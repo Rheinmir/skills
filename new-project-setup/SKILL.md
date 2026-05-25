@@ -1,6 +1,6 @@
 ---
 name: new-project-setup
-description: Deploy llmwiki từ đầu vào project mới — template pull, skill install, RTK, wiki seed, onboard
+description: Deploy llmwiki từ đầu vào project mới — template pull, skill install, RTK, Caveman, wiki seed, onboard
 ---
 
 # Skill: new-project-setup
@@ -23,6 +23,7 @@ Reset = xóa `llmwiki/wiki/concepts/` và `llmwiki/wiki/entities/` — **GIỮ**
 # sync-template tự pull từ rheinmir/setup@orca và install skills vào:
 #   .claude/commands/           ← Claude Code
 #   ~/.agents/skills/*/SKILL.md ← OpenCode / Antigravity
+#   ~/.kiro/skills/*/SKILL.md   ← Kiro CLI
 ```
 
 **3. Init wiki folder structure:**
@@ -47,6 +48,15 @@ rtk init -g
 
 # Verify hook:
 grep -q "rtk hook claude" ~/.claude/settings.json && echo "RTK hooked" || echo "MANUAL: add rtk hook to settings.json"
+```
+
+**4.b Caveman Setup:**
+```bash
+# Cài đặt caveman cho mọi agent phát hiện trên máy:
+# Windows (PowerShell):
+irm https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.ps1 | iex
+# macOS / Linux / WSL (Bash):
+curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash
 ```
 
 **5. Seed wiki với project info:**
