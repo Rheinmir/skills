@@ -1,0 +1,21 @@
+# CI của repo skills — chỉ kiểm SKILL, không chạy harness/medic/fdk-uat của framework (PLAN 141026-skills-split T2).
+# Tool engine lấy từ Rheinmir/setup (checkout depth 1, ref theo SETUP_REF) — không chép tool sang đây.
+name: skills
+on: [pull_request, push]
+env:
+  SETUP_REF: orca
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Rheinmir/setup
+          ref: ${{ env.SETUP_REF }}
+          path: _setup
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.x' }
+      - run: python3 -m pip install --quiet pyyaml
+      - name: cổng skill (registry · requires · swh · provenance · golden · catalog)
+        run: bash tools/check.sh "$PWD/_setup"
