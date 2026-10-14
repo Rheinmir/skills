@@ -26,6 +26,20 @@ metadata:
 
 `requires` được **sinh** bằng grep tất định (`skill-requires.py gen`), CI bắt lệch; `loop` khai tay.
 
+## Thêm một skill mới (nguyên tắc)
+
+Thêm skill = **văn bản** trong repo này đi qua đủ cổng; engine không đổi. Có skill `/new-skill` lái trọn luồng; làm tay thì theo đúng thứ tự:
+
+1. **Khung đúng chuẩn** `solid-what-how/1`: `python3 <setup>/fdk/tools/new-skill.py <tên> --loop <loop> --desc "<mô tả CÓ cụm trigger>" --skills-dir skills` → `skills/<tên>/SKILL.md` (frontmatter `name` = tên thư mục, `description` không rỗng, `metadata.loop` ∈ wiki-loop · dev-loop · orchestrate · utils). Điền hết ⟨TODO⟩; `swh-lint --ci` phải xanh (skill native). Tool cảnh báo trùng với skill đã có (BM25) — trùng thì sửa skill cũ, không thêm.
+2. **Hợp đồng phụ thuộc sinh bằng máy**: `python3 <setup>/harness/scripts/skill-requires.py gen --write --skills-dir skills --repo-root <setup>` — không khai tay `requires`. Skill cần script engine chưa có → PR ở Rheinmir/setup trước, phát hành, rồi nâng `requires.harness` của skill; không chép script vào đây.
+3. **Marketplace**: thêm `./skills/<tên>` vào plugin phù hợp trong `.claude-plugin/marketplace.json` (registry bắt thiếu/thừa).
+4. **Provenance**: `python3 <setup>/fdk/tools/skill-provenance.py --skills-dir skills --store skills.provenance.json record <tên> --source local-authored` (skill kéo từ upstream → đặt ở `skills/external/<tên>/`, `--source <url>`, không sửa tay).
+5. **Golden router** (nên có): thêm `evals/skill-resolve/<tên>.md` vài câu người dùng thật phải resolve ra skill này; `--check` chỉ đỏ khi hit tổng tụt so baseline.
+6. **Catalog + version**: `python3 tools/catalog.py --update` (bump patch + `catalog.json`; MCP `/healthz` và hook nhắc bản của người dùng đọc số này).
+7. **Cổng**: `bash tools/check.sh <setup>` 7/7 PASS (≈1 s) → push `main` (CI ≈15 s). Không medic, không harness.yml, không fdk-uat.
+
+Sau khi push, repo setup kéo lại ảnh chụp catalog (`python3 fdk/tools/sync-skill-catalog.py` + `capability-stamp.py --update`) ở lần phát hành kế tiếp.
+
 ## Sửa một skill
 
 1. Sửa `skills/<tên>/SKILL.md` (skill mới: `python3 <setup>/fdk/tools/new-skill.py --skills-dir skills <tên>`).
