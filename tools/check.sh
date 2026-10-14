@@ -18,7 +18,7 @@ run() { local name="$1"; shift; local t0=$(date +%s)
 echo "repo skills · setup = $SETUP"
 run "registry (yaml·name·loop·market)" python3 tools/registry.py --check
 run "requires khớp grep"            python3 "$SETUP/harness/scripts/skill-requires.py" gen --check --skills-dir skills --repo-root "$SETUP"
-run "requires đủ ở setup HEAD"       python3 "$SETUP/harness/scripts/skill-requires.py" check --skills-dir skills --repo-root "$SETUP" --ci
+run "requires đủ ở setup HEAD"       python3 "$SETUP/harness/scripts/skill-requires.py" check --skills-dir skills --repo-root "$SETUP" --ci --no-bin
 run "swh-lint (cấu trúc native)"     python3 "$SETUP/fdk/tools/swh-lint.py" --root "$PWD" --ci
 run "provenance checksum"           python3 "$SETUP/fdk/tools/skill-provenance.py" --skills-dir skills --store skills.provenance.json check --ci
 run "skill-resolve golden"          python3 "$SETUP/harness/scripts/skill-resolve-eval.py" --check --skills-dir skills --goldens evals/skill-resolve
