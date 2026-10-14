@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "version": "1.0.0",
+  "version": "1.0.2",
   "harness_floor": "1.3.127",
-  "catalog_sha": "1081dd193a7f1b96",
+  "catalog_sha": "0c842d4ca4d5c731",
   "count": 106,
   "skills": [
     {
@@ -214,11 +214,10 @@
           "fdk/tools/new-skill.py",
           "harness/scripts/fdk-gate.py",
           "harness/scripts/fresh-install-smoke.sh",
-          "harness/scripts/install-harness.sh",
-          "harness/scripts/sync-skills.py"
+          "harness/scripts/install-harness.sh"
         ]
       },
-      "sha": "f896be5edec9efb9"
+      "sha": "ddb5fa4ae74bbdef"
     },
     {
       "name": "agent-reach",
@@ -642,7 +641,7 @@
           "harness/scripts/install-harness.sh"
         ]
       },
-      "sha": "d1115294548ed333"
+      "sha": "1a4f3930b8684aef"
     },
     {
       "name": "health-check",
@@ -839,7 +838,7 @@
       "dir": "skills/new-skill",
       "external": false,
       "loop": "dev-loop",
-      "description": "Scaffold a new skill into both publish trees at once — skills/<name>/SKILL.md plus its byte-identical llmwiki mirror — via fdk/tools/new-skill.py, then print the exact commands to register it on the curated surfaces (LOOP_MAP, marketplace.json, AGENT.md/CLAUDE.md). Use when the user says \"create a skill\", \"add a new skill\", \"scaffold a skill\", \"make a new skill\", \"new skill\", or invokes /new-skill.",
+      "description": "Scaffold (tạo) một skill mới — new skill — into the Rheinmir/skills checkout (skills/<name>/SKILL.md, frontmatter metadata.loop + metadata.requires) via fdk/tools/new-skill.py of the setup repo, then run the skills-repo gate (requires · provenance · catalog · tools/check.sh). Use when the user says \"create a skill\", \"add a new skill\", \"scaffold a skill\", \"make a new skill\", \"new skill\", or invokes /new-skill.",
       "model_invocable": false,
       "requires": {
         "harness": ">=1.3.127",
@@ -847,16 +846,13 @@
           "python3"
         ],
         "scripts": [
-          "fdk/tools/skill-reuse.py",
-          "fdk/tools/swh-lint.py"
+          "fdk/tools/skill-reuse.py"
         ],
         "framework_scripts": [
-          "fdk/tools/new-skill.py",
-          "harness/scripts/skill-registry.py",
-          "harness/scripts/sync-skills.py"
+          "fdk/tools/new-skill.py"
         ]
       },
-      "sha": "78f10b7d638f630e"
+      "sha": "f2994da66f89ff0f"
     },
     {
       "name": "onboard-codebase",

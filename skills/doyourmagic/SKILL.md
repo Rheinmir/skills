@@ -10,7 +10,7 @@ metadata:
     harness: ">=1.3.127"
     bin: [python3]
     scripts: [fdk/tools/medic.py, harness/poc-vendor-neutral/bin/harness-events.py, harness/poc-vendor-neutral/bin/llmwiki-validate.py, harness/poc-vendor-neutral/bootstrap.sh, harness/poc-vendor-neutral/demo.sh, harness/poc-vendor-neutral/gen-converters.py, harness/poc-vendor-neutral/install.sh, harness/poc-vendor-neutral/test-broad.sh, harness/scripts/dym-sync.py]
-    framework_scripts: [fdk/tools/fdk-kit.sh, fdk/tools/new-skill.py, harness/scripts/fdk-gate.py, harness/scripts/fresh-install-smoke.sh, harness/scripts/install-harness.sh, harness/scripts/sync-skills.py]
+    framework_scripts: [fdk/tools/fdk-kit.sh, fdk/tools/new-skill.py, harness/scripts/fdk-gate.py, harness/scripts/fresh-install-smoke.sh, harness/scripts/install-harness.sh]
 ---
 
 # Skill: doyourmagic
@@ -168,9 +168,11 @@ Chỉ hub vào context. Gõ `/<hub>` để xem bảng slug, `/<hub> <slug>` đ�
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/Rheinmir/setup/orca/fdk/tools/fdk-kit.sh) pull   # lần đầu
 cp -R .overstack/doyourmagic/<repo>/skills/<hub>-<slug> .overstack/kit/skills/<tên-mới>          # đổi tên nếu bỏ tiền tố dym-
-cd .overstack/kit && python3 fdk/tools/new-skill.py <tên-mới> --dry-run                # in checklist register
-# register: LOOP_MAP (sync-skills.py) · LOOP_GROUPS · marketplace.json · bảng AGENT.md+CLAUDE.md · provenance
-bash fdk/tools/fdk-kit.sh check && bash fdk/tools/fdk-kit.sh submit skill/<tên-mới> "<mô tả>"
+# từ 141026 skill ở repo riêng Rheinmir/skills: chép vào checkout đó rồi đi qua cổng của nó (xem /new-skill)
+git clone -q https://github.com/Rheinmir/skills ~/orca/skills 2>/dev/null || true
+cp -R .overstack/doyourmagic/<repo>/skills/<hub>-<slug> ~/orca/skills/skills/<tên-mới>
+cd ~/orca/skills && python3 .overstack/kit/harness/scripts/skill-requires.py gen --write --skills-dir skills --repo-root .overstack/kit
+# register: marketplace.json · skill-provenance.py record · tools/catalog.py --update → bash tools/check.sh .overstack/kit → push main
 ```
 Sửa `name:` trong frontmatter cho khớp tên mới; giữ `description` trigger. Hub KHÔNG promote (nó chỉ có nghĩa cạnh bundle).
 

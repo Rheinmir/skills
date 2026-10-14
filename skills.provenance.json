@@ -332,7 +332,7 @@
     },
     "doyourmagic": {
       "files": {
-        "SKILL.md": "b415f33cf100a1a1cd347c64435d7a11fbe0eaac10afb9b5d1cddd558f98c6f6",
+        "SKILL.md": "197d5f934e08671fc3f0a7c635cd12e096654228932b9e7099f369a5f81216e8",
         "references/example-setup/README.md": "343c09fef83bbb179514311d025f1a697b474d977cc08e0b952026e8e2fb29b6",
         "references/example-setup/flow.html": "60b9be43143738268175baaa8d5a4ea62198b93875068d138b0fa1884f585d43",
         "references/example-setup/skills/dym-setup-agent-workflow.skill.md": "3f94fd478de88a2ce33d203a02c96e111beace12b8d97ee3afeedfe23cd4a2a3",
@@ -567,7 +567,7 @@
     },
     "harness-update": {
       "files": {
-        "SKILL.md": "d92819b128058dc087e7b3ead24038ae013915c0965a7fb79b9cab5a996962c0"
+        "SKILL.md": "e75ea73f1089ed3c9dba5d0a3cc1e194ab1188ce197077b4ce0f83d273d66e9c"
       },
       "recorded": "2026-10-14",
       "source": "local-authored"
@@ -844,7 +844,7 @@
     },
     "new-skill": {
       "files": {
-        "SKILL.md": "a5bb12188833cf147dc3a9ef166d5bd9e42b8cac43364dce14da90791c9f2d78"
+        "SKILL.md": "5311dd3479fa045ba603dbf4060d7733b72e47c27d9745918f1a7e227562cd29"
       },
       "recorded": "2026-10-14",
       "source": "local-authored"

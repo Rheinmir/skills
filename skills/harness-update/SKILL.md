@@ -74,6 +74,12 @@ Chi tiết từng bước (nguồn chân lý cho W01–W04):
 curl -fsSL https://raw.githubusercontent.com/Rheinmir/setup/orca/harness/poc-vendor-neutral/bootstrap.sh | bash
 ```
   Gọi nhầm `install-harness.sh . --self-heal` ở layout này → script tự DỪNG rc 5 và in đúng lệnh trên (đo 20/09/2026: đường cũ không cập nhật global mà còn chép 77 script vào dự án). Agent chạy trong terminal có pty: thêm `-s -- --with-graph` để khỏi chờ checklist 60 giây.
+- **Chỉ cập nhật bộ skill** (từ 141026 skill ở repo riêng [Rheinmir/skills](https://github.com/Rheinmir/skills), cài global `~/.claude/skills`): không đụng harness/llmwiki, ~45 s:
+```bash
+curl -fsSL https://raw.githubusercontent.com/Rheinmir/setup/orca/harness/poc-vendor-neutral/bootstrap.sh | bash -s -- --skills-only
+# tương đương: npx -y skills add rheinmir/skills#main --global --all ; rồi python3 ~/.claude/harness/harness/scripts/skill-requires.py check --installed
+```
+  Lệnh ghi dấu `~/.claude/harness/skills-version.json` và in skill nào thiếu binary/script/sàn harness. Hook SessionStart tự nhắc một dòng `⬆ [version]` khi máy cũ hơn bản chuẩn (harness hoặc skill) — thấy dòng đó thì chạy đúng lệnh nó in.
 - **Repo framework** (`repo_role: framework`): KHÔNG chạy installer vào đây — installer tự từ chối rc 3. Cập nhật framework = `git pull`.
 - **Layout cũ trần** (`llmwiki/` + `harness/` nằm trong dự án, chưa có stamp) — đường `--self-heal` (tự detect migrate/update; thiếu nguồn thì clone template):
 ```bash
