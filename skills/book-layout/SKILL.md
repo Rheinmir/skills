@@ -49,6 +49,8 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 | `01 \| Tiêu đề \| mô tả \| 06` | dòng mục lục (trang `toc`) |
 | `~ chữ / *gạch vàng*` | chữ viết tay góc dưới phải |
 | `![mô tả](ảnh)` | ảnh (trang `image`: tràn trang, chữ đè) |
+| `![mô tả](x.gif "x.png")` | GIF trong cùng khung ảnh, kèm ảnh tĩnh cho người tắt chuyển động |
+| `+ 30,40 chữ` | ghim chú thích số 1, 2… trên ảnh/GIF ngay trên (x, y theo %), chữ thành danh sách đánh số dưới khung |
 | `@ chữ` | tiêu đề chạy góc phải (vd «Chương 2») |
 | dòng khác | đoạn văn, `**đậm**` được |
 
@@ -82,6 +84,21 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 | B01 | recovery | check.mjs HỎNG | đọc số đo: `over` → rút chữ trong ô, `uneven` → bỏ khối lạ đầu trang, `sw` → ảnh/bảng quá rộng | 2 vòng vẫn hỏng → báo user | W04 |
 | B02 | conditional | user có ảnh thật | thêm `![mô tả](ảnh)` vào `cover` / `image` / `page` | không có → giữ SVG mặc định | W03 |
 
+### Khi nào dùng GIF (pattern ưu tiên, không máy móc)
+Owner 30/10: «ưu tiên luôn GIF với annotation». Khung ảnh trong trang (`page`) mặc định là **GIF có ghim chú thích**; ảnh tĩnh chỉ khi GIF không hợp.
+- **GIF + chú thích (mặc định)**: thao tác, diễn biến, trước rồi sau, luồng 2–4 bước, bằng chứng UI. Mỗi GIF một ý, 3–8 giây, lặp, dưới 2 MB. Ghim `+ x,y chữ` đánh số đúng chỗ người cần nhìn (nút bấm, toast, số đổi); 1–4 ghim, chữ ngắn nói ĐIỀU XẢY RA («Bấm Save», «Toast Đã lưu hiện»).
+- **Ảnh tĩnh** khi chuyển động không thêm thông tin: bìa, trang `image` tràn có chữ đè, ảnh không khí, sơ đồ. Ảnh tĩnh vẫn ghim được.
+- Không có GIF thật thì đừng bịa: dùng ảnh tĩnh hoặc minh hoạ SVG sẵn có. GIF quay bằng Playwright (vd `tests/lib/record_gif.mjs` của Hang) dùng thẳng được.
+- Khoảng 1 GIF mỗi trải hai trang; hai GIF cạnh nhau tranh nhau sự chú ý.
+- Luôn kèm poster tĩnh: `![mô tả](thao-tac.gif "thao-tac.png")`; người bật «giảm chuyển động» thấy ảnh tĩnh. `mô tả` ghi điều GIF cho thấy, không ghi «ảnh động».
+
+Mẫu:
+```
+![Gõ «vẽ sơ đồ», archify hiện ở dòng gợi ý](flow.gif "flow.png")
++ 30,28 Gõ một ý vào ô tìm
++ 60,62 Skill gần nghĩa có chip «gợi ý»
+```
+
 ### Validation và stopping
 Xong khi `check.mjs` in hai dòng `ok` (1280 và 390) và user có tệp HTML. Selftest của script: `python3 scripts/book.py --selftest`.
 
@@ -96,4 +113,4 @@ Xong khi `check.mjs` in hai dòng `ok` (1280 và 390) và user có tệp HTML. S
 - `scripts/check.mjs`: đo 1280 + 390, chụp ảnh.
 
 ## Origin
-- Owner 30/10 (phòng Vịnh Hồng, Hang): «xem trang web và ảnh này dribbble.com/shots/27684270-Book-interior-layout-magazine-layout-design thiết kế html theo layout này ra skill». Trang mẫu viết tay được duyệt («trông ok»), kèm ý «tốn nhiều token out» → đóng gói thành khuôn + script để agent chỉ viết markdown.
+- Owner 30/10 (phòng Vịnh Hồng, Hang): GIF có chú thích là loại khung ưu tiên. Yêu cầu gốc: «xem trang web và ảnh này dribbble.com/shots/27684270-Book-interior-layout-magazine-layout-design thiết kế html theo layout này ra skill». Trang mẫu viết tay được duyệt («trông ok»), kèm ý «tốn nhiều token out» → đóng gói thành khuôn + script để agent chỉ viết markdown.

@@ -21,6 +21,8 @@ Cú pháp (mỗi dòng «=== <kiểu>» mở một trang; hai trang liền nhau 
     01 | Tiêu đề | mô tả | 06 dòng mục lục (trang toc)
     ~ chữ / *gạch vàng*       chữ viết tay góc dưới phải
     ![mô tả](ảnh.jpg)         ảnh; ở trang image là ảnh tràn trang
+    ![mô tả](thao-tac.gif "tinh.png")   GIF kèm ảnh tĩnh cho người tắt chuyển động (xem «Khi nào dùng GIF» trong SKILL.md)
+    + 30,40 chữ               ghim chú thích số 1, 2… trên ảnh/GIF ngay trên, ở x=30 %, y=40 %; chữ hiện thành danh sách đánh số dưới khung
     @ chữ                     tiêu đề chạy góc phải trang (vd «Chương 2»)
     dòng khác                 đoạn văn (**đậm** được)
 """
@@ -64,8 +66,12 @@ def icon(i, stroke="#5f8a3a"):
     return f'<svg viewBox="0 0 24 24" fill="none" stroke="{stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{ICONS[i % len(ICONS)]}</svg>'
 
 
-def img(src, alt):
-    return f'<img src="{html.escape(src)}" alt="{html.escape(alt)}" style="display:block;width:100%;height:100%;object-fit:cover">'
+def img(src, alt, poster=""):
+    """Ảnh hoặc GIF. GIF kèm poster (ảnh tĩnh): người bật «giảm chuyển động» thấy poster thay vì GIF chạy."""
+    tag = f'<img src="{html.escape(src)}" alt="{html.escape(alt)}" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">'
+    if not poster:
+        return tag
+    return f'<picture style="display:block;width:100%;height:100%"><source media="(prefers-reduced-motion: reduce)" srcset="{html.escape(poster)}">{tag}</picture>'
 
 
 def parse(text):
@@ -94,7 +100,7 @@ def parse(text):
 def render_page(pg, no, meta):
     kind, L = pg["kind"], [x for x in pg["lines"]]
     brand = html.escape(meta.get("brand", "Tài liệu"))
-    run_r, h_done, body, items, steps, checks, icons_, toc, hand, image, panel_t = "", False, [], [], [], [], [], [], "", None, ""
+    run_r, h_done, body, items, steps, checks, icons_, toc, hand, image, panel_t, figs = "", False, [], [], [], [], [], [], "", None, "", []
 
     def flush():
         nonlocal panel_t
@@ -150,13 +156,19 @@ def render_page(pg, no, meta):
             toc.append(f'<li><span class="n">{inline(p[0])}</span><div><h3>{inline(p[1])}</h3><p>{inline(p[2])}</p></div><span class="pg">{inline(p[3])}</span></li>')
         elif s.startswith("~ "):
             hand = f'<div class="two"><span></span><span class="hand">{lines_br(s[2:], u=True)}</span></div>'
-        elif m := re.match(r"^!\[(.*?)\]\((.+?)\)$", s):
-            image = (m.group(2), m.group(1))
+        elif m := re.match(r'^!\[(.*?)\]\((\S+?)(?:\s+"(.*?)")?\)$', s):
+            image = (m.group(2), m.group(1), m.group(3) or "")
             if kind not in ("image", "cover"):
-                body.append(f'<div class="photo">{img(*image).replace("height:100%", "height:auto")}</div>')
+                figs.append((image, [])); body.append(f"\x00{len(figs) - 1}\x00")
+        elif (m := re.match(r"^\+\s*(\d{1,3})\s*,\s*(\d{1,3})\s+(.+)$", s)) and figs:
+            figs[-1][1].append((min(int(m.group(1)), 100), min(int(m.group(2)), 100), m.group(3)))
         else:
             flush(); body.append(f"<p>{inline(s)}</p>")
     flush()
+    for i, (im, pins) in enumerate(figs):   # khung ảnh / GIF + ghim chú thích đánh số (vị trí %, chữ giải thích bên dưới)
+        dots = "".join(f'<b class="pin" style="left:{x}%;top:{y}%">{n}</b>' for n, (x, y, _) in enumerate(pins, 1))
+        notes = f'<ol class="notes">{"".join(f"<li>{inline(t)}</li>" for _, _, t in pins)}</ol>' if pins else ""
+        body = [f'<figure class="photo">{img(*im).replace("height:100%", "height:auto")}{dots}</figure>{notes}' if b == f"\x00{i}\x00" else b for b in body]
     if toc:
         body.append(f'<ol class="toc">{"".join(toc)}</ol>')
     if kind == "cycle":
@@ -196,6 +208,11 @@ def selftest():
                  "<h3>Thử ngay</h3>", 'class="checks"', 'class="steps"', "<small>ghi chú</small>", 'class="ilist"', "<u>tay</u>", 'page bleed', "Chương 2", ">005<"):
         assert want in out, want
     assert out.count('<section class="spread">') == 3, out.count('<section class="spread">')
+    g = build('=== page\n![Bấm Save](save.gif "save.png")\n')
+    assert 'srcset="save.png"' in g and 'src="save.gif"' in g and "prefers-reduced-motion" in g, "GIF + poster"
+    a = build('=== page\n![Lưu](save.gif "save.png")\n+ 80,10 Bấm Save\n+ 50,90 Toast Đã lưu\n')
+    assert '<b class="pin" style="left:80%;top:10%">1</b>' in a and "<li>Toast Đã lưu</li>" in a and a.count('class="pin"') == 2, "ghim chú thích"
+    assert "<picture" not in build("=== page\n![a](a.gif)\n"), "GIF không poster: img trần"
     assert "<script" not in build("=== page\n<script>alert(1)</script>\n"), "phải escape HTML"
     print("book.py selftest: ok")
 
