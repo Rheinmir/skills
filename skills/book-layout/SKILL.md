@@ -61,8 +61,8 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 - RULE-01 (MUST): KHÔNG viết HTML/CSS tay cho tài liệu này: viết `.md` rồi chạy `book.py`. Cần khối mới → thêm vào `book.py` + `book.css` + selftest, không chèn HTML vào markdown (book.py escape mọi HTML).
 - RULE-02 (MUST): chạy `node scripts/check.mjs <tệp>.html` và chỉ báo xong khi cả hai dòng là `ok` (0 cuộn ngang, 0 chữ tràn, tiêu đề không cắt dấu, lề trái đều, sơ đồ vòng `cyc` đều: tâm nút cách tâm vòng như nhau ± 1 px, góc 360/n ± 1°, nhãn cách nút như nhau, mũi tên nằm trên vòng giữa hai nút, `hit` 0 = nhãn không đè mũi tên/nút).
 - RULE-03 (MUST): giữ nền sáng và hai font có dấu tiếng Việt; tiêu đề `line-height` ≥ 1.2.
-- RULE-05 (MUST): tài liệu giải thích một thay đổi / quyết định / so sánh viết theo `references/case-study.md`: bìa là MỘT câu kết luận có số, có câu hỏi «Làm sao để …», mỗi chặng một sản phẩm có nguồn, trang «cũ so với mới» bằng khối `<>` (chỗ cách mới không hơn dùng `<>!`). Khung trống: `assets/case-study.md`.
 - RULE-04 (SHOULD): mỗi trang một ý, ≤ 120 chữ đoạn văn; chữ dài hơn → tách thêm `=== page`.
+- RULE-05 (MUST): tài liệu giải thích một thay đổi / quyết định / so sánh viết theo `references/case-study.md`: bìa là MỘT câu kết luận có số, có câu hỏi «Làm sao để …», mỗi chặng một sản phẩm có nguồn, trang «cũ so với mới» bằng khối `<>` (chỗ cách mới không hơn dùng `<>!`). Khung trống: `assets/case-study.md`.
 - Capabilities: đọc/ghi tệp trong dự án; chạy python3 và node (Playwright cài global).
 
 ### Failure boundaries

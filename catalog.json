@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "version": "1.0.8",
+  "version": "1.0.9",
   "harness_floor": "1.3.127",
-  "catalog_sha": "23fa4aa92b108148",
+  "catalog_sha": "41d063eda4b26318",
   "count": 107,
   "skills": [
     {
@@ -23,7 +23,7 @@
       "description": "Design MẶC ĐỊNH cho mọi tài liệu HTML (owner 30/10): khuôn SÁCH / TẠP CHÍ (trải hai trang có gáy, bìa, mục lục số lớn, đầu chương, trích dẫn, số liệu nổi bật, so sánh cách cũ / cách mới, danh sách icon, sơ đồ vòng, ảnh tràn trang, chữ viết tay gạch vàng) cộng cách viết CASE STUDY (kết luận trước, bối cảnh, câu hỏi, KPI, các chặng, cũ so với mới, bài học, bước tiếp) từ một tệp markdown ngắn bằng script, nên layout tốn 0 token đầu ra. Nền giấy sáng, font Be Vietnam Pro + Patrick Hand đủ dấu tiếng Việt, kiểm Playwright 1280 + 390. Gọi khi user nhờ viết BẤT KỲ tài liệu nào gửi người đọc (tài liệu triển khai, patch, thiết kế, so sánh, báo cáo, proposal), hoặc nói \"viết doc kiểu tạp chí\", \"case study\", \"so với cách cũ\", \"tài liệu dạng sách\", \"layout sách\", \"book layout\", \"magazine layout\", \"sổ tay HTML\", \"html tài liệu đẹp như sách\", hoặc /book-layout. KHÁC `docs-site-macos` (site tài liệu kính mờ kiểu macOS) và `hallmark` (thiết kế UI mới): đây là KHUÔN CỐ ĐỊNH, chỉ đổ chữ.",
       "model_invocable": true,
       "requires": {},
-      "sha": "8aa08cb28c8cb564"
+      "sha": "f062853793ad9e33"
     },
     {
       "name": "br",
