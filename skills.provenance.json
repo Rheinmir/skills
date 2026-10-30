@@ -149,11 +149,14 @@
     },
     "book-layout": {
       "files": {
-        "SKILL.md": "8e74ca35e2754e93b72cf2ed027effb6f641c58646366ac01f2d2f397ebc3c9d",
-        "assets/book.css": "7b2ee85fb502ad360f73abcec66ff108d812c09e11b8a54c2c3ee46175119218",
-        "assets/example.md": "9ed78494105159b937ad6bf484ac01e01222f82339b573621f1248e015be8c4a",
-        "scripts/book.py": "3b1a5a63ce6b28b5f5570a13ce19a128fd6ae208f4586011115cd44f416ba123",
-        "scripts/check.mjs": "d5eee94e28148a4b87b914454f08032c6fd6ee52740c333fb321bd7f0c672ce2"
+        "SKILL.md": "babb304fac2888d99a52f8ca3c2377b765eb65c6a903a46a9bcc1ae0dc67b234",
+        "assets/book.css": "5bab5a3eb45bc3a945f29a502ee63bcdc5ae403482bf0c4d5bb080edb5c88d5a",
+        "assets/case-study.md": "15d35e3080a0b09a2a5fca57813d1c6ee9e06675c2d53376d6f633f63c952fa6",
+        "assets/example.md": "9e5595dc3ace0fc4e897bf872c549078ba7778ceacfae1e8d41119dc3ef3809a",
+        "examples/driver-chung.md": "c47180496b81c8506cf6f61352aa45b72603ffcb1bb1ef28d531ce252684de76",
+        "references/case-study.md": "37346f6ce19feee95b1a90c53ad5ca7014d4a3fda5fc9e41086eef41b0155f47",
+        "scripts/book.py": "375ef2878c4e5a544ba8413ef43c33a419f1672c93bd4be0249b12ccf128e3b6",
+        "scripts/check.mjs": "b0b107182c4cdef89e663fd3a4a617b631d33085195a3229d5ae34af8be33bab"
       },
       "recorded": "2026-10-30",
       "source": "local-authored"

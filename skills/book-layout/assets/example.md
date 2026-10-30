@@ -61,6 +61,9 @@ Mỗi phòng có một điều phối và vài worker. Hang ghi lại ai nhận 
 > Sức mạnh của những lần ghép nhỏ.
 ---
 Một nhánh nhỏ, một test đỏ rồi xanh, một trang concept: lặp lại đủ lâu thì thành nền vững.
+<> | Nhánh lớn | Nhánh nhỏ
+<> Thời gian review | 2 ngày | 20 phút | ví dụ
+<>! Số lần ghép | 1 | 6 | nhiều lần hơn, mỗi lần nhẹ
 ### Thử ngay
 - Bắt đầu bằng một test đỏ.
 - Sửa ít nhất có thể cho nó xanh.

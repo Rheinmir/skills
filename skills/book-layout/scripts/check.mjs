@@ -11,7 +11,7 @@ for (const w of [1280, 390]) {
   const p = await b.newPage({ viewport: { width: w, height: 900 } }); const errs = []; p.on('pageerror', e => errs.push(String(e)));
   await p.goto('file://' + f); await p.waitForTimeout(1500);
   const m = await p.evaluate(() => {
-    const over = [...document.querySelectorAll('h1,h2,h3,p,li,blockquote,.hand,.big')].filter(e => e.scrollWidth > e.clientWidth + 1).length;
+    const over = [...document.querySelectorAll('h1,h2,h3,p,li,blockquote,.hand,.big,.cmp-r b,.cmp-r span')].filter(e => e.scrollWidth > e.clientWidth + 1).length;
     const clip = [...document.querySelectorAll('h1,h2,.big')].filter(e => { const c = getComputedStyle(e); return parseFloat(c.lineHeight) / parseFloat(c.fontSize) < 1.15; }).length;
     const uneven = [...document.querySelectorAll('.page:not(.bleed)')].filter(pg => { const L = pg.getBoundingClientRect().left;
       return new Set([...pg.querySelectorAll(':scope > h1, :scope > h2, :scope > .lead, :scope > p, :scope > .kick, :scope > .rule')].map(e => Math.round(e.getBoundingClientRect().left - L))).size > 1; }).length;

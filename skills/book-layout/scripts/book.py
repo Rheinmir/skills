@@ -24,6 +24,9 @@ Cú pháp (mỗi dòng «=== <kiểu>» mở một trang; hai trang liền nhau 
     ![mô tả](thao-tac.gif "tinh.png")   GIF kèm ảnh tĩnh cho người tắt chuyển động (xem «Khi nào dùng GIF» trong SKILL.md)
     + 30,40 chữ               ghim chú thích số 1, 2… trên ảnh/GIF ngay trên, ở x=30 %, y=40 %; chữ hiện thành danh sách đánh số dưới khung
     @ chữ                     tiêu đề chạy góc phải trang (vd «Chương 2»)
+    <> Chỉ số | cũ | mới | nguồn   một dòng so sánh cách cũ với cách mới (các dòng liền nhau thành một khối);
+    <>! Chỉ số | cũ | mới     dòng mà cách mới KHÔNG hơn (ngang hoặc tệ hơn): không tô xanh, không gạch cách cũ; đừng giấu
+    <> | Nhãn cũ | Nhãn mới   đổi nhãn cột (mặc định «Cách cũ» / «Cách mới»); không bảng: màn hẹp thành thẻ có nhãn
     dòng khác                 đoạn văn (**đậm** được)
 """
 from __future__ import annotations
@@ -129,9 +132,17 @@ def render_page(pg, no, meta):
     kind, L = pg["kind"], [x for x in pg["lines"]]
     brand = html.escape(meta.get("brand", "Tài liệu"))
     run_r, h_done, body, items, steps, checks, icons_, toc, hand, image, panel_t, figs = "", False, [], [], [], [], [], [], "", None, "", []
+    cmp, cmp_l = [], ["Cách cũ", "Cách mới"]
 
     def flush():
         nonlocal panel_t
+        if cmp:   # so sánh cũ/mới: lưới chữ, không <table> (owner đọc trên điện thoại); nhãn cột lặp trong từng ô để màn hẹp vẫn rõ
+            o, n = (html.escape(x, quote=True) for x in cmp_l)
+            head = f'<div class="cmp-h" aria-hidden="true"><span></span><span>{inline(cmp_l[0])}</span><span>{inline(cmp_l[1])}</span></div>'
+            rows = "".join(f'<div class="cmp-r{" same" if w else ""}"><b>{inline(m)}</b><span class="old" data-l="{o}">{inline(a)}</span><span class="new" data-l="{n}">{inline(b)}</span>'
+                           f'{f"<cite>{inline(c)}</cite>" if c else ""}</div>' for m, a, b, c, w in cmp)
+            body.append(f'<div class="cmp">{f"<h3>{panel_t}</h3>" if panel_t else ""}{head}{rows}</div>')
+            cmp.clear(); panel_t = ""
         if checks:
             body.append(f'<div class="panel">{f"<h3>{panel_t}</h3>" if panel_t else ""}<ul class="checks">{"".join(f"<li>{c}</li>" for c in checks)}</ul></div>')
         if steps:
@@ -147,6 +158,16 @@ def render_page(pg, no, meta):
         s = ln.strip()
         if not s:
             continue
+        if s.startswith(("<> ", "<>! ")):
+            worse = s.startswith("<>!")
+            p = [x.strip() for x in s.split(" ", 1)[1].split("|")] + ["", "", ""]
+            if not p[0]:
+                cmp_l[:] = [p[1] or cmp_l[0], p[2] or cmp_l[1]]
+            else:
+                cmp.append((*p[:4], worse))
+            continue
+        if cmp:
+            flush()
         if s.startswith("@ "):
             run_r = inline(s[2:])
         elif s.startswith("^ "):
@@ -242,6 +263,14 @@ def selftest():
     assert '<b class="pin" style="left:80%;top:10%">1</b>' in a and "<li>Toast Đã lưu</li>" in a and a.count('class="pin"') == 2, "ghim chú thích"
     assert "<picture" not in build("=== page\n![a](a.gif)\n"), "GIF không poster: img trần"
     assert "<script" not in build("=== page\n<script>alert(1)</script>\n"), "phải escape HTML"
+    c = build("=== page\n### Đo xen kẽ\n<> | Cửa sổ + hook | Driver chung\n<> Mở phiên Claude | 15,4 s | 3,5 s | h2h_il_summary.json\n<> Tin tới phiên rảnh | 13 s | 3 s\nĐoạn sau.\n<> Một dòng | a | b\n")
+    assert c.count('class="cmp"') == 2 and c.count('class="cmp-r"') == 3, "hai khối so sánh, ba dòng"
+    assert "<h3>Đo xen kẽ</h3>" in c and 'data-l="Cửa sổ + hook"' in c and "<span>Driver chung</span>" in c and "<cite>h2h_il_summary.json</cite>" in c, "nhãn cột + nguồn"
+    assert c.index('class="cmp"') < c.index("Đoạn sau.") < c.rindex('class="cmp"'), "khối đóng khi gặp dòng khác"
+    assert 'data-l="Cách cũ"' in build("=== page\n<> X | a | b\n") and "<table" not in c, "nhãn mặc định, không bảng"
+    assert "<script" not in build("=== page\n<> <script>x</script> | a | b\n"), "escape trong khối so sánh"
+    w = build("=== page\n<> Mở | 9 s | 6 s\n<>! Resume | 5 s | 6 s\n")
+    assert w.count('class="cmp-r same"') == 1 and w.count('class="cmp"') == 1, "dòng không hơn: đánh dấu same, cùng khối"
     print("book.py selftest: ok")
 
 

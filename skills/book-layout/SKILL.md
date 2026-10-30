@@ -1,6 +1,6 @@
 ---
 name: book-layout
-description: "Dựng tài liệu HTML dạng SÁCH / TẠP CHÍ (trải hai trang có gáy, bìa, mục lục số lớn, đầu chương, trích dẫn, số liệu nổi bật, danh sách icon, sơ đồ vòng, ảnh tràn trang, chữ viết tay gạch vàng) từ một tệp markdown ngắn bằng script, nên layout tốn 0 token đầu ra. Nền giấy sáng, font Be Vietnam Pro + Patrick Hand đủ dấu tiếng Việt, kiểm Playwright 1280 + 390. Gọi khi user nói \"viết doc kiểu tạp chí\", \"tài liệu dạng sách\", \"layout sách\", \"book layout\", \"magazine layout\", \"sổ tay HTML\", \"html tài liệu đẹp như sách\", hoặc /book-layout. KHÁC `docs-site-macos` (site tài liệu kính mờ kiểu macOS) và `hallmark` (thiết kế UI mới): đây là KHUÔN CỐ ĐỊNH, chỉ đổ chữ."
+description: "Design MẶC ĐỊNH cho mọi tài liệu HTML (owner 30/10): khuôn SÁCH / TẠP CHÍ (trải hai trang có gáy, bìa, mục lục số lớn, đầu chương, trích dẫn, số liệu nổi bật, so sánh cách cũ / cách mới, danh sách icon, sơ đồ vòng, ảnh tràn trang, chữ viết tay gạch vàng) cộng cách viết CASE STUDY (kết luận trước, bối cảnh, câu hỏi, KPI, các chặng, cũ so với mới, bài học, bước tiếp) từ một tệp markdown ngắn bằng script, nên layout tốn 0 token đầu ra. Nền giấy sáng, font Be Vietnam Pro + Patrick Hand đủ dấu tiếng Việt, kiểm Playwright 1280 + 390. Gọi khi user nhờ viết BẤT KỲ tài liệu nào gửi người đọc (tài liệu triển khai, patch, thiết kế, so sánh, báo cáo, proposal), hoặc nói \"viết doc kiểu tạp chí\", \"case study\", \"so với cách cũ\", \"tài liệu dạng sách\", \"layout sách\", \"book layout\", \"magazine layout\", \"sổ tay HTML\", \"html tài liệu đẹp như sách\", hoặc /book-layout. KHÁC `docs-site-macos` (site tài liệu kính mờ kiểu macOS) và `hallmark` (thiết kế UI mới): đây là KHUÔN CỐ ĐỊNH, chỉ đổ chữ."
 metadata:
   design-standard: "solid-what-how/1"
   contract-version: "1.0.0"
@@ -52,12 +52,16 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 | `![mô tả](x.gif "x.png")` | GIF trong cùng khung ảnh, kèm ảnh tĩnh cho người tắt chuyển động |
 | `+ 30,40 chữ` | ghim chú thích số 1, 2… trên ảnh/GIF ngay trên (x, y theo %), chữ thành danh sách đánh số dưới khung |
 | `@ chữ` | tiêu đề chạy góc phải (vd «Chương 2») |
+| `<> Chỉ số \| cũ \| mới \| nguồn` | một dòng so sánh cách cũ / cách mới (dòng liền nhau thành một khối, `### …` ngay trên làm tiêu đề); cũ gạch mờ, mới xanh đậm; màn hẹp thành thẻ có nhãn trong ô, không bảng |
+| `<>! Chỉ số \| cũ \| mới \| nguồn` | dòng mà cách mới KHÔNG hơn: không tô xanh, không gạch cách cũ (đừng giấu chỗ kém) |
+| `<> \| Nhãn cũ \| Nhãn mới` | đổi nhãn hai cột (mặc định «Cách cũ» / «Cách mới») |
 | dòng khác | đoạn văn, `**đậm**` được |
 
 ### Rules và capabilities
 - RULE-01 (MUST): KHÔNG viết HTML/CSS tay cho tài liệu này: viết `.md` rồi chạy `book.py`. Cần khối mới → thêm vào `book.py` + `book.css` + selftest, không chèn HTML vào markdown (book.py escape mọi HTML).
 - RULE-02 (MUST): chạy `node scripts/check.mjs <tệp>.html` và chỉ báo xong khi cả hai dòng là `ok` (0 cuộn ngang, 0 chữ tràn, tiêu đề không cắt dấu, lề trái đều, sơ đồ vòng `cyc` đều: tâm nút cách tâm vòng như nhau ± 1 px, góc 360/n ± 1°, nhãn cách nút như nhau, mũi tên nằm trên vòng giữa hai nút, `hit` 0 = nhãn không đè mũi tên/nút).
 - RULE-03 (MUST): giữ nền sáng và hai font có dấu tiếng Việt; tiêu đề `line-height` ≥ 1.2.
+- RULE-05 (MUST): tài liệu giải thích một thay đổi / quyết định / so sánh viết theo `references/case-study.md`: bìa là MỘT câu kết luận có số, có câu hỏi «Làm sao để …», mỗi chặng một sản phẩm có nguồn, trang «cũ so với mới» bằng khối `<>` (chỗ cách mới không hơn dùng `<>!`). Khung trống: `assets/case-study.md`.
 - RULE-04 (SHOULD): mỗi trang một ý, ≤ 120 chữ đoạn văn; chữ dài hơn → tách thêm `=== page`.
 - Capabilities: đọc/ghi tệp trong dự án; chạy python3 và node (Playwright cài global).
 
@@ -72,7 +76,7 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 ### Main workflow
 | Step | Type | Inputs | Action | Outputs/exit | Failure/next |
 |---|---|---|---|---|---|
-| W01 | judgment | yêu cầu user | Chia nội dung thành trang: bìa, mục lục (nếu ≥ 4 chương), mỗi chương 1–2 trang, ảnh tràn làm nhịp nghỉ | dàn trang | — |
+| W01 | judgment | yêu cầu user | Chia nội dung thành trang: bìa, mục lục (nếu ≥ 4 chương), mỗi chương 1–2 trang, ảnh tràn làm nhịp nghỉ. Tài liệu về một thay đổi / so sánh: theo thứ tự trang của `references/case-study.md` | dàn trang | — |
 | W02 | effect | dàn trang | Viết `<tên>.md` theo cú pháp (chép khung từ `assets/example.md`) | tệp .md | — |
 | W03 | deterministic | .md | `python3 scripts/book.py <tên>.md -o <tên>.html` | tệp .html | lỗi cú pháp → sửa W02 |
 | W04 | deterministic | .html | `node scripts/check.mjs <tên>.html` | 2 dòng ok + 2 ảnh | HỎNG → B01 |
@@ -109,8 +113,12 @@ Xong khi `check.mjs` in hai dòng `ok` (1280 và 390) và user có tệp HTML. S
 ### Reference — Assets
 - `assets/book.css`: khuôn (biến màu ở `:root`: `--green`, `--sun`, `--sage`, `--paper`). Đổi màu thương hiệu: sửa biến, không sửa từng khối.
 - `assets/example.md`: mẫu đủ mọi kiểu trang và mọi khối.
+- `assets/case-study.md`: khung trống của tài liệu case-study (8 trang).
+- `references/case-study.md`: thứ tự trang, nhịp viết, cách đặt hình, checklist (rút từ bài uxdesign.cc owner chọn).
+- `examples/driver-chung.md`: tài liệu thật theo khuôn case-study (driver chung của Hang, số đo xen kẽ cũ / mới).
 - `scripts/book.py`: markdown → HTML, stdlib, Python 3.9.
 - `scripts/check.mjs`: đo 1280 + 390, chụp ảnh.
 
 ## Origin
+- Owner 30/10 (phòng Vịnh Hồng, Hang): «đóng thành skill, sau này mọi thể loại tài liệu viết ra theo design này» sau khi gửi bài uxdesign.cc «Designing a system for book reviews, a UX case study»; trả lời thẻ hỏi: design = cả hai, book-layout làm khuôn hình + cách viết case-study. Kèm «compare so với cách cũ, lưu vào tài liệu patch triển khai để có chứng cứ phải đổi» → khối `<>` / `<>!`. Đo trên tài liệu driver chung: trang cũ cần 11,4 KB mã dựng viết tay riêng (`build_page.py`, font Iowan Old Style chỉ có trên máy Apple), trang mới 4,3 KB markdown dùng chung khuôn, cả hai 0 tràn ở 1280 và 390.
 - Owner 30/10 (phòng Vịnh Hồng, Hang): GIF có chú thích là loại khung ưu tiên. Yêu cầu gốc: «xem trang web và ảnh này dribbble.com/shots/27684270-Book-interior-layout-magazine-layout-design thiết kế html theo layout này ra skill». Trang mẫu viết tay được duyệt («trông ok»), kèm ý «tốn nhiều token out» → đóng gói thành khuôn + script để agent chỉ viết markdown.
