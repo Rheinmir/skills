@@ -29,7 +29,9 @@ Cú pháp (mỗi dòng «=== <kiểu>» mở một trang; hai trang liền nhau 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import html
+import io
 import math
 import re
 import sys
@@ -53,7 +55,7 @@ def cyc_pt(a):
 
 
 def cycle_html(nodes):
-    """n nút (≤ 3) chia đều 360/n quanh tâm, bắt đầu từ đỉnh; nhãn nằm phía ngoài vòng (nút nửa trên: nhãn trên, nửa dưới: nhãn dưới),
+    """n nút (2–3) chia đều 360/n quanh tâm, bắt đầu từ đỉnh; nhãn nằm phía ngoài vòng (nút nửa trên: nhãn trên, nửa dưới: nhãn dưới),
     cách nút cùng một khoảng; mũi tên là cung của chính vòng đó, chừa CYC_GAP độ quanh mỗi nút."""
     n = len(nodes)
     angs = [360 * k / n for k in range(n)]
@@ -176,7 +178,7 @@ def render_page(pg, no, meta):
             i = len(icons_)
             if kind == "cycle":
                 bg, st = NODE_BG[i % 3]
-                icons_.append((f'<i style="background:{bg}">{icon(i + 3, st)}</i>', f"<div><b>{inline(t)}</b><span>{inline(d)}</span></div>"))
+                icons_.append((f'<i style="background:{bg}">{icon(i + 3, st)}</i>', f"<div><b>{inline(t)}</b><span>{inline(d)}</span></div>", t))
             else:
                 icons_.append(f'<li><i>{icon(i)}</i><div><h3>{inline(t)}</h3><p>{inline(d)}</p></div></li>')
         elif kind == "toc" and re.match(r"^\d+\s*\|", s):
@@ -199,8 +201,13 @@ def render_page(pg, no, meta):
         body = [f'<figure class="photo">{img(*im).replace("height:100%", "height:auto")}{dots}</figure>{notes}' if b == f"\x00{i}\x00" else b for b in body]
     if toc:
         body.append(f'<ol class="toc">{"".join(toc)}</ol>')
-    if kind == "cycle" and icons_:
-        body.append(cycle_html(icons_[:3]))
+    if kind == "cycle":   # 1 nút thì cung 25°→335° thành cung nhỏ cắt ngang nút; 4 nút trở lên thì nhãn bên phải/trái không đủ chỗ
+        if len(icons_) < 2:
+            raise SystemExit(f"trang {no} (cycle) cần 2–3 mục «* Tiêu đề :: mô tả», đang có {len(icons_)}")
+        if len(icons_) > 3:
+            print(f"book.py: trang {no} (cycle) có {len(icons_)} mục, chỉ vẽ 3 mục đầu; bỏ từ mục thứ 4: "
+                  + ", ".join(f"«{t}»" for _, _, t in icons_[3:]), file=sys.stderr)
+        body.append(cycle_html([(ic, lab) for ic, lab, _ in icons_[:3]]))
     foot = f'<div class="foot"><span>{html.escape(meta.get("footer", meta.get("brand", "")))}</span><span>{no:03d}</span></div>'
     left = f'<span class="brand"><svg><use href="#leaf"/></svg>{brand}</span>' if no % 2 or kind in ("cover", "image") else "<span></span>"
     right = f'{html.escape(meta.get("date", ""))}<br>{html.escape(meta.get("vol", ""))}' if kind == "cover" else (run_r or f"{no:03d}")
@@ -240,6 +247,16 @@ def selftest():
     assert 'srcset="save.png"' in g and 'src="save.gif"' in g and "prefers-reduced-motion" in g, "GIF + poster"
     a = build('=== page\n![Lưu](save.gif "save.png")\n+ 80,10 Bấm Save\n+ 50,90 Toast Đã lưu\n')
     assert '<b class="pin" style="left:80%;top:10%">1</b>' in a and "<li>Toast Đã lưu</li>" in a and a.count('class="pin"') == 2, "ghim chú thích"
+    two = build("=== cycle\n* A :: a\n* B :: b\n")
+    assert 'class="node up" style="left:50.0%;top:30.0%"' in two and 'class="node down" style="left:50.0%;top:82.0%"' in two, "vòng 2 nút: đỉnh và đáy"
+    try:
+        build("=== cycle\n* A :: a\n"); raise AssertionError("vòng 1 nút phải báo lỗi")
+    except SystemExit as e:
+        assert "cần 2–3 mục" in str(e) and "đang có 1" in str(e), e
+    err = io.StringIO()
+    with contextlib.redirect_stderr(err):
+        four = build("=== cycle\n* A :: a\n* B :: b\n* C :: c\n* D :: d\n* E :: e\n")
+    assert four.count('class="node ') == 3 and ">D<" not in four and "bỏ từ mục thứ 4: «D», «E»" in err.getvalue(), err.getvalue()
     assert "<picture" not in build("=== page\n![a](a.gif)\n"), "GIF không poster: img trần"
     assert "<script" not in build("=== page\n<script>alert(1)</script>\n"), "phải escape HTML"
     print("book.py selftest: ok")

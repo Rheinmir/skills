@@ -149,10 +149,10 @@
     },
     "book-layout": {
       "files": {
-        "SKILL.md": "8e74ca35e2754e93b72cf2ed027effb6f641c58646366ac01f2d2f397ebc3c9d",
+        "SKILL.md": "d57e7a1191e12b61e207d1637e710c8ceb1cd24d5666f12a1e9d5e8e9178a964",
         "assets/book.css": "7b2ee85fb502ad360f73abcec66ff108d812c09e11b8a54c2c3ee46175119218",
         "assets/example.md": "9ed78494105159b937ad6bf484ac01e01222f82339b573621f1248e015be8c4a",
-        "scripts/book.py": "3b1a5a63ce6b28b5f5570a13ce19a128fd6ae208f4586011115cd44f416ba123",
+        "scripts/book.py": "5259a70df9050f3ae2c78bf7ad54c5c704ad44db5399683539a7c1fa2c2c9d82",
         "scripts/check.mjs": "d5eee94e28148a4b87b914454f08032c6fd6ee52740c333fb321bd7f0c672ce2"
       },
       "recorded": "2026-10-30",

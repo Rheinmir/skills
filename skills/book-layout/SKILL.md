@@ -45,7 +45,7 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 | `! 325 \| chữ \| nguồn` | khối số liệu nổi bật |
 | `- chữ` | danh sách tích xanh trong khung |
 | `1. chữ ; ghi chú` | các bước đánh số trong khung |
-| `* Tiêu đề :: mô tả` | danh sách icon (trang `cycle`: ba nút của vòng) |
+| `* Tiêu đề :: mô tả` | danh sách icon (trang `cycle`: 2–3 nút của vòng; 0–1 mục thì `book.py` báo lỗi, từ mục thứ 4 bị bỏ kèm cảnh báo) |
 | `01 \| Tiêu đề \| mô tả \| 06` | dòng mục lục (trang `toc`) |
 | `~ chữ / *gạch vàng*` | chữ viết tay góc dưới phải |
 | `![mô tả](ảnh)` | ảnh (trang `image`: tràn trang, chữ đè) |
@@ -62,7 +62,7 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 - Capabilities: đọc/ghi tệp trong dự án; chạy python3 và node (Playwright cài global).
 
 ### Failure boundaries
-- Dòng `=== <kiểu>` lạ hoặc chữ đứng trước trang đầu → `book.py` dừng, báo lỗi rõ → sửa markdown.
+- Dòng `=== <kiểu>` lạ, chữ đứng trước trang đầu, hoặc trang `cycle` dưới 2 mục → `book.py` dừng, báo lỗi rõ → sửa markdown. Trang `cycle` quá 3 mục → cảnh báo trên stderr, chỉ vẽ 3 mục đầu → tách thành hai trang hoặc gộp mục.
 - Không có mạng tới Google Fonts → `check.mjs` ghi «font chưa tải» → chữ lùi về font hệ thống; vẫn đọc được nhưng không đúng mẫu.
 - Playwright chưa cài → `check.mjs` lỗi import → **blocked**: `npm i -g playwright` (hoặc đặt `PW_ROOT`). Playwright không có Chromium cho máy (vd macOS 13: «does not support chromium… on mac13») → `PW_CHANNEL=chrome node scripts/check.mjs …` dùng Google Chrome đã cài.
 - `check.mjs` báo HỎNG → sửa nội dung (chữ quá dài trong một ô) hoặc khuôn, chạy lại; 2 vòng vẫn hỏng → báo user kèm số đo.
