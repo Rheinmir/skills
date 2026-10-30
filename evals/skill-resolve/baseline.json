@@ -1,6 +1,14 @@
 {
   "k": 3,
   "per": {
+    "book-layout": {
+      "hit1": 1,
+      "hit3": 1
+    },
+    "book-layout-casestudy": {
+      "hit1": 1,
+      "hit3": 1
+    },
     "caveman": {
       "hit1": 1,
       "hit3": 1
@@ -88,8 +96,8 @@
   },
   "schema": "skill-resolve-baseline/v1",
   "totals": {
-    "hit1": 21,
-    "hit3": 21,
-    "n": 21
+    "hit1": 23,
+    "hit3": 23,
+    "n": 23
   }
 }
