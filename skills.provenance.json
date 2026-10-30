@@ -147,6 +147,17 @@
       "recorded": "2026-10-14",
       "source": "local-authored"
     },
+    "book-layout": {
+      "files": {
+        "SKILL.md": "0e2d4e27c4f9dd6369c0f5deaa690f99acca2a3b6a56e3847fae441598373aa2",
+        "assets/book.css": "95c1e79dae66544daf392beb9c0d9e1b63621539fda8493f9aaf13252d2565d2",
+        "assets/example.md": "9ed78494105159b937ad6bf484ac01e01222f82339b573621f1248e015be8c4a",
+        "scripts/book.py": "09c2b08d88c2c96191b057f4428f330d68cad9c2ba8eff78f92b4b993e8d4b36",
+        "scripts/check.mjs": "41a16810f89a018df0930c1ae4bbe12d99598ed24ca811b64f586947743ead30"
+      },
+      "recorded": "2026-10-30",
+      "source": "local-authored"
+    },
     "br": {
       "files": {
         "SKILL.md": "1ff4118d5daa962db434902713b9dbcd736725dd98bc93b01f8360255d53972d",

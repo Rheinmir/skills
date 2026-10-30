@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "harness_floor": "1.3.127",
-  "catalog_sha": "312e31d506764b76",
-  "count": 106,
+  "catalog_sha": "97643462f8183790",
+  "count": 107,
   "skills": [
     {
       "name": "blur",
@@ -14,6 +14,16 @@
       "model_invocable": true,
       "requires": {},
       "sha": "66f8609edb78efd3"
+    },
+    {
+      "name": "book-layout",
+      "dir": "skills/book-layout",
+      "external": false,
+      "loop": "utils",
+      "description": "Dựng tài liệu HTML dạng SÁCH / TẠP CHÍ (trải hai trang có gáy, bìa, mục lục số lớn, đầu chương, trích dẫn, số liệu nổi bật, danh sách icon, sơ đồ vòng, ảnh tràn trang, chữ viết tay gạch vàng) từ một tệp markdown ngắn bằng script, nên layout tốn 0 token đầu ra. Nền giấy sáng, font Be Vietnam Pro + Patrick Hand đủ dấu tiếng Việt, kiểm Playwright 1280 + 390. Gọi khi user nói \"viết doc kiểu tạp chí\", \"tài liệu dạng sách\", \"layout sách\", \"book layout\", \"magazine layout\", \"sổ tay HTML\", \"html tài liệu đẹp như sách\", hoặc /book-layout. KHÁC `docs-site-macos` (site tài liệu kính mờ kiểu macOS) và `hallmark` (thiết kế UI mới): đây là KHUÔN CỐ ĐỊNH, chỉ đổ chữ.",
+      "model_invocable": true,
+      "requires": {},
+      "sha": "c321b5f3d15401b3"
     },
     {
       "name": "br",
@@ -1561,5 +1571,5 @@
       "sha": "f2f24c68c8f48647"
     }
   ],
-  "generated_at": "2026-10-14"
+  "generated_at": "2026-10-30"
 }

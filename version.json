@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "harness_floor": "1.3.127",
-  "catalog_sha": "312e31d506764b76",
-  "count": 106,
-  "generated_at": "2026-10-14",
-  "generated_commit": "a5390ba"
+  "catalog_sha": "97643462f8183790",
+  "count": 107,
+  "generated_at": "2026-10-30",
+  "generated_commit": "a692ad9"
 }

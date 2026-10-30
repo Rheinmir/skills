@@ -60,6 +60,7 @@
         "./skills/diagram",
         "./skills/tidy",
         "./skills/docs-site-macos",
+        "./skills/book-layout",
         "./skills/dark-mode-maker",
         "./skills/doyourmagic",
         "./skills/extract-site",
