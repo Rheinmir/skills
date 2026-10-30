@@ -149,11 +149,11 @@
     },
     "book-layout": {
       "files": {
-        "SKILL.md": "9240da10fc516dbf18428c21c66f6fca58287f2e80b522e96cd2db34336f6c14",
-        "assets/book.css": "b4f1ea2c730a6c4d45d9c5bd98a049430ac94a82de029dbd1f88206242e05bcb",
+        "SKILL.md": "8e74ca35e2754e93b72cf2ed027effb6f641c58646366ac01f2d2f397ebc3c9d",
+        "assets/book.css": "7b2ee85fb502ad360f73abcec66ff108d812c09e11b8a54c2c3ee46175119218",
         "assets/example.md": "9ed78494105159b937ad6bf484ac01e01222f82339b573621f1248e015be8c4a",
-        "scripts/book.py": "8e49e8159e742719f05e909667ad58b62bd106b4890d7c90cb9ec5ac0f2166ba",
-        "scripts/check.mjs": "41a16810f89a018df0930c1ae4bbe12d99598ed24ca811b64f586947743ead30"
+        "scripts/book.py": "3b1a5a63ce6b28b5f5570a13ce19a128fd6ae208f4586011115cd44f416ba123",
+        "scripts/check.mjs": "d5eee94e28148a4b87b914454f08032c6fd6ee52740c333fb321bd7f0c672ce2"
       },
       "recorded": "2026-10-30",
       "source": "local-authored"

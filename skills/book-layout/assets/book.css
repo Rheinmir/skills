@@ -51,10 +51,15 @@ p{margin:0 0 12px;color:var(--ink2);max-width:34em}
 .quote blockquote{margin:0;font-size:clamp(19px,1.9vw,23px);line-height:1.45;font-style:italic;color:var(--ink)}
 .quote cite{display:block;margin-top:14px;font-style:normal;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3)}
 /* sơ đồ vòng */
-.cycle{position:relative;margin:auto 0;aspect-ratio:1;max-width:440px;width:100%;align-self:center}
+.cycle{position:relative;margin:auto 0;aspect-ratio:1;max-width:440px;width:100%;align-self:center;container-type:inline-size}
 .cycle svg.ring{position:absolute;inset:0;width:100%;height:100%}
-.node{position:absolute;width:38%;text-align:left;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
-.node i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-style:normal}
+/* .node là điểm neo 0×0 đặt đúng toạ độ trên vòng (book.py tính); nút tròn canh tâm vào điểm đó, nhãn về phía ngoài vòng,
+   cách mép nút 10cqw (theo bề rộng khung) để nhãn nút dưới luôn nằm dưới cung nối hai nút dưới */
+.node{position:absolute;width:0;height:0}
+.node i{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-style:normal}
+.node>div{position:absolute;left:0;width:140px;transform:translateX(-50%);text-align:center}
+.node.up>div{bottom:calc(26px + 10cqw)}
+.node.down>div{top:calc(26px + 10cqw)}
 .node i svg{width:24px;height:24px}
 .node b{display:block;font-size:15px;line-height:1.3}
 .node span{font-size:12.5px;line-height:1.45;color:var(--ink2)}
@@ -106,5 +111,6 @@ p{margin:0 0 12px;color:var(--ink2);max-width:34em}
   .leafpanel{min-height:300px;margin-top:28px}
   .stat,.panel,.quote,.cycle,.cover .art,.two{margin-top:28px}
   .cycle{aspect-ratio:auto;display:grid;gap:18px;max-width:none}.cycle svg.ring{display:none}
-  .node{position:static;width:auto}
+  .node{position:static;width:auto;height:auto;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+  .node i,.node>div{position:static;width:auto;transform:none;text-align:left}
 }

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import math
 import re
 import sys
 from pathlib import Path
@@ -42,7 +43,34 @@ ICONS = [  # vòng lặp cho danh sách có icon và nút của vòng
     '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>', '<path d="M4 5h16v11H9l-5 4z"/>',
     '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>', '<path d="M5 12.5l4.5 4.5L19 7.5"/>']
 NODE_BG = [("var(--sun)", "#1d1d1b"), ("var(--green)", "#fff"), ("var(--ink)", "#f2c230")]
-NODE_POS = ["left:4%;top:4%", "right:0;top:34%", "left:8%;bottom:0"]
+CYC_C, CYC_R, CYC_GAP = (50, 56), 26, 25   # sơ đồ vòng (đơn vị viewBox = % khung vuông): tâm, bán kính, góc chừa quanh mỗi nút cho mũi tên
+
+
+def cyc_pt(a):
+    """Điểm trên vòng ở góc a (độ, 0 = đỉnh, theo chiều kim đồng hồ)."""
+    r = math.radians(a)
+    return round(CYC_C[0] + CYC_R * math.sin(r), 2), round(CYC_C[1] - CYC_R * math.cos(r), 2)
+
+
+def cycle_html(nodes):
+    """n nút (≤ 3) chia đều 360/n quanh tâm, bắt đầu từ đỉnh; nhãn nằm phía ngoài vòng (nút nửa trên: nhãn trên, nửa dưới: nhãn dưới),
+    cách nút cùng một khoảng; mũi tên là cung của chính vòng đó, chừa CYC_GAP độ quanh mỗi nút."""
+    n = len(nodes)
+    angs = [360 * k / n for k in range(n)]
+    arcs = []
+    for k, a in enumerate(angs):
+        (x0, y0), (x1, y1) = cyc_pt(a + CYC_GAP), cyc_pt(a + 360 / n - CYC_GAP)
+        arcs.append(f"M{x0} {y0} A{CYC_R} {CYC_R} 0 0 1 {x1} {y1}")
+    cx, cy = CYC_C
+    ring = ('<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a8a82"/></marker></defs>'
+            f'<circle cx="{cx}" cy="{cy}" r="15" fill="#edf1e2"/><use href="#leaf" x="{cx - 9}" y="{cy - 9}" width="18" height="18"/>'
+            + "".join(f'<path d="{d}" fill="none" stroke="#8a8a82" stroke-width=".6" stroke-dasharray="1.6 1.6" marker-end="url(#ah)"/>' for d in arcs) + "</svg>")
+    out = []
+    for k, (ic, lab) in enumerate(nodes):
+        x, y = cyc_pt(angs[k])
+        side = "up" if math.cos(math.radians(angs[k])) > 0 else "down"
+        out.append(f'<div class="node {side}" style="left:{x}%;top:{y}%">{ic}{lab}</div>')
+    return f'<div class="cycle">{ring}{"".join(out)}</div>'
 ART = {  # minh hoạ mặc định khi không có ảnh (SVG, không tải gì)
     "cover": '<svg viewBox="0 0 400 260"><rect width="400" height="260" fill="#eef0e6"/><circle cx="292" cy="78" r="38" fill="#f2c230"/><path d="M0 190 L70 120 L130 170 L200 92 L270 160 L330 118 L400 170 V260 H0z" fill="#b9c99a"/><path d="M0 220 L90 160 L170 210 L250 150 L330 205 L400 175 V260 H0z" fill="#7fa257"/><path d="M0 245 L120 205 L220 240 L320 210 L400 236 V260 H0z" fill="#4f7531"/></svg>',
     "image": '<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fb4c9"/><stop offset=".45" stop-color="#f3d9a0"/><stop offset=".62" stop-color="#e9a65a"/></linearGradient></defs><rect width="400" height="600" fill="url(#sky)"/><circle cx="250" cy="300" r="30" fill="#fff4cf"/><path d="M0 330 L80 270 L150 310 L230 250 L310 300 L400 260 V600 H0z" fill="#6f8a6a"/><path d="M0 380 L100 320 L190 370 L290 320 L400 360 V600 H0z" fill="#4f6b45"/><path d="M0 440 L120 390 L240 430 L400 400 V600 H0z" fill="#3c5634"/></svg>',
@@ -148,7 +176,7 @@ def render_page(pg, no, meta):
             i = len(icons_)
             if kind == "cycle":
                 bg, st = NODE_BG[i % 3]
-                icons_.append(f'<div class="node" style="{NODE_POS[i % 3]}"><i style="background:{bg}">{icon(i + 3, st)}</i><div><b>{inline(t)}</b><span>{inline(d)}</span></div></div>')
+                icons_.append((f'<i style="background:{bg}">{icon(i + 3, st)}</i>', f"<div><b>{inline(t)}</b><span>{inline(d)}</span></div>"))
             else:
                 icons_.append(f'<li><i>{icon(i)}</i><div><h3>{inline(t)}</h3><p>{inline(d)}</p></div></li>')
         elif kind == "toc" and re.match(r"^\d+\s*\|", s):
@@ -171,11 +199,8 @@ def render_page(pg, no, meta):
         body = [f'<figure class="photo">{img(*im).replace("height:100%", "height:auto")}{dots}</figure>{notes}' if b == f"\x00{i}\x00" else b for b in body]
     if toc:
         body.append(f'<ol class="toc">{"".join(toc)}</ol>')
-    if kind == "cycle":
-        ring = ('<svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8a8a82"/></marker></defs>'
-                '<circle cx="50" cy="52" r="15" fill="#edf1e2"/><use href="#leaf" x="41" y="43" width="18" height="18"/>'
-                + "".join(f'<path d="{d}" fill="none" stroke="#8a8a82" stroke-width=".6" stroke-dasharray="1.6 1.6" marker-end="url(#ah)"/>' for d in ("M36 30 Q50 22 64 30", "M72 50 Q74 64 64 74", "M38 76 Q26 66 28 50")) + "</svg>")
-        body.append(f'<div class="cycle">{ring}{"".join(icons_[:3])}</div>')
+    if kind == "cycle" and icons_:
+        body.append(cycle_html(icons_[:3]))
     foot = f'<div class="foot"><span>{html.escape(meta.get("footer", meta.get("brand", "")))}</span><span>{no:03d}</span></div>'
     left = f'<span class="brand"><svg><use href="#leaf"/></svg>{brand}</span>' if no % 2 or kind in ("cover", "image") else "<span></span>"
     right = f'{html.escape(meta.get("date", ""))}<br>{html.escape(meta.get("vol", ""))}' if kind == "cover" else (run_r or f"{no:03d}")
@@ -207,6 +232,9 @@ def selftest():
     for want in ('<h1>Giữ lại<br><span class="accent">mọi phiên.</span></h1>', 'class="toc"', 'class="cycle"', 'class="quote"', 'class="stat"',
                  "<h3>Thử ngay</h3>", 'class="checks"', 'class="steps"', "<small>ghi chú</small>", 'class="ilist"', "<u>tay</u>", 'page bleed', "Chương 2", ">005<"):
         assert want in out, want
+    pts = [tuple(map(float, m)) for m in re.findall(r'class="node (?:up|down)" style="left:([\d.]+)%;top:([\d.]+)%"', out)]
+    assert len(pts) == 3 and all(abs(math.dist(p_, CYC_C) - CYC_R) < 0.01 for p_ in pts) and pts[0] == (50.0, 30.0), f"nút vòng đều: {pts}"
+    assert out.count('class="node up"') == 1 and out.count('class="node down"') == 2, "nhãn về phía ngoài vòng"
     assert out.count('<section class="spread">') == 3, out.count('<section class="spread">')
     g = build('=== page\n![Bấm Save](save.gif "save.png")\n')
     assert 'srcset="save.png"' in g and 'src="save.gif"' in g and "prefers-reduced-motion" in g, "GIF + poster"

@@ -56,7 +56,7 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 
 ### Rules và capabilities
 - RULE-01 (MUST): KHÔNG viết HTML/CSS tay cho tài liệu này: viết `.md` rồi chạy `book.py`. Cần khối mới → thêm vào `book.py` + `book.css` + selftest, không chèn HTML vào markdown (book.py escape mọi HTML).
-- RULE-02 (MUST): chạy `node scripts/check.mjs <tệp>.html` và chỉ báo xong khi cả hai dòng là `ok` (0 cuộn ngang, 0 chữ tràn, tiêu đề không cắt dấu, lề trái đều).
+- RULE-02 (MUST): chạy `node scripts/check.mjs <tệp>.html` và chỉ báo xong khi cả hai dòng là `ok` (0 cuộn ngang, 0 chữ tràn, tiêu đề không cắt dấu, lề trái đều, sơ đồ vòng `cyc` đều: tâm nút cách tâm vòng như nhau ± 1 px, góc 360/n ± 1°, nhãn cách nút như nhau, mũi tên nằm trên vòng giữa hai nút, `hit` 0 = nhãn không đè mũi tên/nút).
 - RULE-03 (MUST): giữ nền sáng và hai font có dấu tiếng Việt; tiêu đề `line-height` ≥ 1.2.
 - RULE-04 (SHOULD): mỗi trang một ý, ≤ 120 chữ đoạn văn; chữ dài hơn → tách thêm `=== page`.
 - Capabilities: đọc/ghi tệp trong dự án; chạy python3 và node (Playwright cài global).
@@ -64,7 +64,7 @@ Mỗi dòng `=== <kiểu>` mở một trang (`cover`, `toc`, `page`, `cycle`, `i
 ### Failure boundaries
 - Dòng `=== <kiểu>` lạ hoặc chữ đứng trước trang đầu → `book.py` dừng, báo lỗi rõ → sửa markdown.
 - Không có mạng tới Google Fonts → `check.mjs` ghi «font chưa tải» → chữ lùi về font hệ thống; vẫn đọc được nhưng không đúng mẫu.
-- Playwright chưa cài → `check.mjs` lỗi import → **blocked**: `npm i -g playwright` (hoặc đặt `PW_ROOT`).
+- Playwright chưa cài → `check.mjs` lỗi import → **blocked**: `npm i -g playwright` (hoặc đặt `PW_ROOT`). Playwright không có Chromium cho máy (vd macOS 13: «does not support chromium… on mac13») → `PW_CHANNEL=chrome node scripts/check.mjs …` dùng Google Chrome đã cài.
 - `check.mjs` báo HỎNG → sửa nội dung (chữ quá dài trong một ô) hoặc khuôn, chạy lại; 2 vòng vẫn hỏng → báo user kèm số đo.
 
 ## HOW
