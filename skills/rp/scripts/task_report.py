@@ -53,12 +53,19 @@ TX = {
     "m_green": ("DONE. The task is live. Only this color means done.", "XONG: đã lên Live. Chỉ màu này mới là xong"),
     "cont": ("continued", "tiếp"),
     # lý do (judge): vì sao thẻ có màu đó
-    "r_dead": ("Agent {name} is dead ({health}). Reopen with: {reopen}.", "{name} đã chết ({health}), mở lại: {reopen}"),
+    "r_dead": ("Agent {name} {h}. Reopen with: {reopen}.", "{name} {h}, mở lại: {reopen}"),
+    "h_dead": ("is dead", "đã chết"), "h_exited": ("has exited", "đã thoát"), "h_hung": ("does not answer", "bị treo"),
+    "h_other": ("is down", "gặp sự cố"), "h_idle_long": ("is idle for a long time", "rảnh quá lâu"), "h_limited": ("has no usage left", "hết hạn mức"),
+    # chuỗi «blocking» do server sinh (Vietnamese): ba mẫu đã biết + mẫu chung; bản EN KHÔNG được lọt chữ Việt
+    "b_wave": ("A later wave of the Epic waits for this wave.", "Epic còn wave sau chờ wave trước"),
+    "b_parent": ("The parent {kind} waits for this thread.", "{kind} cha còn mở và đang chờ thread này xong"),
+    "b_other": ("{name} has other work waiting.", "{name} còn việc khác chờ"),
+    "b_generic": ("Another task depends on this task.", "việc khác đang chờ việc này"),
     "r_noreopen": ("no reopen request", "chưa có yêu cầu mở lại"),
     "r_stage": ("The stage code is {st}.", "giai đoạn {st}"),
     "r_stale": ("Work is in progress, but no news for {dur}.", "đang làm mà im {dur}"),
     "r_owner": ("The task waits for the owner.", "chờ owner trả lời"),
-    "r_wait": ("The task waits for: {text}.", "chờ: {text}"),
+    "r_wait": ("{text}", "chờ: {text}"),
     "r_review": ("The task waits for a review. Work is not done.", "chờ review, việc chưa xong"),
     "r_live": ("The task is live.", "đã lên Live"),
     "r_queue": ("Not started. The task waits in the queue.", "chưa bắt đầu, việc đang chờ trong hàng"),
@@ -171,12 +178,27 @@ def short(s, n=64):
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
 
 
+def block_text(b, lang):
+    """Một chuỗi «blocking» của server → câu theo ngôn ngữ. EN dịch bằng bảng (không để chữ Việt lọt vào), VI giữ gần nguyên bản (cắt ngắn)."""
+    b = str(b)
+    m = re.match(r"^(.+?) còn việc khác chờ", b)
+    if m:
+        return L("b_other", lang, name=m.group(1)) if lang == "en" else short(b.split(" («")[0], 50)
+    m = re.match(r"^(Epic|Issue|Manual) cha «", b)
+    if m:
+        return L("b_parent", lang, kind=m.group(1)) if lang == "en" else L("b_parent", "vi", kind=m.group(1))
+    if b.startswith("Epic còn wave sau"):
+        return L("b_wave", lang)
+    return L("b_generic", lang)   # mẫu lạ: câu chung, không đoán nghĩa
+
+
 def judge(t):
     """(màu, [(EN, VI) lý do]) của một thread, chỉ từ dữ liệu của chính thread. Xanh lá cần bằng chứng «xong» (deployed); không có bằng chứng thì không bao giờ xanh lá."""
     idle, st = t.get("idle") or 0, t.get("status")
     red, yel = [], []
     for d in t.get("down") or []:
-        red.append(pair("r_dead", name=d.get("name") or "agent", health=d.get("health"), reopen=d.get("reopen") or (lambda lg: L("r_noreopen", lg))))
+        hv = str(d.get("health"))
+        red.append(pair("r_dead", name=d.get("name") or "agent", h=lambda lg, hv=hv: L("h_" + hv if "h_" + hv in TX else "h_other", lg), reopen=d.get("reopen") or (lambda lg: L("r_noreopen", lg))))
     if st in ("blocked", "failed"):
         red.append(pair("r_stage", st=st))
     if st == "in_progress" and idle > STALE:
@@ -184,7 +206,7 @@ def judge(t):
     if t.get("owner_wait"):
         yel.append(pair("r_owner"))
     for b in t.get("blocking") or []:
-        yel.append(pair("r_wait", text=short(str(b).split(" («")[0], 50)))   # bỏ phần liệt kê tên việc trong ngoặc: dài và đã có ở thread kia
+        yel.append(pair("r_wait", text=lambda lg, b=b: block_text(b, lg)))   # bỏ phần liệt kê tên việc trong ngoặc: dài và đã có ở thread kia
     if st == "review":
         yel.append(pair("r_review"))
     if st == "in_progress" and QUIET < idle <= STALE:
@@ -354,13 +376,13 @@ def sentences(en):
 def selftest():
     now = 1793431800
     T = lambda room, status, idle=60, **k: {"room": room, "name": "Việc " + room, "status": status, "idle": idle, "opened": len(room), "workers": [{"name": "Kai", "status": status}], **k}
-    cases = (("agent chết", T("a", "in_progress", down=[{"name": "Kai", "health": "dead", "reopen": "s123"}]), "red", "Kai đã chết (dead), mở lại: s123", "Agent Kai is dead (dead). Reopen with: s123."),
+    cases = (("agent chết", T("a", "in_progress", down=[{"name": "Kai", "health": "dead", "reopen": "s123"}]), "red", "Kai đã chết, mở lại: s123", "Agent Kai is dead. Reopen with: s123."),
              ("bị chặn", T("b", "blocked"), "red", "giai đoạn blocked", "The stage code is blocked."),
              ("im quá 12 giờ", T("c", "in_progress", idle=13 * 3600), "red", "đang làm mà im 13 giờ", "no news for 13 hours"),
              ("im quá 2 giờ", T("d", "in_progress", idle=3 * 3600), "yellow", "đang làm mà im 3 giờ", "no news for 3 hours"),
              ("chờ owner", T("e", "in_progress", owner_wait=True), "yellow", "chờ owner trả lời", "waits for the owner"),
              ("chờ review", T("f", "review"), "yellow", "chờ review", "waits for a review"),
-             ("đợi việc khác", T("g", "in_progress", blocking=["Kai còn việc khác chờ («Việc x»)"]), "yellow", "chờ: Kai còn việc khác chờ", "waits for: Kai còn việc khác chờ."),
+             ("đợi việc khác", T("g", "in_progress", blocking=["Kai còn việc khác chờ («Việc x»)"]), "yellow", "chờ: Kai còn việc khác chờ", "Kai has other work waiting."),
              ("backlog", T("h", "backlog", workers=[]), "gray", "chưa bắt đầu", "Not started."),
              ("đang làm ổn", T("i", "in_progress", idle=300), "blue", "đang làm, tin cuối 5 phút", "Last news 5 minutes ago"),
              ("đã lên Live", T("j", "done", deployed=True), "green", "đã lên Live", "The task is live."),
@@ -428,6 +450,17 @@ def selftest():
         for ln in card(big, c, w)[1:]:
             assert words(expand(ln, "en" if lg == 0 else "vi")) <= CAP, (lg, ln)
     assert len(card(big, c, w)) <= 6
+
+    # 2b. bản EN không lọt chữ Việt từ dữ liệu của server (blocking, health), trừ tên việc (dòng tiêu đề thẻ) và tên người/nhánh
+    VN = re.compile(r"[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđĐ]", re.I)
+    BL = ["Kai còn việc khác chờ («Việc x», «Việc y»)", "Epic cha «Tên Epic tiếng Việt» còn mở và đang chờ thread này xong (cha không chặn con)", "Epic còn wave sau chờ wave trước", "một câu lạ do server thêm sau này"]
+    HL = ("dead", "exited", "hung", "idle_long", "limited", "mới_lạ")
+    srv = {"running": "c031e23", "open": [T("b%d" % i, "in_progress", blocking=[b]) for i, b in enumerate(BL)] + [T("h%d" % i, "in_progress", down=[{"name": "Kai", "health": h, "reopen": None}]) for i, h in enumerate(HL)]}
+    en2 = [ln for ln in expand(build_md(srv, now), "en").splitlines() if not ln.startswith(("> 🔴", "> 🟡", "> 🔵", "> ⚪", "> 🟢", "!["))]
+    assert not [ln for ln in en2 if VN.search(ln)], ("chữ Việt lọt vào bản EN", [ln for ln in en2 if VN.search(ln)])
+    assert "(dead)" not in expand(build_md(srv, now), "en") and "(dead)" not in expand(build_md(srv, now), "vi"), "health trùng chữ trong ngoặc"
+    for want in ("Agent Kai is dead.", "Agent Kai has exited.", "The parent Epic waits for this thread.", "A later wave of the Epic waits for this wave.", "Another task depends on this task."):
+        assert any(want in ln for ln in en2), want
 
     # 3. màu, bìa, tên phòng
     import re as _re
