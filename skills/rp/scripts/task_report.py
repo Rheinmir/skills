@@ -281,7 +281,7 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
 
 # --- phần HTML sau book.py: đổi dấu đánh dấu thành span EN/VI + nút ngôn ngữ (không gọi mạng) ---
 CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
-       ".stat{margin-bottom:28px;background:#f1efe8}.lead{margin-bottom:12px}"   # book-layout: khối số lớn không có khoảng cách xuống dòng kế (owner 31/10 m1a192add91168b0); nền sage xanh lá đổi sang xám ấm vì xanh lá chỉ dành cho «xong"
+       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page:not(.cover){min-height:0}.book{max-width:640px}.spread{grid-template-columns:1fr}.spread::after{display:none}.spread .page+.page{border-top:1px solid var(--line)}"   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0): trang ôm nội dung, khối cách đều 28 px; MỘT cột 640 px ở mọi khổ (bản mở hai trang kề nhau để lại 250–400 px trống dưới trang ngắn); nền sage xanh lá đổi sang xám ấm vì xanh lá chỉ dành cho «xong"
 
        "#rp-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;font:600 13px/1.2 'Be Vietnam Pro',Helvetica,Arial,sans-serif}"
        "#rp-bar button{font:inherit;color:#1d1d1b;background:#fbfaf6;border:1px solid #c9c9c2;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}"
@@ -458,7 +458,7 @@ def selftest():
     out = finish(fake)
     assert "<title>Task</title>" in out and 'alt="A"' in out, out
     assert '<span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span>' in out and '<span class="tn">Tên *việc*</span>' in out
-    assert '.stat{margin-bottom:28px' in out, "khối số lớn phải có khoảng cách xuống dưới"
+    assert '.stat{margin:28px 0' in out and '.page:not(.cover){min-height:0}.book{max-width:640px}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
     assert OPEN not in out and SEP not in out and NO not in out
     assert not re.search(r"https?://|src=\"http|@import|fetch\(|XMLHttpRequest|translate\.google", out), "trang song ngữ không được gọi ra ngoài"

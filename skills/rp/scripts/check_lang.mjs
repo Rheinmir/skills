@@ -17,16 +17,25 @@ async function open(w, init) {
   await p.goto('file://' + f); await p.waitForTimeout(600); return { ctx, p, errs };
 }
 const vis = (p, sel) => p.evaluate(s => [...document.querySelectorAll(s)].some(e => e.offsetParent !== null), sel);
+// Luật khoảng trống (owner 31/10 m1a192b837fe75fa: «chừa quá nhiều khoảng trống»): trong mỗi trang (trừ bìa) khe giữa hai khối kề nhau ≤ 80 px và chỗ trống dưới khối cuối ≤ 120 px.
+const GAP = 80, TAIL = 120;
+const blank = p => p.evaluate(([g, t]) => [...document.querySelectorAll('article.page:not(.cover)')].flatMap(pg => {
+  const kids = [...pg.children].filter(e => e.offsetParent && !e.matches('.run,.foot')), r = pg.getBoundingClientRect(), out = [];
+  for (let i = 1; i < kids.length; i++) { const d = kids[i].getBoundingClientRect().top - kids[i - 1].getBoundingClientRect().bottom; if (d > g) out.push(`khe ${Math.round(d)}px trong trang «${(pg.querySelector('h2') || {}).textContent}»`); }
+  const foot = pg.querySelector('.foot'), end = (foot ? foot.getBoundingClientRect().top : r.bottom) - (kids.length ? kids[kids.length - 1].getBoundingClientRect().bottom : r.top);
+  if (end > t + 60) out.push(`trống ${Math.round(end)}px dưới khối cuối trang «${(pg.querySelector('h2') || {}).textContent}»`); return out; }), [GAP, TAIL]);
 const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - innerWidth,
   over: [...document.querySelectorAll('h1,h2,h3,p,li,.lead,button')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).length }));
 for (const w of [390, 1280]) {
   const { ctx, p, errs } = await open(w);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en' && await vis(p, '.en') && !await vis(p, '.vi'), `${w}: mở ra tiếng Anh, không thấy chữ Việt của trang`);
   let m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} EN: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
+  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); }
   await p.screenshot({ path: `${out}/en-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); await p.waitForTimeout(150);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'vi' && await vis(p, '.vi') && !await vis(p, '.en'), `${w}: bấm nút đổi cả trang sang tiếng Việt`);
   m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} VI: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
+  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); }
   await p.screenshot({ path: `${out}/vi-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en', `${w}: bấm lại về tiếng Anh`);
   ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
