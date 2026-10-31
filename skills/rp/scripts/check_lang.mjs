@@ -53,7 +53,7 @@ const typo = p => p.evaluate(() => {
 const labels = p => p.evaluate(() => { // mỗi dòng văn trong thẻ việc phải mở đầu bằng nhãn đậm; phần chữ sau nhãn ≤ 300
   const bad = []; let n = 0;
   for (const lead of document.querySelectorAll('p.lead')) {
-    if (!/[🔴🟡🔵⚪🟢]/u.test(lead.textContent)) continue;
+    if (!lead.querySelector('.dot')) continue;
     for (let q = lead.nextElementSibling; q && q.tagName === 'P' && !q.classList.contains('lead'); q = q.nextElementSibling) {
       if (q.offsetParent === null && !q.querySelector('span:not([style*="none"])')) continue;
       n++; const b = q.querySelector('b'); if (!b || !q.textContent.trim().startsWith(b.textContent.trim().slice(0, 3)) || +getComputedStyle(b).fontWeight !== 600) bad.push(`dòng không mở đầu bằng nhãn đậm: «${q.textContent.trim().slice(0, 30)}»`);
@@ -115,6 +115,28 @@ const chips = p => p.evaluate(src => { const re = new RegExp(src); const bad = [
   const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let t; (t = w.nextNode());) { const e = t.parentElement; if (!e || e.offsetParent === null || skip(e)) continue; const m = t.textContent.match(re); if (m) bad.push(`mã ngoài chip: «${m[0].slice(0, 30)}»`); }
   return { n, bad }; }, CODE.source);
+// Chấm trạng thái (owner m1a193435b762da4: emoji 🔴🟡 bóng loáng, lệch → «dot pastel màu đặc»): KHÔNG còn emoji chấm màu ở bất kỳ chữ nào; mỗi .dot là hình tròn CSS màu ĐẶC pastel, phẳng (không bóng, không viền, không gradient),
+// đúng bảng màu, tương phản ≥ 1,5:1 với nền thật phía sau, và THẲNG HÀNG với chữ đi kèm (tâm chấm lệch tâm hộp chữ ≤ 3 px).
+const DOTS = { red: [233, 140, 131], yellow: [239, 201, 92], blue: [134, 179, 230], gray: [183, 187, 193], green: [141, 206, 150] };
+const dots = p => p.evaluate(D => { const bad = []; let n = 0;
+  const rgb = x => (x.match(/[\d.]+/g) || []).slice(0, 3).map(Number), Lm = a => { const v = a.map(c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; }, cr = (a, b) => (Math.max(Lm(a), Lm(b)) + .05) / (Math.min(Lm(a), Lm(b)) + .05);
+  const emoji = /[\u{1F534}\u{1F535}\u{1F7E0}-\u{1F7EB}\u{26AA}\u{26AB}\u{25CF}]/u, w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let t; (t = w.nextNode());) { const e = t.parentElement; if (e && e.offsetParent !== null && !e.closest('script,style') && emoji.test(t.textContent)) bad.push(`còn ký tự chấm màu (emoji): «${t.textContent.trim().slice(0, 24)}»`); }
+  for (const d of document.querySelectorAll('.dot')) { if (d.offsetParent === null) continue; n++;
+    const st = getComputedStyle(d), k = [...d.classList].find(c => c.startsWith('dot-'))?.slice(4), r = d.getBoundingClientRect();
+    if (!D[k]) { bad.push(`chấm không thuộc năm màu (${d.className})`); continue; }
+    if (rgb(st.backgroundColor).join() !== D[k].join()) bad.push(`chấm ${k} phải nền pastel rgb(${D[k].join(', ')}), đang ${st.backgroundColor}`);
+    if (st.backgroundImage !== 'none' || (st.boxShadow && st.boxShadow !== 'none') || parseFloat(st.borderTopWidth) > 0) bad.push(`chấm ${k} phải phẳng: không gradient, không bóng, không viền`);
+    if (parseFloat(st.borderTopLeftRadius) < r.width / 2 - .5 || Math.abs(r.width - r.height) > .5) bad.push(`chấm ${k} phải là hình tròn (${Math.round(r.width)}×${Math.round(r.height)}, bo ${st.borderTopLeftRadius})`);
+    let pe = d.parentElement, pbg = null; while (pe) { const b = getComputedStyle(pe).backgroundColor; if (!/rgba\(0, 0, 0, 0\)|transparent/.test(b)) { pbg = b; break; } pe = pe.parentElement; }
+    if (pbg && cr(D[k], rgb(pbg)) < 1.5) bad.push(`chấm ${k} tương phản ${cr(D[k], rgb(pbg)).toFixed(2)}:1 < 1,5:1 với nền`);
+    // THẲNG HÀNG: hộp chữ đầu tiên bên PHẢI chấm trong cùng dòng (nextSibling của chấm chỉ là khoảng trắng nên lần trước luật không bao giờ chạy: Kirei, thử lệch 6 px vẫn xanh)
+    const par = d.parentElement, rg = document.createRange(); rg.selectNodeContents(par);
+    const tr = [...rg.getClientRects()].filter(x => x.width > 2 && x.left >= r.right - 1 && x.top < r.bottom && x.bottom > r.top).sort((a, b) => a.left - b.left)[0];
+    if (!tr) bad.push(`chấm ${k} không có chữ bên phải cùng dòng để so hàng`);
+    else { const fs = parseFloat(getComputedStyle(par).fontSize), glyphMid = tr.bottom - (tr.height - fs) / 2 - fs * .5 + fs * .02, dotMid = r.top + r.height / 2;
+      if (Math.abs(dotMid - glyphMid) > 3) bad.push(`chấm ${k} lệch hàng với chữ ${(dotMid - glyphMid).toFixed(1)} px (> 3)`); } }
+  return { n, bad }; }, DOTS);
 const faces = p => p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'Lexend Deca' && f.status === 'loaded').length; });
 const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - innerWidth,
   over: [...document.querySelectorAll('h1,h2,h3,p,li,.lead,button')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).length }));
@@ -123,12 +145,12 @@ for (const w of [390, 1280]) {
   const { ctx, p, errs } = await open(w);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en' && await vis(p, '.en') && !await vis(p, '.vi'), `${w}: mở ra tiếng Anh, không thấy chữ Việt của trang`);
   let m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} EN: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok(ch.n >= 8 && !ch.bad.length, `${w} EN: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const co = await colors(p); enColors[w] = co.n; ok(co.n >= 9 && !co.bad.length, `${w} EN: ${co.n} tên màu (tiêu đề, chú giải, tóm tắt) tô đúng màu ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok(ch.n >= 8 && !ch.bad.length, `${w} EN: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const dt = await dots(p); ok(dt.n >= 8 && !dt.bad.length, `${w} EN: ${dt.n} chấm tròn pastel đặc, không emoji ${dt.bad.slice(0, 3).join('; ')}`); const co = await colors(p); enColors[w] = co.n; ok(co.n >= 9 && !co.bad.length, `${w} EN: ${co.n} tên màu (tiêu đề, chú giải, tóm tắt) tô đúng màu ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
   await p.screenshot({ path: `${out}/en-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); await p.waitForTimeout(150);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'vi' && await vis(p, '.vi') && !await vis(p, '.en'), `${w}: bấm nút đổi cả trang sang tiếng Việt`);
   m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} VI: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok(ch.n >= 8 && !ch.bad.length, `${w} VI: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const co = await colors(p); ok(co.n === enColors[w] && !co.bad.length, `${w} VI: ${co.n} tên màu tô đúng màu (phải bằng EN ${enColors[w]}) ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok(ch.n >= 8 && !ch.bad.length, `${w} VI: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const dt = await dots(p); ok(dt.n >= 8 && !dt.bad.length, `${w} VI: ${dt.n} chấm tròn pastel đặc, không emoji ${dt.bad.slice(0, 3).join('; ')}`); const co = await colors(p); ok(co.n === enColors[w] && !co.bad.length, `${w} VI: ${co.n} tên màu tô đúng màu (phải bằng EN ${enColors[w]}) ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
   await p.screenshot({ path: `${out}/vi-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en', `${w}: bấm lại về tiếng Anh`);
   ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();

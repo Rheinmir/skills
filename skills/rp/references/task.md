@@ -11,11 +11,11 @@ Chế độ đầu tiên của hub `rp`. Owner (31/10, Issue 452): «báo cáo t
 
 ## Màu (owner 31/10: «tick xanh là tui hiểu xong hết rồi hả»)
 Màu tính từ dữ liệu của chính thread (`judge()` trong `task_report.py`); xanh lá cần bằng chứng «xong», không có bằng chứng thì không bao giờ xanh lá.
-1. 🔴 Đỏ, cần xử lý: có agent đã chết (`down[]`), hoặc giai đoạn blocked/failed, hoặc đang làm mà im quá 12 giờ.
-2. 🟡 Vàng, chậm hoặc chờ: chờ owner (`owner_wait`), chờ review, đợi việc khác (`blocking[]`), đang làm mà im quá 2 giờ.
-3. 🔵 Xanh dương: đang làm bình thường, chưa xong.
-4. ⚪ Xám: backlog hoặc xếp hàng, chưa bắt đầu.
-5. 🟢 Xanh lá: XONG, cờ `deployed` true (đã lên Live) và không có agent chết.
+1. Đỏ, cần xử lý: có agent đã chết (`down[]`), hoặc giai đoạn blocked/failed, hoặc đang làm mà im quá 12 giờ.
+2. Vàng, chậm hoặc chờ: chờ owner (`owner_wait`), chờ review, đợi việc khác (`blocking[]`), đang làm mà im quá 2 giờ.
+3. Xanh dương: đang làm bình thường, chưa xong.
+4. Xám: backlog hoặc xếp hàng, chưa bắt đầu.
+5. Xanh lá: XONG, cờ `deployed` true (đã lên Live) và không có agent chết.
 Thứ tự ưu tiên: xanh lá, đỏ, vàng, xám/xanh dương. Dòng có nhiều lý do liệt kê hết.
 
 ## Báo cáo gồm
@@ -63,6 +63,12 @@ Danh sách theo thứ tự owner nói (31/10 → 1/11). Lời owner mới nhất
 8. Tên màu tô màu tương ứng (1/11). Kiểm: `--selftest`, `check_lang.mjs`.
 9. Mã máy đóng chip (1/11). Kiểm: `--selftest`, `check_lang.mjs`.
 10. Quy trình: tự chụp 390 và 1280, tự xem, gửi ảnh trước/sau (31/10 → 1/11).
+
+## Chấm trạng thái (owner 1/11: «cái dot tròn vẫn vậy, bỏ luôn đi; tôi tưởng bạn làm được dot pastel màu đặc»)
+- Trước: emoji 🔴🟡🔵⚪🟢 ở đầu thẻ việc, dòng tóm tắt và chú giải. Emoji bóng loáng (hình cầu có đốm sáng), lệch hàng với chữ và đổi theo hệ điều hành, nên owner bỏ.
+- Nay: hình tròn CSS màu ĐẶC pastel, phẳng: đỏ #e98c83, vàng #efc95c, xanh dương #86b3e6, xám #b7bbc1, xanh lá #8dce96 (`DOT_PASTEL`; cùng hue với màu tình trạng, nhạt hơn; tương phản với giấy 1,5–2,4:1: vàng thấp nhất 1,53:1). Cỡ 0,7 em, cách chữ 0,45 em, `vertical-align:-.04em` cho tâm chấm trùng tâm chữ (đo: lệch ≤ 1 px ở 16 px). Marker md `⟐màu⟐` (hằng `DT`, bảng `COLORS`), `finish()` đổi thành `<span class="dot dot-màu" aria-hidden="true">`.
+- Chấm chỉ trang trí: màu cũng nằm ở chữ đi kèm (tên màu tô màu ở tiêu đề trang, chú giải, dòng tóm tắt), nên `aria-hidden`.
+- `check_lang.mjs`: không còn ký tự chấm màu (emoji, «●») ở bất kỳ chữ nào; mỗi `.dot` đúng màu của bảng, phẳng (không gradient/bóng/viền), tròn (rộng = cao, bo ≥ nửa), tương phản ≥ 1,5:1 với nền thật phía sau, tâm lệch tâm chữ ≤ 3 px (đo với hộp chữ ĐẦU TIÊN bên phải chấm trong cùng dòng; bản đầu đo với nextSibling vốn chỉ là khoảng trắng nên không bao giờ chạy, Kirei bắt ở 99fe694; chứng đỏ: chấm `position:relative;top:6px` lệch 6,7 px → FAIL); ≥ 8 chấm. Chứng đỏ: bản emoji 5ab8c73 → FAIL (không có `.dot`, thẻ việc không nhận ra).
 
 ## Chip cho mã máy (owner 1/11: «mấy mã kiểu này thêm luật vào skill đóng vào chip và highlight lên»)
 - Nguồn kiểu: trang mẫu của owner https://uiux.giatbh.io.vn/components/chip.html, Hình 1 «Vỏ chip» (lớp `.cx.fill`), đo bằng Playwright 1/11: `border-radius 999px`, nền pastel theo nhóm (Blue, Violet, Gray, Green, Periwinkle, Yellow, Pink, Teal, Peach), viền 1 px đậm hơn nền ~15 %, chữ #1a1d21, 14 px, padding ngang 14 px, cao 32 px. Rp dùng viên thuốc cùng kiểu nhưng gọn hơn để nằm giữa dòng chữ: padding ngang 12 px, cao 22 px, chữ Lexend Deca 300 (RULE-10 cấm 400); chip dài (> 30 ký tự) bo 14 px để khi xuống dòng không thành viên thuốc phình.
