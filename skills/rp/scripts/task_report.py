@@ -336,17 +336,19 @@ CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
        "#rp-bar button:focus-visible{outline:2px solid #1d1d1b;outline-offset:2px}"
        "html[data-lang=vi] #rp-tr{display:none}")
 JS = """(function(){var h=document.documentElement,b=document.getElementById('rp-lang'),t=document.getElementById('rp-tr'),K='rp-lang',T=%(T)s;
-function set(l){h.setAttribute('data-lang',l);h.lang=l;b.textContent=T[l].t;b.title=T[l].h;try{localStorage.setItem(K,l)}catch(e){}}
+function eq(){var ps=[].slice.call(document.querySelectorAll('.page'));ps.forEach(function(p){p.style.minHeight=''});if(innerWidth<=820)return;var m=0;ps.forEach(function(p){m=Math.max(m,p.offsetHeight)});ps.forEach(function(p){p.style.minHeight=m+'px'})}
+function set(l){h.setAttribute('data-lang',l);h.lang=l;b.textContent=T[l].t;b.title=T[l].h;try{localStorage.setItem(K,l)}catch(e){}eq()}
+var rt=null;addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(eq,120)});addEventListener('load',eq);if(document.fonts){if(document.fonts.ready)document.fonts.ready.then(eq);if(document.fonts.addEventListener)document.fonts.addEventListener('loadingdone',eq)}setTimeout(eq,400);
 var q=(location.search.match(/[?&]lang=(en|vi)/)||[])[1],s=null;try{s=localStorage.getItem(K)}catch(e){}
 set(q||(s==='en'||s==='vi'?s:null)||h.getAttribute('data-lang')||'en');
 b.onclick=function(){set(h.getAttribute('data-lang')==='en'?'vi':'en')};
 if('Translator' in self){t.hidden=false;var tr=null,on=false;t.onclick=async function(){var ns=document.querySelectorAll('.tn');
-if(on){ns.forEach(function(n){if(n.dataset.o)n.textContent=n.dataset.o});on=false;t.setAttribute('aria-pressed','false');return}
+if(on){ns.forEach(function(n){if(n.dataset.o)n.textContent=n.dataset.o});on=false;t.setAttribute('aria-pressed','false');eq();return}
 t.disabled=true;var old=t.textContent;t.textContent='Đang tải bộ dịch trên máy…';
 try{tr=tr||await Translator.create({sourceLanguage:'vi',targetLanguage:'en'});
 for(var i=0;i<ns.length;i++){var n=ns[i];if(!n.dataset.o)n.dataset.o=n.textContent;n.textContent=await tr.translate(n.dataset.o)}
 on=true;t.setAttribute('aria-pressed','true')}catch(e){t.title='Không dịch được trên máy này'}
-t.textContent=old;t.disabled=false}}})();"""
+t.textContent=old;t.disabled=false;eq()}}})();"""
 
 
 def finish(page):
