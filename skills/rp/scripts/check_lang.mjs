@@ -46,7 +46,7 @@ const typo = p => p.evaluate(() => {
     if (w <= 200 && cr(c.color, 'rgb(17, 17, 17)') > 1.3) bad.push(`chữ mảnh (${w}) không dùng màu gần đen (${c.color}): ${tag}`);
     const r = cr(c.color, bgOf(e)), need = fs >= 24 ? 3 : 4.5;
     if (r < need) bad.push(`tương phản ${r.toFixed(2)}:1 < ${need}:1 (cỡ ${Math.round(fs)} px): ${tag}`);
-    if (!/^"?Lexend Deca/.test(c.fontFamily) && !e.closest('svg') && !e.closest('.chip')) bad.push(`họ font không phải Lexend Deca (${c.fontFamily.slice(0, 30)}): ${tag}`);
+    if (!/^"?Lexend Deca/.test(c.fontFamily) && !e.closest('svg')) bad.push(`họ font không phải Lexend Deca (${c.fontFamily.slice(0, 30)}): ${tag}`);
   }
   return bad;
 });
@@ -74,14 +74,34 @@ const colors = p => p.evaluate(([T, N]) => { const bad = []; let n = 0;
   }
   return { n, bad }; }, [TXT, NAMES.map(([k, re]) => [k, [re.source, re.flags]])]);
 // Mã máy đóng chip (owner 1/11: «mấy mã kiểu này … đóng vào chip và highlight lên»): mọi mã khớp mẫu (mã mở lại s…, sha, id tin m…, room:…, nhánh a/b) ngoài chip, chân trang, nhãn, tiêu đề, tên việc là FAIL;
-// chip phải là MỘT khối nền nhạt, chữ đơn cách, không tràn khung; số chip tối thiểu.
+// chip phải là MỘT khối nền nhạt, cùng họ font Lexend Deca 300 như chữ thường (không đơn cách), không tràn khung; số chip tối thiểu.
 const CODE = /(\bs[0-9a-f]{11,12}\b|\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b|\bm[0-9a-f]{15}\b|\broom:[a-z0-9][a-z0-9-]*|\b[a-z0-9][a-z0-9_.-]*\/[a-z0-9][a-z0-9_./-]*)/;
 const chips = p => p.evaluate(src => { const re = new RegExp(src); const bad = []; let n = 0;
   for (const c of document.querySelectorAll('.chip')) { if (c.offsetParent === null) continue; n++;
     const st = getComputedStyle(c);
-    if (!/mono|Menlo|Consolas|Courier/i.test(st.fontFamily)) bad.push(`chip không đơn cách: «${c.textContent.slice(0, 20)}»`);
+    if (!/^"?Lexend Deca/.test(st.fontFamily) || +st.fontWeight !== 300) bad.push(`chip phải dùng Lexend Deca 300 như chữ thường (owner 1/11: «font chữ đổi luôn đi»), đang ${st.fontFamily.slice(0, 24)} ${st.fontWeight}: «${c.textContent.slice(0, 20)}»`);
     if (/rgba\(0, 0, 0, 0\)|transparent/.test(st.backgroundColor)) bad.push(`chip không có nền: «${c.textContent.slice(0, 20)}»`);
     if (st.display !== 'inline-block') bad.push(`chip không là một khối (display ${st.display})`);
+    // KIỂU CHIP = trang mẫu của owner https://uiux.giatbh.io.vn/components/chip.html (Hình 1, .cx.fill): viên thuốc bo tròn, nền pastel THEO NHÓM, viền 1 px đậm hơn nền, chữ tối #1a1d21.
+    // Nhóm: xám (#dcdcdc) = sha, room:, hang_open_work; đào (#fae3c8) = mã mở lại s…; mòng két (#b2ece2) = tên nhánh a/b. Cấm tím/xanh dương/xanh lá/vàng/đỏ (tím bị owner chê «lạc quẻ»; còn lại là màu tình trạng).
+    const rgb = x => (x.match(/[\d.]+/g) || []).slice(0, 3).map(Number), L = a => { const v = a.map(c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; }, cr = (a, b) => (Math.max(L(a), L(b)) + .05) / (Math.min(L(a), L(b)) + .05);
+    const KIND = { gray: [220, 220, 220], peach: [250, 227, 200], teal: [178, 236, 226] }, txt = c.textContent.trim();
+    const want = /^s[0-9a-f]{1,12}$/.test(txt) ? 'peach' : (/^room:|^hang_open_work$|^[0-9a-f]{7,40}$/.test(txt) ? 'gray' : 'teal');   // còn lại là tên nhánh (có hoặc không có «/»)
+    const bgc = rgb(st.backgroundColor);
+    if (!c.classList.contains('chip-' + want)) bad.push(`chip «${txt.slice(0, 20)}» phải thuộc nhóm ${want}, đang lớp «${c.className}»`);
+    if (bgc.join() !== KIND[want].join()) bad.push(`chip «${txt.slice(0, 20)}» phải nền ${want} rgb(${KIND[want].join(', ')}) như trang mẫu, đang ${st.backgroundColor}`);
+    if (rgb(st.color).join() !== '26,29,33') bad.push(`chữ chip phải #1a1d21 như trang mẫu, đang ${st.color}`);
+    const bd = rgb(st.borderTopColor); if (st.borderTopWidth !== '1px' || !bd.every((v, i) => v < bgc[i])) bad.push(`chip phải có viền 1 px đậm hơn nền (viền ${st.borderTopColor}, nền ${st.backgroundColor})`);
+    if (parseFloat(st.borderTopLeftRadius) < 14) bad.push(`chip phải bo tròn kiểu viên thuốc (bo ${st.borderTopLeftRadius})`);
+    const ink = rgb(st.color), bg = bgc;
+    // giấy THẬT = nền đầu tiên có alpha > 0 đi ngược tổ tiên từ cha của chip (.page trong suốt, giấy là .spread hoặc .stat): lần trước lấy nền .page = rgba(0,0,0,0) → so với ĐEN, luật không bao giờ FAIL (Kirei CẦN SỬA f51402b)
+    const alpha = x => { const m = x.match(/[\d.]+/g) || []; return m.length > 3 ? +m[3] : 1; };
+    let pe = c.parentElement, pbg = null; while (pe) { const b = getComputedStyle(pe).backgroundColor; if (alpha(b) > 0) { pbg = b; break; } pe = pe.parentElement; }
+    const paper = rgb(pbg || 'rgb(255, 255, 255)');
+    if (cr(ink, bg) < 7) bad.push(`chữ chip tương phản ${cr(ink, bg).toFixed(1)}:1 < 7:1`);
+    if (!pbg) bad.push('không tìm thấy nền giấy phía sau chip');
+    else if (cr(bg, paper) < 1.06) bad.push(`chip không nổi hơn giấy (${cr(bg, paper).toFixed(3)}:1 < 1,06; giấy ${pbg})`);
+    if (cr(ink, bg) < 7) bad.push(`chữ chip tương phản ${cr(ink, bg).toFixed(1)}:1 < 7:1`);
     const pr = c.closest('p,li,h2,div');
     if (pr && c.getBoundingClientRect().right > pr.getBoundingClientRect().right + 1) bad.push(`chip tràn khung: «${c.textContent.slice(0, 20)}»`); }
   const skip = e => e.closest('.chip,.foot,.run,.tn,.lead,b,h1,h2,#rp-bar,script,style,.kick,.vol,svg');

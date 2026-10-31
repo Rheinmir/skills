@@ -113,9 +113,16 @@ STE_ABBR = {"DONE", "ID", "UTC"}   # chữ HOA ≥ 2 ký tự được phép tro
 STE_BANNED = {"should", "may", "might", "shall", "get", "gets", "got", "make", "makes"}   # vài từ STE cấm hay gặp; không phải từ điển STE đầy đủ (bản quyền ASD)
 
 
-def chip(text):
-    """Mã máy (mã mở lại phiên, sha, id tin, tên room:…, nhánh) đóng chip nền nhạt, chữ đơn cách."""
-    return f"{CHB}{text}{CHE}"
+# KIỂU CHIP lấy từ trang mẫu của owner https://uiux.giatbh.io.vn/components/chip.html (Hình 1 «Vỏ chip», lớp .cx.fill; đo bằng Playwright 1/11): viên thuốc bo 999 px,
+# nền pastel PHÂN NHÓM, viền 1 px đậm hơn nền ~15 %, chữ tối cố định #1a1d21 (đủ tương phản ở cả hai chế độ), padding ngang 14 px (ở đây 12 px vì chip nằm giữa dòng chữ).
+# Nhóm mã dùng ba pastel của trang mẫu, tránh họ tím (owner chê «lạc quẻ») và xanh dương/xanh lá/vàng/đỏ (màu tình trạng): xám = định danh (sha, room:, hang_open_work), đào = mã mở lại, mòng két = nhánh.
+CHIP_KINDS = {"gray": ("#dcdcdc", "#bbbbbb"), "peach": ("#fae3c8", "#d5c1aa"), "teal": ("#b2ece2", "#97c8c0")}   # (nền, viền) đúng các giá trị đo ở trang mẫu Gray / Peach / Teal
+CHIP_INK = "#1a1d21"
+
+
+def chip(text, kind="gray"):
+    """Mã máy (mã mở lại phiên, sha, id tin, tên room:…, nhánh) đóng chip viên thuốc pastel theo nhóm, chữ Lexend Deca 300."""
+    return f"{CHB}{kind}{CS}{text}{CHE}"
 
 
 def clr(k, text):
@@ -145,7 +152,7 @@ def expand(md, lang):
     i = 0 if lang == "en" else 1
     md = re.sub(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), lambda m: m.group(1 + i), md)
     md = re.sub(re.escape(CB) + r"\w+" + re.escape(CS) + r"(.*?)" + re.escape(CE), r"\1", md, flags=re.S)
-    md = md.replace(CHB, "").replace(CHE, "")
+    md = re.sub(re.escape(CHB) + r"\w+" + re.escape(CS), "", md).replace(CHB, "").replace(CHE, "")
     return md.replace(NO, "").replace(NC, "")
 
 
@@ -211,7 +218,7 @@ def judge(t):
     red, yel = [], []
     for d in t.get("down") or []:
         hv = str(d.get("health"))
-        red.append(pair("r_dead", name=d.get("name") or "agent", h=lambda lg, hv=hv: L("h_" + hv if "h_" + hv in TX else "h_other", lg), reopen=chip(d.get("reopen")) if d.get("reopen") else (lambda lg: L("r_noreopen", lg))))
+        red.append(pair("r_dead", name=d.get("name") or "agent", h=lambda lg, hv=hv: L("h_" + hv if "h_" + hv in TX else "h_other", lg), reopen=chip(d.get("reopen"), "peach") if d.get("reopen") else (lambda lg: L("r_noreopen", lg))))
     if st in ("blocked", "failed"):
         red.append(pair("r_stage", st=st))
     if st == "in_progress" and idle > STALE:
@@ -258,7 +265,7 @@ def card(t, color, why):
     quiet = not any("im " in x[1] or "no news" in x[0] for x in why)   # lý do «đang làm mà im N» đã nói rồi thì không lặp
     seg2 = tuple(L("s_who", lg, x=who(lg)) for lg in ("en", "vi"))
     seg3 = tuple(L("s_idle", lg, dur=lambda l2: dur(idle, l2)) for lg in ("en", "vi")) if quiet else None
-    br = lambda lg: chip(t.get("branch")) if t.get("branch") else L("s_nobranch", lg)
+    br = lambda lg: chip(t.get("branch"), "teal") if t.get("branch") else L("s_nobranch", lg)
     seg4 = tuple(L("s_branch", lg, b=br) for lg in ("en", "vi"))
     seg5 = tuple(L("s_thread", lg, room=chip("room:" + str(t.get("room")))) for lg in ("en", "vi"))
     segs = [x for x in (seg1, seg2, seg3, seg4, seg5) if x]
@@ -333,8 +340,9 @@ def font_css():
 CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
        ':root{--sans:"Lexend Deca",system-ui,-apple-system,"Segoe UI",sans-serif;--hand:var(--sans);--page-pad:clamp(24px,4.8vw,60px);--ink3:#5c5c56}'   # tên font ở MỘT chỗ; lề rộng hơn kiểu tạp chí; --ink3 (chữ phụ nhỏ) từ #8a8a82 (3,3:1) lên #5c5c56 (≥ 6:1) vì chữ Light mỏng cần tương phản cao hơn
        "html body,html body *{font-weight:300!important}html body b,html body strong{font-weight:600!important}" + "".join(f".c-{k}{{color:{v}}}" for k, v in TXT.items()) + 'html body h2 [class^="c-"]{font-weight:300!important}html body b [class^="c-"]{font-weight:600!important}'
-       + ".chip{display:inline-block;max-width:100%;overflow-wrap:anywhere;word-break:break-all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84em;line-height:1.5;color:#1b1340;background:#ece8fb;border:1px solid #cfc6ee;border-radius:5px;padding:0 6px}"   # tên màu tô màu tương ứng (trong h2 mảnh 200 phải #111, nên dùng 300) · NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
-       "body{font-size:16px;line-height:1.7}"
+       + ".chip{display:inline-block;max-width:100%;overflow-wrap:anywhere;word-break:break-all;vertical-align:baseline;font-family:var(--sans);font-weight:300;font-size:.9em;line-height:22px;letter-spacing:.01em;color:" + CHIP_INK + ";border:1px solid;border-radius:999px;padding:0 12px}"
+       + ".chip-long{line-height:1.5;border-radius:14px;padding:3px 12px}" + "".join(f".chip-{k}{{background:{bg};border-color:{bd}}}" for k, (bg, bd) in CHIP_KINDS.items())   # tên màu tô màu tương ứng (trong h2 mảnh 200 phải #111, nên dùng 300) · NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
+       + "body{font-size:16px;line-height:1.7}"
        "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111;letter-spacing:-.015em}html body h3{color:#111;letter-spacing:-.015em}"
        "h1,h2{line-height:1.2}.cover h1{font-size:clamp(44px,6.4vw,84px);line-height:1.2}h2{font-size:clamp(34px,4vw,52px)}"   # tiêu đề lớn mỏng canh trái như trang chủ lexend.com; line-height ≥ 1.2 để không cắt dấu Việt (check.mjs clip)
        "@media (min-width:1100px){html body .cover h1,html body .stat .big{font-weight:100!important}}"
@@ -364,12 +372,12 @@ def finish(page):
     pat = re.compile(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), re.S)
     colp = re.compile(re.escape(CB) + r"(\w+)" + re.escape(CS) + r"(.*?)" + re.escape(CE), re.S)
     page = re.sub(r"<title>.*?</title>", lambda m: colp.sub(lambda c: c.group(2), pat.sub(lambda x: x.group(1), m.group(0))), page, flags=re.S)
-    page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + m.group(2).replace(CHB, "").replace(CHE, "") + m.group(3), page)
+    page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + re.sub(re.escape(CHB) + r"\w+" + re.escape(CS), "", m.group(2)).replace(CHE, "") + m.group(3), page)
     page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + pat.sub(lambda x: x.group(1), m.group(2)) + m.group(3), page)
     page = pat.sub(lambda m: f'<span class="en" lang="en">{m.group(1)}</span><span class="vi" lang="vi">{m.group(2)}</span>', page)
     page = re.sub(re.escape(NO) + r"(.*?)" + re.escape(NC), r'<span class="tn">\1</span>', page)
     page = colp.sub(lambda c: f'<span class="c-{c.group(1)}">{c.group(2)}</span>', page)
-    page = re.sub(re.escape(CHB) + r"(.*?)" + re.escape(CHE), r'<code class="chip">\1</code>', page, flags=re.S)
+    page = re.sub(re.escape(CHB) + r"(\w+)" + re.escape(CS) + r"(.*?)" + re.escape(CHE), lambda c: f'<code class="chip chip-{c.group(1)}{" chip-long" if len(c.group(2)) > 30 else ""}">{c.group(2)}</code>', page, flags=re.S)
     T = {"en": {"t": L("btn_vi", "en"), "h": L("btn_vi_title", "en")}, "vi": {"t": L("btn_vi", "vi"), "h": L("btn_vi_title", "vi")}}
     bar = ('<div id="rp-bar"><button type="button" id="rp-tr" hidden aria-pressed="false" title="' + htmllib.escape(L("btn_tr_title", "en")) + '">' + L("btn_tr", "en") + "</button>"
            '<button type="button" id="rp-lang" title="' + htmllib.escape(L("btn_vi_title", "en")) + '">' + L("btn_vi", "en") + "</button></div>")
@@ -413,7 +421,7 @@ def sentences(en):
 def selftest():
     now = 1793431800
     T = lambda room, status, idle=60, **k: {"room": room, "name": "Việc " + room, "status": status, "idle": idle, "opened": len(room), "workers": [{"name": "Kai", "status": status}], **k}
-    cases = (("agent chết", T("a", "in_progress", down=[{"name": "Kai", "health": "dead", "reopen": "s123"}]), "red", "Kai đã chết, mở lại: ⟮s123⟯", "Agent Kai is dead. Reopen with: ⟮s123⟯."),
+    cases = (("agent chết", T("a", "in_progress", down=[{"name": "Kai", "health": "dead", "reopen": "s123"}]), "red", "Kai đã chết, mở lại: ⟮peach‖s123⟯", "Agent Kai is dead. Reopen with: ⟮peach‖s123⟯."),
              ("bị chặn", T("b", "blocked"), "red", "giai đoạn blocked", "The stage code is blocked."),
              ("im quá 12 giờ", T("c", "in_progress", idle=13 * 3600), "red", "đang làm mà im 13 giờ", "no news for 13 hours"),
              ("im quá 2 giờ", T("d", "in_progress", idle=3 * 3600), "yellow", "đang làm mà im 3 giờ", "no news for 3 hours"),
@@ -543,13 +551,13 @@ def selftest():
     assert all(CB not in x and CE not in x for x in (expand(md, "en"), expand(md, "vi"))), "marker màu không được sót ở bản chữ thuần"
 
     # 3c. mã máy đóng chip (owner 1/11): sha, mã mở lại, nhánh, thread, mã trong tóm tắt
-    assert f"{CHB}c031e2312e03{CHE}" in md and f"{CHB}s123{CHE}" in md, "sha và mã mở lại phải là chip"
-    assert md.count(f"**Thread:** {CHB}room:") >= len(cases) and f"{CHB}room:vinh-hong{CHE} {CHB}hang_open_work{CHE}" in md, "tên room: và hang_open_work là chip"
-    assert f"{CHB}none{CHE}" not in md and f"{CHB}chưa có{CHE}" not in md, "«none»/«chưa có» không phải mã, không đóng chip"
+    assert f"{CHB}gray{CS}c031e2312e03{CHE}" in md and f"{CHB}peach{CS}s123{CHE}" in md, "sha (xám) và mã mở lại (đào) phải là chip"
+    assert md.count(f"**Thread:** {CHB}gray{CS}room:") >= len(cases) and f"{CHB}gray{CS}room:vinh-hong{CHE} {CHB}gray{CS}hang_open_work{CHE}" in md, "tên room: và hang_open_work là chip xám"
+    assert "none" not in "".join(re.findall(re.escape(CHB) + r"\w+" + re.escape(CS) + r"(.*?)" + re.escape(CHE), md)) and "chưa có" not in "".join(re.findall(re.escape(CHB) + r"\w+" + re.escape(CS) + r"(.*?)" + re.escape(CHE), md)), "«none»/«chưa có» không phải mã, không đóng chip"
     assert CHB not in expand(md, "en") and CHE not in expand(md, "vi"), "marker chip không được sót ở bản chữ thuần"
 
     # 4. finish(): span EN/VI, nút, tên việc, không URL ngoài, localStorage bọc try/catch, Translator chỉ khi 'Translator' in self và chỉ sau khi bấm
-    fake = '<!doctype html><html lang="vi"><head><title>⟬red‖⟦Task¦Việc⟧⟭</title></head><body><p>⟬red‖⟦Red¦Đỏ⟧⟭ ⟪Tên *việc*⟫ ⟮sf98721ecbfeb⟯</p><img alt="⟦A¦B⟧"></body></html>'
+    fake = '<!doctype html><html lang="vi"><head><title>⟬red‖⟦Task¦Việc⟧⟭</title></head><body><p>⟬red‖⟦Red¦Đỏ⟧⟭ ⟪Tên *việc*⟫ ⟮gray‖sf98721ecbfeb⟯ ⟮teal‖kenji/epoch-hai-nut-rat-dai-hon-ba-muoi-ky-tu⟯</p><img alt="⟦A¦B⟧"></body></html>'
     out = finish(fake)
     assert "<title>Task</title>" in out and 'alt="A"' in out, out
     assert '<span class="c-red"><span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span></span>' in out, "marker màu thành span.c-red"
@@ -557,7 +565,7 @@ def selftest():
     assert '.stat{margin:28px 0' in out and '.page{min-height:0}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
     assert '.spread{align-items:start' not in out, "quyển tập hai tờ cao bằng nhau (giấy chung của book-layout), không tờ riêng lệch chiều cao"
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
-    assert '<code class="chip">sf98721ecbfeb</code>' in out and CHB not in out and CHE not in out, "marker chip thành <code class=chip>"
+    assert '<code class="chip chip-gray">sf98721ecbfeb</code>' in out and '<code class="chip chip-teal chip-long">kenji/epoch-hai-nut-rat-dai-hon-ba-muoi-ky-tu</code>' in out and CHB not in out and CHE not in out, "marker chip thành <code class=chip chip-nhóm>, chip dài có chip-long"
     assert OPEN not in out and SEP not in out and NO not in out
     assert not re.search(r"https?://|src=\"http|@import|fetch\(|XMLHttpRequest|translate\.google", out), "trang song ngữ không được gọi ra ngoài"
     # font tự phục vụ (owner D-c2-001/002): @font-face base64 woff2, không link Google Fonts, độ đậm ≤ 300, sàn mỏng
