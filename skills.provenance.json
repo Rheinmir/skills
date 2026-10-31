@@ -1029,8 +1029,8 @@
         "assets/fonts/LexendDeca-latin.woff2": "e16222b5909f61ca5c7cbf9e1ab7cead1dd9aa7eae3292fe079d56e1c5470981",
         "assets/fonts/LexendDeca-vietnamese.woff2": "7438c2336b7c145fcfb19c4f1abc44b2bda3ca3e02bbb53836e55c1cd2014f7e",
         "assets/fonts/OFL-Lexend.txt": "5da8505887d0fa7fe963445fd58852707fda34adfeb65af25c99d152bab285bd",
-        "references/task.md": "391ac365a4a507d42222084dff70fb6b096c177b4c6b007ef52edac18e508d56",
-        "scripts/check_lang.mjs": "c34ec6749c2d8bb33b4dddd5a4eb68079f69acf934dfcdb6076f35455dcda1a3",
+        "references/task.md": "4a8f896cc8975861517b4e1df0deb8d19d988ed55f55db1de878632660434102",
+        "scripts/check_lang.mjs": "92d30f7348034fbe5cc2f2f8db86b97ba051eb92d84c6ea58fabd57676e473b8",
         "scripts/task_report.py": "f1f04346a49fade721c6b035d6db8e0cb197afa69d79eff0c3d9ce79980591b2"
       },
       "recorded": "2026-11-01",
