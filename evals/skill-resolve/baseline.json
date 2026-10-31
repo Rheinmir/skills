@@ -73,6 +73,10 @@
       "hit1": 1,
       "hit3": 1
     },
+    "rp": {
+      "hit1": 1,
+      "hit3": 1
+    },
     "ship": {
       "hit1": 1,
       "hit3": 1
@@ -96,8 +100,8 @@
   },
   "schema": "skill-resolve-baseline/v1",
   "totals": {
-    "hit1": 23,
-    "hit3": 23,
-    "n": 23
+    "hit1": 24,
+    "hit3": 24,
+    "n": 24
   }
 }

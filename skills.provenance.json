@@ -1023,6 +1023,15 @@
       "recorded": "2026-10-14",
       "source": "https://github.com/Leonxlnx/taste-skill"
     },
+    "rp": {
+      "files": {
+        "SKILL.md": "d27e042ddc26d2ac1c75c1d4131ce68daabeae611a8751b68808be0c1c5fe6bb",
+        "references/task.md": "a0c77f4db61553806a873c70e350c40ffbe5a27be0afaee9053f966e119aaad4",
+        "scripts/task_report.py": "098e4f24e56d24e2410277711d98df4b4cec729d23ffcdd4a2911d09c6ad208c"
+      },
+      "recorded": "2026-10-31",
+      "source": "local-authored"
+    },
     "safe-change": {
       "files": {
         "SKILL.md": "7d01b50ffd416eeb31bd7dedbb5753ca22bcbd7d02f4d0a1a9b4af62f1f47bfe"
