@@ -7,7 +7,7 @@
 Nguồn: GET <HANG_URL>/work/open?room=<phòng> (cùng dữ liệu tool MCP hang_open_work; mặc định vinh-hong, không kèm room thì Hang gộp mọi phòng gốc token máy thấy) với Bearer token máy ở ~/.hang/token; --src đọc tệp JSON thay cho mạng.
 Không ghi gì lên Hang, không in token. Mỗi việc mang id thread (room), req hoặc nhánh làm bằng chứng; thứ không đo được ghi «chưa đo».
 MÀU (owner 31/10: «tick xanh là tui hiểu xong hết rồi hả»): xanh lá CHỈ khi việc thật sự xong (đã lên Live). Việc đang làm, chờ, chậm, chết, chưa bắt đầu KHÔNG BAO GIỜ xanh lá.
-THOÁNG (owner 31/10): mỗi việc là một thẻ (tiêu đề một dòng + 1–3 dòng ngắn), mỗi dòng ≤ 25 chữ; không «- » (tích xanh), không «*…*» (xanh lá).
+THOÁNG (owner 31/10): mỗi việc là một thẻ (tiêu đề một dòng + 1–3 dòng ngắn), mỗi dòng ≤ 20 chữ; không «- » (tích xanh), không «*…*» (xanh lá).
 SONG NGỮ (owner 31/10: «viết bằng tiếng Anh chuẩn hàng không… sẵn 1 nút dịch tiếng Việt, không qua token Claude»): mọi câu do mã sinh nằm MỘT nơi, bảng TX (EN, VI). EN viết theo mẫu ASD-STE100, chỉ KIỂM CƠ HỌC bằng ste_problems(), KHÔNG phải chứng nhận STE.
 Trong markdown mỗi câu là «⟦EN¦VI⟧», tên việc là «⟪tên⟫»; sau book.py, finish() đổi thành <span class=en>/<span class=vi> và thêm nút. Nút không gọi mạng.
 Tên việc (tiếng Việt do người đặt) giữ nguyên; chỉ khi trình duyệt có Translator API và người xem BẤM nút «Translate task names» thì dịch trên máy, không gửi chữ ra ngoài.
@@ -19,8 +19,8 @@ from pathlib import Path
 
 ROOM = "vinh-hong"   # phòng gốc mặc định; tên hiển thị lấy từ chính tham số, không gõ cứng ở brand/footer
 PER_PAGE = 2   # thẻ mỗi trang: thoáng (book-layout muốn ≤ 120 chữ mỗi trang)
-MINW = 6   # dòng ngắn hơn mức này bị gộp vào dòng kề (owner: «khoảng 10-25 chữ»; dòng 3 đoạn tối đa 3)
-CAP = 25   # chữ tối đa mỗi dòng văn (owner 31/10 m1a19291cd4a58d3: «khoảng 10-25 chữ 1 dòng»); VI đếm theo khoảng trắng (mỗi âm tiết một chữ)
+MINW = 10   # dòng ngắn hơn mức này bị gộp vào dòng kề khi gộp được mà không vượt CAP (owner 31/10: «10-20 thôi»)
+CAP = 20   # chữ tối đa mỗi dòng văn (owner 31/10: m1a19291cd4a58d3 «10-25», rồi m1a192aae03f1e9c «10-20 thôi, 25 vẫn dài»); VI đếm theo khoảng trắng (mỗi âm tiết một chữ)
 QUIET = 2 * 3600   # đang làm mà im quá mức này → vàng
 STALE = 12 * 3600   # đang làm mà im quá mức này → đỏ
 OPEN, SEP, CLOSE, NO, NC = "⟦", "¦", "⟧", "⟪", "⟫"   # dấu đánh dấu cặp EN/VI và tên việc trong md; book.py không đụng tới, finish() đổi thành HTML
@@ -48,7 +48,7 @@ TX = {
     "unknown": ("unknown", "chưa biết"),
     "c_red": ("Red", "Đỏ"), "c_yellow": ("Yellow", "Vàng"), "c_blue": ("Blue", "Xanh dương"), "c_gray": ("Gray", "Xám"), "c_green": ("Green", "Xanh lá"),
     "m_red": ("Act now. An agent is dead. Or the task stops. Or there is no news for 12 hours.", "cần xử lý: agent đã chết, hoặc bị chặn, hoặc đang làm mà im hơn 12 giờ"),
-    "m_yellow": ("Slow or waiting. It waits for the owner, a review or other work. Or there is no news for 2 hours.", "chậm hoặc đang chờ: chờ owner, chờ review, đợi việc khác, im quá 2 giờ"),
+    "m_yellow": ("Slow. It waits for the owner or a review. Or there is no news for 2 hours.", "chậm hoặc đang chờ: chờ owner, chờ review, hoặc im quá 2 giờ"),
     "m_blue": ("In progress. Work is normal. The task is not done.", "đang làm bình thường (chưa xong)"),
     "m_gray": ("Not started. The task is in the backlog or in the queue.", "chưa bắt đầu (backlog, xếp hàng)"),
     "m_green": ("DONE. The task is live. Only this color means done.", "XONG: đã lên Live. Chỉ màu này mới là xong"),
@@ -60,9 +60,9 @@ TX = {
     "r_stale": ("Work is in progress, but no news for {dur}.", "đang làm mà im {dur}"),
     "r_owner": ("The task waits for the owner.", "chờ owner trả lời"),
     "r_wait": ("The task waits for: {text}.", "chờ: {text}"),
-    "r_review": ("The task waits for a review. Work is not done.", "chờ review"),
+    "r_review": ("The task waits for a review. Work is not done.", "chờ review, việc chưa xong"),
     "r_live": ("The task is live.", "đã lên Live"),
-    "r_queue": ("Not started. The task waits in the queue.", "chưa bắt đầu"),
+    "r_queue": ("Not started. The task waits in the queue.", "chưa bắt đầu, việc đang chờ trong hàng"),
     "r_ok": ("Work is in progress and normal. Last news {when}.", "đang làm, tin cuối {when}"),
     "r_other": ("The stage code is {st}.", "giai đoạn {st}"),
     "r_more": ("Plus {n} more.", "Còn {n} lý do nữa."),
@@ -87,8 +87,9 @@ TX = {
     "nm_h": ("Limits", "Giới hạn"),
     "nm_smoke": ("Latest smoke result of Live: not measured. This report has no source for smoke.", "Kết quả smoke mới nhất của Live: chưa đo (báo cáo này không có nguồn đọc smoke)."),
     "nm_sha": ("Sha of each branch in review: not measured. Hang gives the branch name, not the sha.", "Sha từng nhánh đang review: chưa đo (hang_open_work chỉ cho tên nhánh, không cho sha)."),
-    "nm_done": ("Done comes from the deployed flag of the thread. It does not come from a sha compare. A thread without the flag is never green.", "«Xong» lấy từ cờ deployed của thread, không phải từ so sánh sha: thread chưa có cờ thì không bao giờ ra xanh lá."),
-    "nm_stage": ("The color follows the work list stage. The review log is not read. A task with a pass can show yellow.", "Màu theo giai đoạn của danh sách việc, chưa đọc sổ review. Việc đã ĐẠT trong sổ vẫn có thể hiện vàng hoặc xám."),
+    "nm_done": ("Done comes from the deployed flag. A thread without the flag is never green.", "«Xong» lấy từ cờ deployed của thread. Thread chưa có cờ thì không bao giờ ra xanh lá."),
+    "nm_stage": ("The color follows the work list stage. The review log is not read.", "Màu theo giai đoạn của danh sách việc, chưa đọc sổ review."),
+    "nm_pass": ("A task with a pass can still show yellow.", "Việc đã ĐẠT trong sổ vẫn có thể hiện vàng hoặc xám."),
     "nm_closed": ("Closed threads are not in this report.", "Thread đã đóng không có trong báo cáo."),
     "nm_room": ("Tasks outside room {room} are not in this report.", "Việc ngoài phòng {room} cũng không có."),
     "nm_src": ("The room of the source file: not measured.", "Phạm vi phòng của tệp nguồn: chưa đo."),
@@ -219,14 +220,14 @@ def pack(segs):
         lines = [(" ".join(x[0] for x in g), " ".join(x[1] for x in g)) for g in grp]
         if all(words(e) <= CAP and words(v) <= CAP for e, v in lines):
             lo = min(min(words(e), words(v)) for e, v in lines)
-            key = (lo < MINW, -len(lines), -lo)   # ưu tiên: không dòng cụt, rồi NHIỀU dòng hơn (thoáng; tối đa 3 đoạn), rồi dòng ngắn nhất dài nhất
+            key = (lo < MINW, -lo if lo < MINW else -len(lines), -len(lines), -lo)   # có cách mọi dòng ≥ MINW thì chọn NHIỀU dòng nhất (thoáng); không có thì chọn cách dòng ngắn nhất dài nhất (không để dòng cụt)
             if best is None or key < best[0]:
                 best = (key, lines)
     return best[1] if best else [(x[0], x[1]) for x in segs]   # một đoạn đơn lẻ đã > CAP: để nguyên từng đoạn, selftest sẽ báo
 
 
 def card(t, color, why):
-    """Một việc = một thẻ: dòng tiêu đề (lead: chấm màu + tên) rồi 1–3 dòng văn ≤ 25 chữ có nhãn. Không «- » (tích xanh), không «*…*» (xanh lá)."""
+    """Một việc = một thẻ: dòng tiêu đề (lead: chấm màu + tên) rồi 1–3 dòng văn ≤ 20 chữ có nhãn. Không «- » (tích xanh), không «*…*» (xanh lá)."""
     idle = t.get("idle") or 0
     shown = list(why)
     while True:
@@ -288,7 +289,7 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
         for i in range(0, len(grp), PER_PAGE):
             o += ["=== page", f"@ {bi('c_' + k)}", f"# {bi('c_' + k)}" + (f" {bi('cont')}" if i else ""), "---"]
             o += [x for j, (t, w) in enumerate(grp[i:i + PER_PAGE]) for x in (["---"] if j else []) + card(t, k, w)] + [""]   # thanh ngắn giữa hai thẻ cho thấy ranh giới
-    o += ["=== page", f"@ {bi('nm')}", f"# {bi('nm')}", "---", bi("nm_smoke"), bi("nm_sha"), bi("nm_done"), bi("nm_stage"),
+    o += ["=== page", f"@ {bi('nm')}", f"# {bi('nm')}", "---", bi("nm_smoke"), bi("nm_sha"), bi("nm_done"), bi("nm_stage"), bi("nm_pass"),
           (mark(L("nm_closed", "en") + " " + L("nm_room", "en", room=room), L("nm_closed", "vi") + " " + L("nm_room", "vi", room=room)) if room
            else mark(L("nm_closed", "en") + " " + L("nm_src", "en"), L("nm_closed", "vi") + " " + L("nm_src", "vi"))),
           f"~ {bi('nm_hand')}", ""]
@@ -395,7 +396,7 @@ def selftest():
     assert ste_problems("The valve is closed by the pilot.") and ste_problems("You should check it; then go.") and ste_problems("Don't touch.")   # bộ lọc có cắn
     assert not ste_problems("The task waits for a review.")
 
-    # 2. mỗi ngôn ngữ: không «- », không «*», dòng văn ≤ 25 chữ, thẻ 1–3 dòng, mỗi việc đúng một thẻ
+    # 2. mỗi ngôn ngữ: không «- », không «*», dòng văn ≤ CAP chữ, thẻ 1–3 dòng, mỗi việc đúng một thẻ
     dots = ("> 🔴", "> 🟡", "> 🔵", "> ⚪", "> 🟢")
     mins = []
     for lang in ("en", "vi"):
@@ -409,7 +410,7 @@ def selftest():
             if ln.startswith(("=== ", "@ ", "^ ", "# ", "---", "! ", "![", "> 🔴", "> 🟡", "> 🔵", "> ⚪", "> 🟢")) or not ln.strip():
                 continue
             t = ln[2:] if ln.startswith(("> ", "~ ")) else ln
-            assert words(t) <= CAP, ("dòng quá 25 chữ", lang, words(t), ln)
+            assert words(t) <= CAP, ("dòng quá CAP chữ", lang, words(t), ln)
         cards = 0
         for i, ln in enumerate(Ls):
             if not ln.startswith(dots):
@@ -431,7 +432,7 @@ def selftest():
                     assert len(snt.split()) <= 20 or "Branch:" in snt or "Workers:" in snt, ("câu EN > 20 chữ", snt)
     lo = [m for m in mins if m[0] < 6]
     assert not lo, ("dòng thẻ quá cụt (< 6 chữ), gộp vào dòng kề", lo)
-    # thẻ dài nhất có thể: ba worker + nhiều lý do + tên nhánh dài vẫn ≤ 25 chữ mỗi dòng
+    # thẻ dài nhất có thể: ba worker + nhiều lý do + tên nhánh dài vẫn ≤ CAP chữ mỗi dòng
     big = T("z" * 3, "in_progress", idle=14 * 3600, name="Một tên việc rất dài " * 6, branch="nhanh/" + "x" * 60, owner_wait=True,
             blocking=["một việc rất dài cần chờ " * 6, "việc khác"], down=[{"name": "Kai", "health": "dead", "reopen": "s1"}], workers=[{"name": f"Agent{i}", "status": "review"} for i in range(5)])
     c, w = judge(big)
