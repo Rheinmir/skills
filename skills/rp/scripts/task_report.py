@@ -10,9 +10,9 @@ Python 3.9, chỉ stdlib."""
 from __future__ import annotations
 
 import argparse, json, os, subprocess, sys, time, urllib.parse, urllib.request
+from pathlib import Path
 
 ROOM = "vinh-hong"   # phòng gốc mặc định; tên hiển thị lấy từ chính tham số, không gõ cứng ở brand/footer
-from pathlib import Path
 
 PER_PAGE = 4   # thread mỗi trang: book-layout muốn ≤ 120 chữ mỗi trang
 STAGES = (("blocked", "Bị chặn"), ("in_progress", "Đang làm"), ("review", "Chờ review"), ("queued", "Xếp hàng"), ("backlog", "Backlog"))
@@ -23,13 +23,20 @@ def hang_home():
     return Path(os.environ.get("HANG_HOME") or Path.home() / ".hang")
 
 
+def get(url, tok):
+    rq = urllib.request.Request(url, headers={"Authorization": "Bearer " + tok, "User-Agent": "hang-rp/1"})   # UA mặc định của urllib bị cổng công khai từ chối (403)
+    with urllib.request.urlopen(rq, timeout=30) as r:
+        return json.load(r)
+
+
 def fetch(room):
     home = hang_home()
     url = (home / "url").read_text().strip().rstrip("/")
     tok = (home / "token").read_text().strip()
-    rq = urllib.request.Request(url + "/work/open?room=" + urllib.parse.quote(room), headers={"Authorization": "Bearer " + tok, "User-Agent": "hang-rp/1"})   # UA mặc định của urllib bị cổng công khai từ chối (403)
-    with urllib.request.urlopen(rq, timeout=30) as r:
-        return json.load(r)
+    q = urllib.parse.quote(room)
+    if get(f"{url}/rooms/{q}?limit=1", tok).get("room") is None:   # /work/open?room=<tên sai> trả 0 việc mà không báo lỗi: tên phòng sai không được thành «0 việc mở»
+        sys.exit(f"blocked: phòng «{room}» không có trên Hang (kiểm tên phòng với hang_rooms)")
+    return get(f"{url}/work/open?room={q}", tok)
 
 
 def ago(sec):
@@ -69,7 +76,7 @@ def line(t):
     return "- " + "; ".join(bits)   # không **đậm** và không « · »: dòng danh sách của book-layout là flex, mỗi đoạn thành một ô và chữ rớt từng từ ở 390 px
 
 
-def build_md(d, now, room=ROOM):
+def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không biết phòng nào → không ghi tên phòng, không khẳng định «ngoài phòng X không có»
     ts = sorted(d.get("open") or [], key=lambda t: t.get("opened") or 0)
     running = str(d.get("running") or "")
     by = {k: [t for t in ts if t.get("status") == k] for k, _ in STAGES}
@@ -77,11 +84,11 @@ def build_md(d, now, room=ROOM):
     att = [(t, r) for t in ts for r in attention(t)]
     dead = sum(len(t.get("down") or []) for t in ts)
     stamp = time.strftime("%d/%m/%Y %H:%M", time.localtime(now))
-    o = ["---", "title: Báo cáo tình trạng task", f"brand: Hang · {room}", f"date: {stamp}", "vol: Báo cáo", f"footer: nguồn hang_open_work room={room} · Live {running[:7] or 'chưa biết'}", "---",
+    o = ["---", "title: Báo cáo tình trạng task", f"brand: Hang · {room}" if room else "brand: Hang", f"date: {stamp}", "vol: Báo cáo", f"footer: nguồn hang_open_work{f' room={room}' if room else ' (tệp)'} · Live {running[:7] or 'chưa biết'}", "---",
          "=== cover", "^ Tình trạng task", f"# {len(ts)} việc mở / *{len(by['in_progress'])} đang làm.*",
          f"> Chốt lúc {stamp}. Số liệu đọc thẳng từ Hang, không ước lượng; mục chưa đo ghi rõ ở trang cuối.", "---", "",
          "=== page", "@ Tóm tắt", "# Tóm tắt / *một trang*", "---"]
-    o += [f"! {len(ts)} | thread Issue/Epic đang mở | room:{room}, hang_open_work"]
+    o += [f"! {len(ts)} | thread Issue/Epic đang mở | {f'room:{room}, ' if room else ''}hang_open_work"]
     o += [f"- {label}: {len(by[k])}" for k, label in STAGES if by[k]] + ([f"- Trạng thái khác: {len(other)}"] if other else [])
     o += [f"- Agent đã chết trong các thread mở: {dead}", f"- Sha đang chạy trên Live: {running[:12] or 'chưa biết'}", ""]
     if att:
@@ -100,7 +107,7 @@ def build_md(d, now, room=ROOM):
           "- Kết quả smoke mới nhất của Live: chưa đo (báo cáo này không có nguồn đọc smoke).",
           "- Sha từng nhánh đang review: chưa đo (hang_open_work chỉ cho tên nhánh, không cho sha).",
           "- «Đã lên Live» lấy từ cờ deployed của thread, không phải từ so sánh sha.",
-          f"- Thread đã đóng không có trong báo cáo; việc ngoài phòng {room} cũng không.",
+          "- Thread đã đóng không có trong báo cáo" + (f"; việc ngoài phòng {room} cũng không." if room else "; phạm vi phòng của tệp nguồn: chưa đo."),
           "~ Chưa đo thì ghi / *chưa đo.*", ""]
     return "\n".join(o)
 
@@ -114,6 +121,8 @@ def selftest():
         {"room": "c-3", "name": "Việc C", "status": "backlog", "idle": 100000, "workers": [], "blocking": ["Kai còn việc khác chờ"], "opened": 3}]}
     md = build_md(fx, now)
     assert "brand: Hang · vinh-hong" in md and "room=vinh-hong" in md and "ngoài phòng vinh-hong" in md
+    mt = build_md(fx, now, None)   # --src: không biết phòng
+    assert "brand: Hang\n" in mt and "ngoài phòng" not in mt and "chưa đo" in mt and "vinh-hong" not in mt
     md2 = build_md(fx, now, "phong-khac")
     assert "brand: Hang · phong-khac" in md2 and "room:phong-khac" in md2 and "vinh-hong" not in md2   # tên phòng đi theo tham số, không gõ cứng
     for want in ("# 3 việc mở / *1 đang làm.*", "room:a-1", "Kai đã chết (dead), mở lại: s123", "chờ owner trả lời", "đang làm mà im 3 giờ",
@@ -137,9 +146,10 @@ def main():
         return selftest()
     now = a.now or int(time.time())
     d = json.loads(Path(a.src).read_text(encoding="utf-8")) if a.src else fetch(a.room)
+    room = None if a.src else a.room
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     md = out / ("rp-task-" + time.strftime("%Y%m%d-%H%M", time.localtime(now)) + ".md")
-    md.write_text(build_md(d, now, a.room), encoding="utf-8")
+    md.write_text(build_md(d, now, room), encoding="utf-8")
     print(md)
     if a.build:
         here = Path(__file__).resolve()

@@ -5,6 +5,8 @@ Chế độ đầu tiên của hub `rp`. Owner (31/10, Issue 452): «báo cáo t
 ## Nguồn số liệu (chỉ đọc)
 - `GET /work/open?room=<phòng>` của chính Hang (cùng dữ liệu MCP `hang_open_work`; mặc định `vinh-hong`, đổi bằng `--room`; không kèm `room` thì Hang gộp mọi phòng gốc token máy thấy nên báo cáo phải luôn truyền), Bearer token máy ở `~/.hang/token`. Mỗi thread mở có: `room`, `name`, `kind` (issue/epic), `status`, `workers[]` (tên, giai đoạn, `health`), `down[]` (agent đã chết, mã mở lại), `blocking[]`, `branch`, `deployed`, `owner_wait`, `idle`, `req[]`.
 - `running` = sha đang chạy trên Live.
+- Phòng sai tên: script hỏi `GET /rooms/<phòng>` trước (Hang trả `room: null`) và dừng với «blocked», vì `/work/open?room=<tên sai>` trả 0 việc mà không báo lỗi.
+- `--src <tệp>.json` (đọc tệp thay cho mạng): báo cáo không ghi tên phòng và không khẳng định «ngoài phòng X không có».
 - Script gửi header `User-Agent: hang-rp/1`: cổng công khai từ chối UA mặc định của Python (403).
 
 ## Báo cáo gồm

@@ -41,7 +41,8 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 - Không đọc được Hang (`~/.hang/url`/`token` thiếu, mạng, 401/403) → **blocked**: nói đúng lỗi, không dựng báo cáo từ trí nhớ.
 - Không có skill `book-layout` → **blocked**: cập nhật skills hoặc chạy từ checkout repo skills; không viết HTML thay.
 - `check.mjs` HỎNG → sửa theo bảng nhánh của `book-layout` (tối đa 2 vòng), vẫn hỏng thì gửi kèm số đo và nói rõ.
-- Hang trả ít hơn kỳ vọng (không thread nào mở) → báo cáo vẫn hợp lệ: «0 việc mở».
+- Phòng không có trên Hang (`--room` sai tên) → **blocked**: báo tên sai, không dựng báo cáo «0 việc».
+- Hang trả ít hơn kỳ vọng (phòng có mà không thread nào mở) → báo cáo vẫn hợp lệ: «0 việc mở».
 
 ## HOW
 
