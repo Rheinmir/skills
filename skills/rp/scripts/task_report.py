@@ -115,12 +115,12 @@ STE_BANNED = {"should", "may", "might", "shall", "get", "gets", "got", "make", "
 
 # KIỂU CHIP lấy từ trang mẫu của owner https://uiux.giatbh.io.vn/components/chip.html (Hình 1 «Vỏ chip», lớp .cx.fill; đo bằng Playwright 1/11): viên thuốc bo 999 px,
 # nền pastel PHÂN NHÓM, viền 1 px đậm hơn nền ~15 %, chữ tối cố định #1a1d21 (đủ tương phản ở cả hai chế độ), padding ngang 14 px (ở đây 12 px vì chip nằm giữa dòng chữ).
-# Nhóm mã dùng bốn pastel của trang mẫu (CHIP_WHAT), MỖI LOẠI MỘT MÀU, không xám; tránh đỏ/xanh lá (Kanade) và vàng/xanh dương (màu tình trạng). Periwinkle (hue ~234°) hơi gần xanh dương tình trạng (~211°): đổi một token nếu owner thấy dễ nhầm.
-CHIP_KINDS = {"violet": ("#eabaf6", "#c89fd2"), "periwinkle": ("#c6caf0", "#a9accd"), "teal": ("#b2ece2", "#97c8c0"), "peach": ("#fae3c8", "#d5c1aa")}   # (nền, viền) đúng các giá trị đo ở trang mẫu: Violet, Periwinkle, Teal, Peach (viền = nền × 0,855)
+# Nhóm mã dùng ba pastel của trang mẫu (CHIP_WHAT): Pink, Teal, Peach. Pink (hue ~333°) vừa dưới ngưỡng tông đỏ 335° của luật kiểm; Teal ~170° (ngoài dải xanh lá 75–150°).
+CHIP_KINDS = {"pink": ("#f7c1d9", "#d3a5b9"), "teal": ("#b2ece2", "#97c8c0"), "peach": ("#fae3c8", "#d5c1aa")}   # (nền, viền) đúng các giá trị đo ở trang mẫu: Pink, Teal, Peach (viền = nền × 0,855). KHÔNG tím (Violet, Periwinkle: owner chê «lạc quẻ»), không xám
 CHIP_INK = "#1a1d21"
 
 
-CHIP_WHAT = {"sha": "violet", "room": "teal", "open": "teal", "reopen": "peach", "branch": "periwinkle"}   # loại mã → nhóm màu (owner m1a19339fed71243 «hạn chế màu xám, dùng bộ màu pastel»): sha tím nhạt, room:/hang_open_work mòng két, mã mở lại đào, nhánh xanh tím nhạt (Periwinkle); KHÔNG xám, không đỏ/xanh lá/vàng/xanh dương (màu tình trạng)
+CHIP_WHAT = {"sha": "pink", "room": "teal", "open": "teal", "branch": "teal", "reopen": "peach"}   # loại mã → nhóm màu: sha hồng phấn, mã mở lại đào, nơi chốn (room:, hang_open_work, nhánh) mòng két. Không tím (owner m1a1932949ed7b2d, Klau m1a1933d34ca6dd5), không xám (m1a19339fed71243), không đỏ/xanh lá (Kanade), không vàng/xanh dương (màu tình trạng)
 
 
 def chip(text, what="sha"):
@@ -548,20 +548,20 @@ def selftest():
         a, b = _lum(hx), _lum("#fbfaf6")
         assert (max(a, b) + .05) / (min(a, b) + .05) >= 4.5, ("màu chữ thiếu tương phản", k, hx)
     assert set(TXT) == {k for k, _ in COLORS}
-    assert "gray" not in CHIP_KINDS and set(CHIP_WHAT.values()) <= set(CHIP_KINDS) and len(set(CHIP_WHAT.values())) >= 4, "chip không dùng xám, mỗi loại mã có màu pastel"
+    assert "gray" not in CHIP_KINDS and set(CHIP_WHAT.values()) <= set(CHIP_KINDS) and len(set(CHIP_WHAT.values())) >= 3 and not ({"violet", "periwinkle", "gray"} & set(CHIP_KINDS)), "chip không dùng xám hay tím, có ≥ 3 nhóm pastel"
     for k, _ in COLORS:
         assert f"**{CB}{k}{CS}" in md, ("chú giải thiếu màu", k)                      # chú giải
     assert md.count(f"# {CB}red{CS}") >= 1 and md.count(f"# {CB}yellow{CS}") >= 1, "tiêu đề trang màu phải tô màu"   # fx có đỏ và vàng
     assert all(CB not in x and CE not in x for x in (expand(md, "en"), expand(md, "vi"))), "marker màu không được sót ở bản chữ thuần"
 
     # 3c. mã máy đóng chip (owner 1/11): sha, mã mở lại, nhánh, thread, mã trong tóm tắt
-    assert f"{CHB}violet.sha{CS}c031e2312e03{CHE}" in md and f"{CHB}peach.reopen{CS}s123{CHE}" in md, "sha (tím nhạt) và mã mở lại (đào) phải là chip"
+    assert f"{CHB}pink.sha{CS}c031e2312e03{CHE}" in md and f"{CHB}peach.reopen{CS}s123{CHE}" in md, "sha (hồng phấn) và mã mở lại (đào) phải là chip"
     assert md.count(f"**Thread:** {CHB}teal.room{CS}room:") >= len(cases) and f"{CHB}teal.room{CS}room:vinh-hong{CHE} {CHB}teal.open{CS}hang_open_work{CHE}" in md, "tên room: và hang_open_work là chip mòng két"
     assert "none" not in "".join(re.findall(re.escape(CHB) + r"[\w.]+" + re.escape(CS) + r"(.*?)" + re.escape(CHE), md)) and "chưa có" not in "".join(re.findall(re.escape(CHB) + r"[\w.]+" + re.escape(CS) + r"(.*?)" + re.escape(CHE), md)), "«none»/«chưa có» không phải mã, không đóng chip"
     assert CHB not in expand(md, "en") and CHE not in expand(md, "vi"), "marker chip không được sót ở bản chữ thuần"
 
     # 4. finish(): span EN/VI, nút, tên việc, không URL ngoài, localStorage bọc try/catch, Translator chỉ khi 'Translator' in self và chỉ sau khi bấm
-    fake = '<!doctype html><html lang="vi"><head><title>⟬red‖⟦Task¦Việc⟧⟭</title></head><body><p>⟬red‖⟦Red¦Đỏ⟧⟭ ⟪Tên *việc*⟫ ⟮violet.sha‖sf98721ecbfeb⟯ ⟮periwinkle.branch‖deadbeef⟯</p><img alt="⟦A¦B⟧"></body></html>'
+    fake = '<!doctype html><html lang="vi"><head><title>⟬red‖⟦Task¦Việc⟧⟭</title></head><body><p>⟬red‖⟦Red¦Đỏ⟧⟭ ⟪Tên *việc*⟫ ⟮pink.sha‖sf98721ecbfeb⟯ ⟮teal.branch‖deadbeef⟯</p><img alt="⟦A¦B⟧"></body></html>'
     out = finish(fake)
     assert "<title>Task</title>" in out and 'alt="A"' in out, out
     assert '<span class="c-red"><span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span></span>' in out, "marker màu thành span.c-red"
@@ -569,7 +569,7 @@ def selftest():
     assert '.stat{margin:28px 0' in out and '.page{min-height:0}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
     assert '.spread{align-items:start' not in out, "quyển tập hai tờ cao bằng nhau (giấy chung của book-layout), không tờ riêng lệch chiều cao"
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
-    assert '<code class="chip chip-violet" data-what="sha">sf98721ecbfeb</code>' in out and '<code class="chip chip-periwinkle" data-what="branch">deadbeef</code>' in out and CHB not in out and CHE not in out, "marker chip thành <code class=chip chip-nhóm data-what=loại>; nhánh toàn hex vẫn là branch"
+    assert '<code class="chip chip-pink" data-what="sha">sf98721ecbfeb</code>' in out and '<code class="chip chip-teal" data-what="branch">deadbeef</code>' in out and CHB not in out and CHE not in out, "marker chip thành <code class=chip chip-nhóm data-what=loại>; nhánh toàn hex vẫn là branch"
     assert OPEN not in out and SEP not in out and NO not in out
     assert not re.search(r"https?://|src=\"http|@import|fetch\(|XMLHttpRequest|translate\.google", out), "trang song ngữ không được gọi ra ngoài"
     # font tự phục vụ (owner D-c2-001/002): @font-face base64 woff2, không link Google Fonts, độ đậm ≤ 300, sàn mỏng
