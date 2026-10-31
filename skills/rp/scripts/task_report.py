@@ -27,7 +27,9 @@ CHB, CHE = "⟮", "⟯"   # ⟮mã⟯ → <code class="chip"> (owner 1/11: «m�
 CB, CS, CE = "⟬", "‖", "⟭"   # ⟬màu‖chữ⟭ → <span class="c-màu">; book.py không đụng tới
 OPEN, SEP, CLOSE, NO, NC = "⟦", "¦", "⟧", "⟪", "⟫"   # dấu đánh dấu cặp EN/VI và tên việc trong md; book.py không đụng tới, finish() đổi thành HTML
 # (khoá, chấm, hạng) theo thứ tự hiện trong báo cáo; chữ nhãn/nghĩa ở bảng TX (khoá c_<màu>, m_<màu>)
-COLORS = (("red", "🔴"), ("yellow", "🟡"), ("blue", "🔵"), ("gray", "⚪"), ("green", "🟢"))
+DT = "⟐"   # ⟐màu⟐ → <span class="dot dot-màu"> chấm tròn CSS màu đặc pastel (owner m1a193435b762da4: emoji 🔴🟡 bóng loáng, lệch; «tôi tưởng bạn làm được dot pastel màu đặc»)
+COLORS = (("red", f"{DT}red{DT}"), ("yellow", f"{DT}yellow{DT}"), ("blue", f"{DT}blue{DT}"), ("gray", f"{DT}gray{DT}"), ("green", f"{DT}green{DT}"))
+DOT_PASTEL = {'red': '#e98c83', 'yellow': '#efc95c', 'blue': '#86b3e6', 'gray': '#b7bbc1', 'green': '#8dce96'}   # nền chấm: pastel ĐẶC cùng hue với màu tình trạng, phẳng (không bóng, không viền); tương phản với giấy ≥ 1,6:1 (có chữ đi kèm nên không là chỗ duy nhất mang nghĩa)
 HEX = {"red": "#c0392b", "yellow": "#e0a800", "blue": "#2f6fb5", "gray": "#9aa0a6", "green": "#3b7a2a"}   # màu thanh ở bìa: đậm, phẳng, không pastel
 DOT = dict(COLORS)
 
@@ -155,6 +157,7 @@ def expand(md, lang):
     i = 0 if lang == "en" else 1
     md = re.sub(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), lambda m: m.group(1 + i), md)
     md = re.sub(re.escape(CB) + r"\w+" + re.escape(CS) + r"(.*?)" + re.escape(CE), r"\1", md, flags=re.S)
+    md = re.sub(re.escape(DT) + r"(\w+)" + re.escape(DT), r"[\1]", md)   # chấm màu → «[màu]» để test thấy màu
     md = re.sub(re.escape(CHB) + r"[\w.]+" + re.escape(CS), "", md).replace(CHB, "").replace(CHE, "")
     return md.replace(NO, "").replace(NC, "")
 
@@ -344,7 +347,7 @@ CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
        ':root{--sans:"Lexend Deca",system-ui,-apple-system,"Segoe UI",sans-serif;--hand:var(--sans);--page-pad:clamp(24px,4.8vw,60px);--ink3:#5c5c56}'   # tên font ở MỘT chỗ; lề rộng hơn kiểu tạp chí; --ink3 (chữ phụ nhỏ) từ #8a8a82 (3,3:1) lên #5c5c56 (≥ 6:1) vì chữ Light mỏng cần tương phản cao hơn
        "html body,html body *{font-weight:300!important}html body b,html body strong{font-weight:600!important}" + "".join(f".c-{k}{{color:{v}}}" for k, v in TXT.items()) + 'html body h2 [class^="c-"]{font-weight:300!important}html body b [class^="c-"]{font-weight:600!important}'
        + ".chip{display:inline;-webkit-box-decoration-break:clone;box-decoration-break:clone;overflow-wrap:anywhere;font-family:var(--sans);font-weight:300;font-size:.9em;line-height:inherit;letter-spacing:.01em;color:" + CHIP_INK + ";border:1px solid;border-radius:999px;padding:1px 12px}"   # INLINE + box-decoration-break:clone: chip xuống dòng thì mỗi dòng là một viên ôm sát chữ như highlight, không thành khối chữ nhật thừa chỗ (owner m1a19338db452775)
-       + "".join(f".chip-{k}{{background:{bg};border-color:{bd}}}" for k, (bg, bd) in CHIP_KINDS.items()) + "p:has(.chip),cite:has(.chip){padding-right:26px}"   # chip inline + clone: trình duyệt không tính đệm của mảnh giữa khi ngắt dòng nên dòng đầy có thể thò ra 2 × (đệm + viền); chừa chỗ để không tràn   # tên màu tô màu tương ứng (trong h2 mảnh 200 phải #111, nên dùng 300) · NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
+       + "".join(f".chip-{k}{{background:{bg};border-color:{bd}}}" for k, (bg, bd) in CHIP_KINDS.items()) + ".dot{display:inline-block;width:.7em;height:.7em;border-radius:50%;margin-right:.45em;vertical-align:-.04em;border:0;box-shadow:none}" + "".join(f".dot-{k}{{background:{v}}}" for k, v in DOT_PASTEL.items()) + "p:has(.chip),cite:has(.chip){padding-right:26px}"   # chip inline + clone: trình duyệt không tính đệm của mảnh giữa khi ngắt dòng nên dòng đầy có thể thò ra 2 × (đệm + viền); chừa chỗ để không tràn   # tên màu tô màu tương ứng (trong h2 mảnh 200 phải #111, nên dùng 300) · NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
        + "body{font-size:16px;line-height:1.7}"
        "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111;letter-spacing:-.015em}html body h3{color:#111;letter-spacing:-.015em}"
        "h1,h2{line-height:1.2}.cover h1{font-size:clamp(44px,6.4vw,84px);line-height:1.2}h2{font-size:clamp(34px,4vw,52px)}"   # tiêu đề lớn mỏng canh trái như trang chủ lexend.com; line-height ≥ 1.2 để không cắt dấu Việt (check.mjs clip)
@@ -375,10 +378,11 @@ def finish(page):
     pat = re.compile(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), re.S)
     colp = re.compile(re.escape(CB) + r"(\w+)" + re.escape(CS) + r"(.*?)" + re.escape(CE), re.S)
     page = re.sub(r"<title>.*?</title>", lambda m: colp.sub(lambda c: c.group(2), pat.sub(lambda x: x.group(1), m.group(0))), page, flags=re.S)
-    page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + re.sub(re.escape(CHB) + r"[\w.]+" + re.escape(CS), "", m.group(2)).replace(CHE, "") + m.group(3), page)
+    page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + re.sub(re.escape(DT) + r"\w+" + re.escape(DT), "", re.sub(re.escape(CHB) + r"[\w.]+" + re.escape(CS), "", m.group(2))).replace(CHE, "") + m.group(3), page)
     page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + pat.sub(lambda x: x.group(1), m.group(2)) + m.group(3), page)
     page = pat.sub(lambda m: f'<span class="en" lang="en">{m.group(1)}</span><span class="vi" lang="vi">{m.group(2)}</span>', page)
     page = re.sub(re.escape(NO) + r"(.*?)" + re.escape(NC), r'<span class="tn">\1</span>', page)
+    page = re.sub(re.escape(DT) + r"(\w+)" + re.escape(DT), r'<span class="dot dot-\1" aria-hidden="true"></span>', page)
     page = colp.sub(lambda c: f'<span class="c-{c.group(1)}">{c.group(2)}</span>', page)
     page = re.sub(re.escape(CHB) + r"([\w.]+)" + re.escape(CS) + r"(.*?)" + re.escape(CHE), lambda c: f'<code class="chip chip-{c.group(1).split(".")[0]}" data-what="{c.group(1).split(".")[-1]}">{c.group(2)}</code>', page, flags=re.S)
     T = {"en": {"t": L("btn_vi", "en"), "h": L("btn_vi_title", "en")}, "vi": {"t": L("btn_vi", "vi"), "h": L("btn_vi_title", "vi")}}
@@ -456,7 +460,7 @@ def selftest():
     assert not ste_problems("The task waits for a review.")
 
     # 2. mỗi ngôn ngữ: không «- », không «*», dòng văn ≤ CAP chữ, thẻ 1–3 dòng, mỗi việc đúng một thẻ
-    dots = ("> 🔴", "> 🟡", "> 🔵", "> ⚪", "> 🟢")
+    dots = ("> [red]", "> [yellow]", "> [blue]", "> [gray]", "> [green]")
     mins = []
     for lang in ("en", "vi"):
         x = expand(md, lang)
@@ -467,7 +471,7 @@ def selftest():
         Ls = x.splitlines()
         body = Ls[Ls.index("=== cover"):]
         for ln in body:
-            if ln.startswith(("=== ", "@ ", "^ ", "# ", "---", "! ", "![", "> 🔴", "> 🟡", "> 🔵", "> ⚪", "> 🟢")) or not ln.strip():
+            if ln.startswith(("=== ", "@ ", "^ ", "# ", "---", "! ", "![", "> [red]", "> [yellow]", "> [blue]", "> [gray]", "> [green]")) or not ln.strip():
                 continue
             t = ln[2:] if ln.startswith(("> ", "~ ")) else ln
             assert words(t) <= CAP, ("dòng quá CAP chữ", lang, words(t), ln)
@@ -505,7 +509,7 @@ def selftest():
     BL = ["Kai còn việc khác chờ («Việc x», «Việc y»)", "Epic cha «Tên Epic tiếng Việt» còn mở và đang chờ thread này xong (cha không chặn con)", "Epic còn wave sau chờ wave trước", "một câu lạ do server thêm sau này"]
     HL = ("dead", "exited", "hung", "idle_long", "limited", "mới_lạ")
     srv = {"running": "c031e23", "open": [T("b%d" % i, "in_progress", blocking=[b]) for i, b in enumerate(BL)] + [T("h%d" % i, "in_progress", down=[{"name": "Kai", "health": h, "reopen": None}]) for i, h in enumerate(HL)]}
-    en2 = [ln for ln in expand(build_md(srv, now), "en").splitlines() if not ln.startswith(("> 🔴", "> 🟡", "> 🔵", "> ⚪", "> 🟢", "!["))]
+    en2 = [ln for ln in expand(build_md(srv, now), "en").splitlines() if not ln.startswith(("> [red]", "> [yellow]", "> [blue]", "> [gray]", "> [green]", "!["))]
     assert not [ln for ln in en2 if VN.search(ln)], ("chữ Việt lọt vào bản EN", [ln for ln in en2 if VN.search(ln)])
     assert "(dead)" not in expand(build_md(srv, now), "en") and "(dead)" not in expand(build_md(srv, now), "vi"), "health trùng chữ trong ngoặc"
     for want in ("Agent Kai is dead.", "Agent Kai has exited.", "The parent Epic waits for this thread.", "A later wave of the Epic waits for this wave.", "Another task depends on this task."):
@@ -522,8 +526,8 @@ def selftest():
     assert "núi" not in md and "mountain" not in md
     ex, vx = expand(md, "en"), expand(md, "vi")
     assert "# 14 open tasks, 1 done." in ex and "# 14 việc mở, 1 xong." in vx
-    assert len([ln for ln in ex.splitlines() if ln.startswith("> 🟢 ")]) == 1   # đúng MỘT thẻ xanh lá (việc đã lên Live)
-    g = ex.splitlines().index(next(ln for ln in ex.splitlines() if ln.startswith("> 🟢 ")))
+    assert len([ln for ln in ex.splitlines() if ln.startswith("> [green] ")]) == 1   # đúng MỘT thẻ xanh lá (việc đã lên Live)
+    g = ex.splitlines().index(next(ln for ln in ex.splitlines() if ln.startswith("> [green] ")))
     assert "room:j" in "\n".join(ex.splitlines()[g:g + 7])
     assert "Only green means done." in ex and "Chỉ màu xanh lá mới là xong." in vx
     for k in ("room:a", "room:h", "**Sha on Live:** c031e2312e03", "not measured"):
