@@ -1025,13 +1025,13 @@
     },
     "rp": {
       "files": {
-        "SKILL.md": "080c3fb9dac8b98335e3efb0a79bb2638af03e5bcf819831d810e2265e2c355e",
+        "SKILL.md": "177f4cc53235f2c54936e0f99f5d82956c87602c7dbb2489415f91d5e4a3380b",
         "assets/fonts/LexendDeca-latin.woff2": "e16222b5909f61ca5c7cbf9e1ab7cead1dd9aa7eae3292fe079d56e1c5470981",
         "assets/fonts/LexendDeca-vietnamese.woff2": "7438c2336b7c145fcfb19c4f1abc44b2bda3ca3e02bbb53836e55c1cd2014f7e",
         "assets/fonts/OFL-Lexend.txt": "5da8505887d0fa7fe963445fd58852707fda34adfeb65af25c99d152bab285bd",
-        "references/task.md": "6e68a5c122c86064dcf91127074526a7d442e6f88a166e8b16e5db53e2277a1f",
-        "scripts/check_lang.mjs": "87f59950bc0f2a0758a4698a07297fbebaba17cb23c6a3f0dae0cf015d772c3b",
-        "scripts/task_report.py": "93160640b0561db30edc4e4228d390e634b01c017a5ae1bcfd439ebad8316363"
+        "references/task.md": "4c17f140134b2cb02b3b57ebef72ef175250e506ded31fb94beff336cd6e3a21",
+        "scripts/check_lang.mjs": "be632f1a7292cce64e97aee219663d4a5c61505a4884248f2a57d79386eb7201",
+        "scripts/task_report.py": "39693257c2523db8948a19fe98bc32e34edcf5f2dc969452a2bbeef8459fde96"
       },
       "recorded": "2026-11-01",
       "source": "local-authored"
