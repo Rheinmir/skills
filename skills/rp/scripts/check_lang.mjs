@@ -82,6 +82,12 @@ const chips = p => p.evaluate(src => { const re = new RegExp(src); const bad = [
     if (!/mono|Menlo|Consolas|Courier/i.test(st.fontFamily)) bad.push(`chip không đơn cách: «${c.textContent.slice(0, 20)}»`);
     if (/rgba\(0, 0, 0, 0\)|transparent/.test(st.backgroundColor)) bad.push(`chip không có nền: «${c.textContent.slice(0, 20)}»`);
     if (st.display !== 'inline-block') bad.push(`chip không là một khối (display ${st.display})`);
+    // màu chip (owner 1/11 «chọn màu bớt lạc quẻ hơn»): tông TRUNG TÍNH hợp giấy kem: độ bão hoà thấp (max−min kênh ≤ 16) và ấm (đỏ ≥ xanh dương, loại tím/xanh), không trùng màu tình trạng; nổi hơn giấy ≥ 1,06:1; chữ mực đậm tương phản ≥ 7:1
+    const rgb = x => (x.match(/[\d.]+/g) || []).slice(0, 3).map(Number), L = a => { const v = a.map(c => { c /= 255; return c <= .03928 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; }, cr = (a, b) => (Math.max(L(a), L(b)) + .05) / (Math.min(L(a), L(b)) + .05);
+    const bg = rgb(st.backgroundColor), ink = rgb(st.color), paper = rgb(getComputedStyle(c.closest('.page') || document.body).backgroundColor);
+    if (Math.max(...bg) - Math.min(...bg) > 16 || bg[0] < bg[2]) bad.push(`chip không trung tính ấm (nền ${st.backgroundColor}; cần max−min kênh ≤ 16 và đỏ ≥ xanh dương): lạc quẻ với giấy kem`);
+    if (paper.length === 3 && cr(bg, paper) < 1.06) bad.push(`chip không nổi hơn giấy (${cr(bg, paper).toFixed(2)}:1 < 1,06)`);
+    if (cr(ink, bg) < 7) bad.push(`chữ chip tương phản ${cr(ink, bg).toFixed(1)}:1 < 7:1`);
     const pr = c.closest('p,li,h2,div');
     if (pr && c.getBoundingClientRect().right > pr.getBoundingClientRect().right + 1) bad.push(`chip tràn khung: «${c.textContent.slice(0, 20)}»`); }
   const skip = e => e.closest('.chip,.foot,.run,.tn,.lead,b,h1,h2,#rp-bar,script,style,.kick,.vol,svg');
