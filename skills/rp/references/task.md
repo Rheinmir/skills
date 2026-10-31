@@ -61,7 +61,15 @@ Danh sách theo thứ tự owner nói (31/10 → 1/11). Lời owner mới nhất
 6. Lexend Deca Light + mỏng, tự phục vụ (1/11). Kiểm: `check_lang.mjs`.
 7. Nhãn đầu dòng trước «:» đậm 600 (1/11): ngoại lệ duy nhất của luật 6. Kiểm: `check_lang.mjs`.
 8. Tên màu tô màu tương ứng (1/11). Kiểm: `--selftest`, `check_lang.mjs`.
-9. Quy trình: tự chụp 390 và 1280, tự xem, gửi ảnh trước/sau (31/10 → 1/11).
+9. Mã máy đóng chip (1/11). Kiểm: `--selftest`, `check_lang.mjs`.
+10. Quy trình: tự chụp 390 và 1280, tự xem, gửi ảnh trước/sau (31/10 → 1/11).
+
+## Chip cho mã máy (owner 1/11: «mấy mã kiểu này thêm luật vào skill đóng vào chip và highlight lên»)
+- Mã máy hiển thị thành chip: mã mở lại phiên (`sf98721ecbfeb`), sha (Live, nhánh), id tin (`m1a…`), tên `room:<thread>`, tên nhánh (`kenji/epoch`), `hang_open_work`. Trong md: `⟮mã⟯` (hàm `chip()`), `finish()` đổi thành `<code class="chip">`.
+- Kiểu: nền tím nhạt #ece8fb (KHÔNG vàng/xanh/đỏ/lá: các màu đó là màu tình trạng), viền #cfc6ee, chữ #1b1340 đơn cách (ui-monospace, Menlo, Consolas), `display:inline-block` và `overflow-wrap:anywhere` nên slug dài xuống dòng TRONG chip (một khối, không cắt đôi). Độ đậm tính 300 để qua luật Light; font đơn cách là ngoại lệ của luật «họ font Lexend» (owner: «chữ đơn cách»).
+- Không phải mã, không chip: «none», «chưa có», tên người, tên việc, nhãn.
+- Chân trang và dòng chạy đầu trang (chữ in hoa nhỏ) không đóng chip: là trang trí, không phải dữ liệu để chép.
+- `check_lang.mjs`: mọi mã khớp mẫu (s…, sha hex ≥ 7 có cả chữ và số, m…, `room:…`, nhánh a/b) nằm ngoài chip là FAIL; chip phải đơn cách, có nền, `inline-block`, không tràn khung; tối thiểu 8 chip. Chứng đỏ: bản d13841e báo FAIL «mã ngoài chip: room:vinh-hong, 83de0be76cdc, sf98721ecbfeb».
 
 ## Màu chữ của tên màu (owner 1/11: «mấy chữ Red, Yellow tô màu tương ứng đi»)
 Bảng `TXT` trong `task_report.py`: đỏ #b3261e, vàng #8a6100, xanh dương #1f5fa8, xám #5b6168, xanh lá #2e6b1f. Đậm hơn màu thanh và chấm (vàng #e0a800 chỉ ~2:1 trên giấy) để tương phản ≥ 4,8:1. Áp ở: tiêu đề trang («Red», «Red continued», «Đỏ», «Đỏ tiếp»), nhãn chú giải, nhãn dòng tóm tắt («Red tasks:»), nhãn màu trong hình bìa. Dấu chấm màu ở đầu thẻ việc là emoji, đã có màu sẵn. Trong nhãn đậm thì cả tên màu đậm 600; trong h2 (mảnh 200 phải #111) tên màu dùng 300. Marker trong md: `⟬màu‖chữ⟭` → `<span class="c-màu">`; `check_lang.mjs` kiểm mọi tên màu có `.c-màu` và đúng màu, và số tên màu nhận ra ở bản VI phải BẰNG bản EN (9 = 9 trên dữ liệu có đỏ + vàng). Regex nhận tên màu không dùng `\b`: `\b` của JS không coi «ỏ», «á» là chữ nên «Đỏ:», «Xanh lá:» không khớp (Kirei bắt ở 1cda5bc); dùng `(?=[\s:：]|$)`.
