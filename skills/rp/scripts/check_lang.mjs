@@ -130,9 +130,11 @@ const dots = p => p.evaluate(D => { const bad = []; let n = 0;
     if (parseFloat(st.borderTopLeftRadius) < r.width / 2 - .5 || Math.abs(r.width - r.height) > .5) bad.push(`chấm ${k} phải là hình tròn (${Math.round(r.width)}×${Math.round(r.height)}, bo ${st.borderTopLeftRadius})`);
     let pe = d.parentElement, pbg = null; while (pe) { const b = getComputedStyle(pe).backgroundColor; if (!/rgba\(0, 0, 0, 0\)|transparent/.test(b)) { pbg = b; break; } pe = pe.parentElement; }
     if (pbg && cr(D[k], rgb(pbg)) < 1.5) bad.push(`chấm ${k} tương phản ${cr(D[k], rgb(pbg)).toFixed(2)}:1 < 1,5:1 với nền`);
-    const nx = d.nextSibling; if (nx && nx.nodeType === 3 && nx.textContent.trim()) { const rg = document.createRange(); rg.setStart(nx, 0); rg.setEnd(nx, Math.min(1 + (nx.textContent.length > 1 ? 0 : 0), nx.textContent.length)); const tr = rg.getBoundingClientRect();
-      // chữ chuẩn: tâm vùng x-height ≈ đáy hộp chữ − 0,31 em; so với tâm chấm
-      const fs = parseFloat(getComputedStyle(d.parentElement).fontSize), glyphMid = tr.bottom - (tr.height - fs) / 2 - fs * .5 + fs * .02, dotMid = r.top + r.height / 2;
+    // THẲNG HÀNG: hộp chữ đầu tiên bên PHẢI chấm trong cùng dòng (nextSibling của chấm chỉ là khoảng trắng nên lần trước luật không bao giờ chạy: Kirei, thử lệch 6 px vẫn xanh)
+    const par = d.parentElement, rg = document.createRange(); rg.selectNodeContents(par);
+    const tr = [...rg.getClientRects()].filter(x => x.width > 2 && x.left >= r.right - 1 && x.top < r.bottom && x.bottom > r.top).sort((a, b) => a.left - b.left)[0];
+    if (!tr) bad.push(`chấm ${k} không có chữ bên phải cùng dòng để so hàng`);
+    else { const fs = parseFloat(getComputedStyle(par).fontSize), glyphMid = tr.bottom - (tr.height - fs) / 2 - fs * .5 + fs * .02, dotMid = r.top + r.height / 2;
       if (Math.abs(dotMid - glyphMid) > 3) bad.push(`chấm ${k} lệch hàng với chữ ${(dotMid - glyphMid).toFixed(1)} px (> 3)`); } }
   return { n, bad }; }, DOTS);
 const faces = p => p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'Lexend Deca' && f.status === 'loaded').length; });
