@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "version": "1.0.20",
+  "version": "1.0.21",
   "harness_floor": "1.3.127",
-  "catalog_sha": "b703003e8ec1c9a2",
+  "catalog_sha": "0af0cf020e117183",
   "count": 108,
   "skills": [
     {
@@ -1197,7 +1197,7 @@
       "description": "Hub báo cáo (report) tình trạng Hang thành trang HTML đọc được trên điện thoại. Chế độ task: /rp task = báo cáo tình trạng các task (thread Issue/Epic đang mở, ai làm, giai đoạn, nhánh, sha Live, việc chờ owner), viết bằng book-layout. Gọi khi owner nói rp, báo cáo tình trạng task, tình hình các task, task đang tới đâu, hoặc /rp.",
       "model_invocable": true,
       "requires": {},
-      "sha": "9746f4afeeefc487"
+      "sha": "ffd4473190630faa"
     },
     {
       "name": "safe-change",
