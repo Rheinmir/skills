@@ -64,7 +64,7 @@ Danh sách theo thứ tự owner nói (31/10 → 1/11). Lời owner mới nhất
 9. Quy trình: tự chụp 390 và 1280, tự xem, gửi ảnh trước/sau (31/10 → 1/11).
 
 ## Màu chữ của tên màu (owner 1/11: «mấy chữ Red, Yellow tô màu tương ứng đi»)
-Bảng `TXT` trong `task_report.py`: đỏ #b3261e, vàng #8a6100, xanh dương #1f5fa8, xám #5b6168, xanh lá #2e6b1f. Đậm hơn màu thanh và chấm (vàng #e0a800 chỉ ~2:1 trên giấy) để tương phản ≥ 4,8:1. Áp ở: tiêu đề trang («Red», «Red continued», «Đỏ», «Đỏ tiếp»), nhãn chú giải, nhãn dòng tóm tắt («Red tasks:»), nhãn màu trong hình bìa. Dấu chấm màu ở đầu thẻ việc là emoji, đã có màu sẵn. Trong nhãn đậm thì cả tên màu đậm 600; trong h2 (mảnh 200 phải #111) tên màu dùng 300. Marker trong md: `⟬màu‖chữ⟭` → `<span class="c-màu">`; `check_lang.mjs` kiểm mọi tên màu có `.c-màu` và đúng màu.
+Bảng `TXT` trong `task_report.py`: đỏ #b3261e, vàng #8a6100, xanh dương #1f5fa8, xám #5b6168, xanh lá #2e6b1f. Đậm hơn màu thanh và chấm (vàng #e0a800 chỉ ~2:1 trên giấy) để tương phản ≥ 4,8:1. Áp ở: tiêu đề trang («Red», «Red continued», «Đỏ», «Đỏ tiếp»), nhãn chú giải, nhãn dòng tóm tắt («Red tasks:»), nhãn màu trong hình bìa. Dấu chấm màu ở đầu thẻ việc là emoji, đã có màu sẵn. Trong nhãn đậm thì cả tên màu đậm 600; trong h2 (mảnh 200 phải #111) tên màu dùng 300. Marker trong md: `⟬màu‖chữ⟭` → `<span class="c-màu">`; `check_lang.mjs` kiểm mọi tên màu có `.c-màu` và đúng màu, và số tên màu nhận ra ở bản VI phải BẰNG bản EN (9 = 9 trên dữ liệu có đỏ + vàng). Regex nhận tên màu không dùng `\b`: `\b` của JS không coi «ỏ», «á» là chữ nên «Đỏ:», «Xanh lá:» không khớp (Kirei bắt ở 1cda5bc); dùng `(?=[\s:：]|$)`.
 
 ## Giới hạn đã biết
 - Chỉ thread mở của MỘT phòng gốc (mặc định `vinh-hong`, tên phòng ghi ở brand và footer của báo cáo).
