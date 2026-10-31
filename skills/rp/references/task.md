@@ -35,6 +35,9 @@ Thứ tự ưu tiên: xanh lá, đỏ, vàng, xám/xanh dương. Dòng có nhi�
 - Chỉ thread mở của MỘT phòng gốc (mặc định `vinh-hong`, tên phòng ghi ở brand và footer của báo cáo).
 - Không có smoke, không có sha từng nhánh: ghi «chưa đo». Cần thì thêm nguồn đọc ở Hang trước, rồi mới thêm vào báo cáo.
 - Không dùng danh sách «- chữ» của `book-layout` cho dòng việc: nó vẽ dấu tích xanh trước MỌI dòng, kể cả dòng cảnh báo, và owner đọc tích là «xong». Báo cáo không có dấu tích nào (`ul.checks` = 0 trong HTML); selftest chặn dòng «- » quay lại.
+- Chữ nhấn «*…*» của `book-layout` có màu XANH LÁ nên báo cáo không dùng nó ở bìa và tiêu đề (xanh lá chỉ dành cho «xong»); selftest chặn «*» quay lại.
+- Màu theo giai đoạn mà `/work/open` trả, chưa đọc giai đoạn trong sổ vòng đời: việc đã ĐẠT trong sổ vẫn có thể hiện xám hoặc vàng «chờ review». Đọc giai đoạn sổ là việc để sau.
+- Footer của trang bìa ở 390 px có thể chồng lên ảnh bìa (lỗi chung của `book-layout`, không sửa ở đây).
 - Không dùng bảng markdown (điện thoại không đọc được); danh sách thay bảng.
 
 ## Thêm chế độ khác sau này

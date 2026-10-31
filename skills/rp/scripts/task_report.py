@@ -7,7 +7,7 @@
 Nguồn: GET <HANG_URL>/work/open?room=<phòng> (cùng dữ liệu tool MCP hang_open_work; mặc định vinh-hong, không kèm room thì Hang gộp mọi phòng gốc token máy thấy) với Bearer token máy ở ~/.hang/token; --src đọc tệp JSON thay cho mạng.
 Không ghi gì lên Hang, không in token. Mỗi dòng báo cáo mang id thread (room), req hoặc nhánh làm bằng chứng; thứ không đo được ghi «chưa đo».
 MÀU (owner 31/10: «tick xanh là tui hiểu xong hết rồi hả»): xanh lá CHỈ khi việc thật sự xong (đã lên Live). Việc đang làm, chờ, chậm, chết, chưa bắt đầu KHÔNG BAO GIỜ xanh lá.
-Không dùng danh sách «- chữ» của book-layout: nó vẽ dấu tích xanh trước MỌI dòng, đọc thành «xong». Mỗi dòng là một đoạn văn mở đầu bằng chấm màu tính từ dữ liệu.
+Không dùng danh sách «- chữ» của book-layout (dấu tích xanh trước MỌI dòng, đọc thành «xong») và không dùng chữ nhấn «*…*» (book-layout tô nó XANH LÁ). Mỗi dòng là một đoạn văn mở đầu bằng chấm màu tính từ dữ liệu.
 Python 3.9, chỉ stdlib."""
 from __future__ import annotations
 
@@ -82,14 +82,14 @@ def judge(t):
         yel.append("chờ review")
     if st == "in_progress" and QUIET < idle <= STALE:
         yel.append(f"đang làm mà im {ago(idle)}")
-    if t.get("deployed") and not red:
+    if t.get("deployed") and not red and not yel:
         return "green", ["đã lên Live"]
     if red:
         return "red", red + yel
     if yel:
-        return "yellow", yel
+        return "yellow", (["đã lên Live"] if t.get("deployed") else []) + yel   # đã lên Live mà còn chờ owner / việc khác: chưa phải xong
     if st in ("backlog", "queued"):
-        return "gray", ["chưa bắt đầu" + ("" if t.get("workers") else ", chưa có người làm")]
+        return "gray", ["chưa bắt đầu"]   # người làm hiện ở cột riêng của dòng, không lặp ở lý do
     if st == "in_progress":
         return "blue", [f"đang làm, tin cuối {ago(idle)} trước"]
     return "gray", [f"giai đoạn {st or 'không rõ'}"]
@@ -109,23 +109,24 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
     stamp = time.strftime("%d/%m/%Y %H:%M", time.localtime(now))
     o = ["---", "title: Báo cáo tình trạng task", f"brand: Hang · {room}" if room else "brand: Hang", f"date: {stamp}", "vol: Báo cáo",
          f"footer: nguồn hang_open_work{f' room={room}' if room else ' (tệp)'} · Live {running[:7] or 'chưa biết'}", "---",
-         "=== cover", "^ Tình trạng task", f"# {len(ts)} việc mở / *{n['green']} xong.*",
+         "=== cover", "^ Tình trạng task", f"# {len(ts)} việc mở / {n['green']} xong.",
          f"> Chốt lúc {stamp}. Số liệu đọc thẳng từ Hang. Màu chỉ nói ĐÚNG tình trạng: xanh lá mới là xong.", "---", "",
-         "=== page", "@ Chú giải", "# Chú giải / *màu*", "---"]
+         "=== page", "@ Chú giải", "# Chú giải / màu", "---"]
     o += [f"{DOT[k]} {LABEL[k]}: {meaning}" for k, _, _, meaning in COLORS] + [""]
-    o += ["=== page", "@ Tóm tắt", "# Tóm tắt / *một trang*", "---", f"! {n['green']} | việc đã xong trong {len(ts)} việc đang mở" + (f" | room:{room}, hang_open_work" if room else " | hang_open_work")]
+    o += ["=== page", "@ Tóm tắt", "# Tóm tắt / một trang", "---", f"! {n['green']} | việc đã xong trong {len(ts)} việc đang mở" + (f" | room:{room}, hang_open_work" if room else " | hang_open_work")]
     o += [f"{DOT[k]} {LABEL[k]}: {n[k]} việc" for k, *_ in COLORS if n[k]] + [f"Sha đang chạy trên Live: {running[:12] or 'chưa biết'}", ""]
     for k, dot, label, _ in COLORS:
         grp = [(t, w) for t, c, w in rows if c == k]
         for i in range(0, len(grp), PER_PAGE):
-            o += ["=== page", f"@ {label}", f"# {label}" + (" / *tiếp*" if i else ""), "---"]
+            o += ["=== page", f"@ {label}", f"# {label}" + (" / tiếp" if i else ""), "---"]
             o += [line(t, k, w) for t, w in grp[i:i + PER_PAGE]] + [""]
-    o += ["=== page", "@ Chưa đo", "# Chưa đo / *và giới hạn*", "---",
+    o += ["=== page", "@ Chưa đo", "# Chưa đo / và giới hạn", "---",
           "Kết quả smoke mới nhất của Live: chưa đo (báo cáo này không có nguồn đọc smoke).",
           "Sha từng nhánh đang review: chưa đo (hang_open_work chỉ cho tên nhánh, không cho sha).",
           "«Xong» lấy từ cờ deployed của thread, không phải từ so sánh sha: thread chưa có cờ thì không bao giờ ra xanh lá.",
+          "Màu theo giai đoạn mà /work/open trả, chưa đọc giai đoạn trong sổ vòng đời: một việc đã được review ĐẠT trong sổ vẫn có thể hiện xám hoặc vàng «chờ review» ở đây (đọc thêm giai đoạn sổ để sau).",
           "Thread đã đóng không có trong báo cáo" + (f"; việc ngoài phòng {room} cũng không." if room else "; phạm vi phòng của tệp nguồn: chưa đo."),
-          "~ Chưa đo thì ghi / *chưa đo.*", ""]
+          "~ Chưa đo thì ghi / chưa đo.", ""]
     return "\n".join(o)
 
 
@@ -139,18 +140,21 @@ def selftest():
              ("chờ owner", T("e", "in_progress", owner_wait=True), "yellow", "chờ owner trả lời"),
              ("chờ review", T("f", "review"), "yellow", "chờ review"),
              ("đợi việc khác", T("g", "in_progress", blocking=["Kai còn việc khác chờ («Việc x»)"]), "yellow", "chờ: Kai còn việc khác chờ"),
-             ("backlog", T("h", "backlog", workers=[]), "gray", "chưa có người làm"),
+             ("backlog", T("h", "backlog", workers=[]), "gray", "chưa bắt đầu"),
              ("đang làm ổn", T("i", "in_progress", idle=300), "blue", "đang làm, tin cuối 5 phút"),
-             ("đã lên Live", T("j", "review", deployed=True), "green", "đã lên Live"),
+             ("đã lên Live", T("j", "done", deployed=True), "green", "đã lên Live"),
+             ("deployed mà vẫn chờ review", T("n", "review", deployed=True), "yellow", "chờ review"),
              ("đã lên Live nhưng agent chết", T("k", "review", deployed=True, down=[{"name": "Kai", "health": "dead"}]), "red", "đã chết"),
+             ("đã lên Live nhưng còn chờ owner", T("m", "review", deployed=True, owner_wait=True), "yellow", "chờ owner trả lời"),
              ("deployed false không xanh lá", T("l", "review", deployed=False), "yellow", "chờ review"))
     for name, t, want, why in cases:
         c, w = judge(t)
         assert c == want and any(why in x for x in w), (name, c, w)
     fx = {"running": "c031e2312e03ebc2974b9672daee8cecbf5498e3", "open": [c[1] for c in cases]}
     md = build_md(fx, now)
-    assert "# 12 việc mở / *1 xong.*" in md, md[:400]
-    assert not [ln for ln in md.splitlines() if ln.startswith("- ")], "còn danh sách «- » (tick xanh)"   # book-layout vẽ tick xanh trước mọi dòng «- »
+    assert "# 14 việc mở / 1 xong." in md, md[:400]
+    assert not [ln for ln in md.splitlines() if ln.startswith("- ")], "còn danh sách «- » (tick xanh)"
+    assert "*" not in md, "còn chữ nhấn «*…*» (book-layout tô xanh lá)"   # ngoài dòng 🟢 cũng không có «*»   # book-layout vẽ tick xanh trước mọi dòng «- »
     greens = [ln for ln in md.splitlines() if ln.startswith("🟢 ") and "room:" in ln]
     assert len(greens) == 1 and "room:j" in greens[0], greens   # đúng MỘT dòng việc xanh lá (việc đã lên Live)
     assert "xanh lá mới là xong" in md and "Chỉ màu này mới là xong" in md
@@ -162,7 +166,7 @@ def selftest():
     md2 = build_md(fx, now, "phong-khac")
     assert "brand: Hang · phong-khac" in md2 and "vinh-hong" not in md2   # tên phòng đi theo tham số, không gõ cứng
     e = build_md({"open": [], "running": ""}, now)
-    assert "0 xong" in e and e.count("=== page") >= 3
+    assert "0 xong." in e and e.count("=== page") >= 3
     print("task_report selftest ok")
 
 
