@@ -53,13 +53,14 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 | W02 | deterministic | Hang | `python3 scripts/task_report.py [--room vinh-hong] --out <thư mục> --build` | `.md` + `.html` | đọc lỗi → blocked |
 | W03 | judgment | `.md` | đọc lướt: dòng nào mâu thuẫn dữ liệu thì sửa nguồn/ghi chú, không thêm số không có nguồn | `.md` đã soát | — |
 | W04 | deterministic | `.html` | `node <book-layout>/scripts/check.mjs <tệp>.html` (macOS 13: `PW_CHANNEL=chrome`) | hai dòng `ok` | HỎNG → sửa 1 lần, lặp tối đa 2 |
-| W05 | effect | `.html` | gửi owner kèm tệp: `sh ~/.hang/bin/hang-room-hook send owner "<2 dòng tóm tắt>" --file <tệp>.html --from $HANG_SESSION --agent claude-code --req <id tin owner> --reply <id tin owner>` | tin có link tệp | — |
+| W04b | judgment | `<tệp>-390.png`, `<tệp>-1280.png` (check.mjs đã chụp) | XEM ảnh bằng mắt (đọc ảnh, không chỉ tin hai dòng `ok`) và phán thẳng 5 điểm: bìa không có tranh hay màu gợi «xong» sai (không xanh lá, không pastel nhạt); chấm màu đủ rõ; chú giải đúng màu; không chữ nhỏ hay chồng nhau ở 390; số trên bìa khớp trang tóm tắt | ảnh đã duyệt | sai điểm nào → sửa `task_report.py`, dựng lại, chụp lại (tối đa 2 vòng), nói rõ điểm sai nếu vẫn hỏng |
+| W05 | effect | `.html` + ảnh 390 | gửi owner kèm tệp (và ảnh 390 màn đầu): `sh ~/.hang/bin/hang-room-hook send owner "<2 dòng tóm tắt>" --file <tệp>.html --from $HANG_SESSION --agent claude-code --req <id tin owner> --reply <id tin owner>` | tin có link tệp | — |
 
 ### Branches
 Không có nhánh phụ. Chế độ mới thêm bằng `references/<chế độ>.md` (cùng dạng bảng bước), không thêm nhánh ở hub.
 
 ### Validation và stopping
-Xong khi: `task_report.py --selftest` in `ok`, `check.mjs` in hai dòng `ok`, và owner nhận được tệp `.html`. Mỗi báo cáo ghi giờ chốt ở bìa; chạy lại để cập nhật, không sửa tay số liệu.
+Xong khi: `task_report.py --selftest` in `ok`, `check.mjs` in hai dòng `ok`, đã XEM ảnh 390 và 1280 (W04b) và thấy hợp lý, và owner nhận được tệp `.html`. Mỗi báo cáo ghi giờ chốt ở bìa; chạy lại để cập nhật, không sửa tay số liệu.
 
 ### Examples
 - **Positive:** owner gõ «/rp task» → script đọc 9 thread mở, ra báo cáo 7 trang → check.mjs ok 1280 + 390 → gửi tệp kèm hai dòng tóm tắt (số việc, việc cần chú ý số một).

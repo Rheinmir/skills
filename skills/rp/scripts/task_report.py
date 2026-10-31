@@ -11,7 +11,7 @@ Không dùng danh sách «- chữ» của book-layout (dấu tích xanh trước
 Python 3.9, chỉ stdlib."""
 from __future__ import annotations
 
-import argparse, json, os, subprocess, sys, time, urllib.parse, urllib.request
+import argparse, base64, json, os, subprocess, sys, time, urllib.parse, urllib.request
 from pathlib import Path
 
 ROOM = "vinh-hong"   # phòng gốc mặc định; tên hiển thị lấy từ chính tham số, không gõ cứng ở brand/footer
@@ -24,6 +24,7 @@ COLORS = (("red", "🔴", "Đỏ", "cần xử lý: agent đã chết, hoặc b�
           ("blue", "🔵", "Xanh dương", "đang làm bình thường (chưa xong)"),
           ("gray", "⚪", "Xám", "chưa bắt đầu (backlog, xếp hàng)"),
           ("green", "🟢", "Xanh lá", "XONG: đã lên Live. Chỉ màu này mới là xong"))
+HEX = {"red": "#c0392b", "yellow": "#e0a800", "blue": "#2f6fb5", "gray": "#9aa0a6", "green": "#3b7a2a"}   # màu thanh ở bìa: đậm, phẳng, không pastel
 DOT = {k: d for k, d, _, _ in COLORS}
 LABEL = {k: n for k, _, n, _ in COLORS}
 
@@ -101,6 +102,20 @@ def line(t, color, why):
     return "; ".join(bits)   # một đoạn văn thường: không «- » (tick xanh), không **đậm** (dòng danh sách là flex)
 
 
+def cover_svg(n):
+    """Hình bìa: thanh ngang số việc theo màu (thay tranh núi xanh lá mặc định của book-layout: xanh lá ở bìa đọc như «ổn»/«xong»). Thanh dài theo số việc; 0 việc thì chỉ còn khung rỗng."""
+    top, mx, rows = 42, max(max(n.values()), 1), []
+    for i, (k, _, label, _) in enumerate(COLORS):
+        y, w = top + i * 40, round(n[k] / mx * 170)
+        rows.append(f'<text x="14" y="{y + 19}" font-size="17" fill="#3d3d3a">{label}</text>'
+                    f'<rect x="136" y="{y}" width="206" height="26" rx="4" fill="none" stroke="#c9c9c2"/>'
+                    + (f'<rect data-c="{k}" x="136" y="{y}" width="{max(w + 36, 36)}" height="26" rx="4" fill="{HEX[k]}"/>' if n[k] else "")
+                    + f'<text x="356" y="{y + 20}" font-size="20" font-weight="700" fill="#1d1d1b">{n[k]}</text>')
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" font-family="Be Vietnam Pro, Helvetica Neue, Helvetica, Arial, sans-serif">'   # ảnh SVG không tải được web font: lùi về sans hệ thống, không để rơi vào font có chân
+           '<rect width="400" height="260" fill="#fbfaf6"/><text x="14" y="26" font-size="15" fill="#6b6b66">Số việc theo màu</text>' + "".join(rows) + "</svg>")
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
 def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không biết phòng nào → không ghi tên phòng, không khẳng định «ngoài phòng X không có»
     ts = sorted(d.get("open") or [], key=lambda t: t.get("opened") or 0)
     running = str(d.get("running") or "")
@@ -110,7 +125,8 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
     o = ["---", "title: Báo cáo tình trạng task", f"brand: Hang · {room}" if room else "brand: Hang", f"date: {stamp}", "vol: Báo cáo",
          f"footer: nguồn hang_open_work{f' room={room}' if room else ' (tệp)'} · Live {running[:7] or 'chưa biết'}", "---",
          "=== cover", "^ Tình trạng task", f"# {len(ts)} việc mở / {n['green']} xong.",
-         f"> Chốt lúc {stamp}. Số liệu đọc thẳng từ Hang. Màu chỉ nói ĐÚNG tình trạng: xanh lá mới là xong.", "---", "",
+         f"> Chốt lúc {stamp}. Số liệu đọc thẳng từ Hang. Màu chỉ nói ĐÚNG tình trạng: xanh lá mới là xong.", "---",
+         "![Số việc theo màu: " + ", ".join(f"{LABEL[k].lower()} {n[k]}" for k, *_ in COLORS) + f"]({cover_svg(n)})", "",
          "=== page", "@ Chú giải", "# Chú giải / màu", "---"]
     o += [f"{DOT[k]} {LABEL[k]}: {meaning}" for k, _, _, meaning in COLORS] + [""]
     o += ["=== page", "@ Tóm tắt", "# Tóm tắt / một trang", "---", f"! {n['green']} | việc đã xong trong {len(ts)} việc đang mở" + (f" | room:{room}, hang_open_work" if room else " | hang_open_work")]
@@ -155,6 +171,13 @@ def selftest():
     assert "# 14 việc mở / 1 xong." in md, md[:400]
     assert not [ln for ln in md.splitlines() if ln.startswith("- ")], "còn danh sách «- » (tick xanh)"
     assert "*" not in md, "còn chữ nhấn «*…*» (book-layout tô xanh lá)"   # ngoài dòng 🟢 cũng không có «*»   # book-layout vẽ tick xanh trước mọi dòng «- »
+    import re
+    m = re.search(r"!\[Số việc theo màu: ([^\]]+)\]\(data:image/svg\+xml;base64,([^)]+)\)", md)
+    assert m, "bìa thiếu hình thanh số việc theo màu"
+    svg = base64.b64decode(m.group(2)).decode()
+    assert all(f'data-c="{k}"' in svg for k in ("red", "yellow", "blue", "gray", "green")), svg[:200]   # fx có đủ năm màu
+    assert 'data-c="green"' not in cover_svg({"red": 2, "yellow": 1, "blue": 0, "gray": 0, "green": 0}) and 'data-c="blue"' not in cover_svg({"red": 2, "yellow": 1, "blue": 0, "gray": 0, "green": 0})   # 0 việc: không thanh (khung rỗng), nhất là xanh lá
+    assert "xanh lá 0" in build_md({"open": [], "running": ""}, now) and "núi" not in md
     greens = [ln for ln in md.splitlines() if ln.startswith("🟢 ") and "room:" in ln]
     assert len(greens) == 1 and "room:j" in greens[0], greens   # đúng MỘT dòng việc xanh lá (việc đã lên Live)
     assert "xanh lá mới là xong" in md and "Chỉ màu này mới là xong" in md
