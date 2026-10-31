@@ -7,12 +7,11 @@ import { createRequire } from 'module'; import { execSync } from 'child_process'
 const require = createRequire((process.env.PW_ROOT || execSync('npm root -g', { encoding: 'utf8' }).trim()) + '/');
 const { chromium } = require('playwright');
 const f = resolve(process.argv[2] || ''), out = resolve(process.argv[3] || '.'); mkdirSync(out, { recursive: true });
-const b = await chromium.launch(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}); let bad = 0, ext = 0, fonts = 0;
+const b = await chromium.launch(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}); let bad = 0, ext = 0;
 const ok = (c, m) => { console.log((c ? 'ok   ' : 'FAIL ') + m); if (!c) bad++; };
 async function open(w, init) {
   const ctx = await b.newContext({ viewport: { width: w, height: 844 } }); const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  await ctx.route('**/*', r => { const u = r.request().url(); if (u.startsWith('file:')) return r.continue();
-    if (/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(u)) fonts++; else { ext++; console.log('  request ngoài: ' + u); } return r.abort(); });   // chặn HẾT; web font của khung book-layout (GET, không mang chữ báo cáo) đếm riêng
+  await ctx.route('**/*', r => { const u = r.request().url(); if (u.startsWith('file:') || u.startsWith('data:')) return r.continue(); ext++; console.log('  request ngoài: ' + u); return r.abort(); });   // chặn HẾT; font Lexend Deca nhúng base64 nên không còn ngoại lệ
   if (init) await p.addInitScript(init);
   await p.goto('file://' + f); await p.waitForTimeout(600); return { ctx, p, errs };
 }
@@ -26,18 +25,41 @@ const blank = p => p.evaluate(([g, t]) => [...document.querySelectorAll('.spread
   for (let i = 1; i < kids.length; i++) { const d = kids[i].getBoundingClientRect().top - kids[i - 1].getBoundingClientRect().bottom; if (d > g) out.push(`khe ${Math.round(d)}px trong trang «${(pg.querySelector('h2') || {}).textContent}»`); }
   const foot = pg.querySelector('.foot'), end = (foot ? foot.getBoundingClientRect().top : r.bottom) - (kids.length ? kids[kids.length - 1].getBoundingClientRect().bottom : r.top);
   if (end > t) out.push(`trống ${Math.round(end)}px dưới khối cuối trang «${(pg.querySelector('h2') || {}).textContent}»`); return out; })), [GAP, TAIL]);
+// Luật chữ (owner m1a192fa92c41dfb, Kanade DUYỆT): độ đậm ≤ 300 (cấm Lexend thường và bold); < 200 chỉ khi cỡ ≥ 48 px; chữ ≤ 200 dùng màu gần đen (WCAG không tính độ mảnh);
+// tương phản ≥ 4.5:1 chữ < 24 px, ≥ 3:1 chữ lớn; họ font đầu tiên là Lexend Deca. Độ mảnh của nét: chưa đo bằng số, xem ảnh.
+const typo = p => p.evaluate(() => {
+  const lum = c => { const a = c.match(/[\d.]+/g).map(Number).slice(0, 3).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * a[0] + .7152 * a[1] + .0722 * a[2]; };
+  const bgOf = e => { for (let n = e; n; n = n.parentElement) { const c = getComputedStyle(n).backgroundColor; if (!/rgba\(0, 0, 0, 0\)|transparent/.test(c)) return c; } return 'rgb(255, 255, 255)'; };
+  const cr = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const bad = [], seen = new Set();
+  for (const e of document.querySelectorAll('body *')) {
+    if (!e.offsetParent && e.tagName !== 'BODY') continue;
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+    const c = getComputedStyle(e), w = +c.fontWeight, fs = parseFloat(c.fontSize), k = `${e.tagName}.${e.className}|${w}|${Math.round(fs)}|${c.color}`;
+    if (seen.has(k)) continue; seen.add(k);
+    const tag = `${e.tagName.toLowerCase()}${e.className ? '.' + e.className : ''} «${e.textContent.trim().slice(0, 24)}»`;
+    if (w > 300) bad.push(`độ đậm ${w} > 300: ${tag}`);
+    if (w < 200 && fs < 48) bad.push(`độ đậm ${w} < 200 ở cỡ ${Math.round(fs)} px (< 48): ${tag}`);
+    if (w <= 200 && cr(c.color, 'rgb(17, 17, 17)') > 1.3) bad.push(`chữ mảnh (${w}) không dùng màu gần đen (${c.color}): ${tag}`);
+    const r = cr(c.color, bgOf(e)), need = fs >= 24 ? 3 : 4.5;
+    if (r < need) bad.push(`tương phản ${r.toFixed(2)}:1 < ${need}:1 (cỡ ${Math.round(fs)} px): ${tag}`);
+    if (!/^"?Lexend Deca/.test(c.fontFamily) && !e.closest('svg')) bad.push(`họ font không phải Lexend Deca (${c.fontFamily.slice(0, 30)}): ${tag}`);
+  }
+  return bad;
+});
+const faces = p => p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'Lexend Deca' && f.status === 'loaded').length; });
 const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - innerWidth,
   over: [...document.querySelectorAll('h1,h2,h3,p,li,.lead,button')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).length }));
 for (const w of [390, 1280]) {
   const { ctx, p, errs } = await open(w);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en' && await vis(p, '.en') && !await vis(p, '.vi'), `${w}: mở ra tiếng Anh, không thấy chữ Việt của trang`);
   let m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} EN: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
   await p.screenshot({ path: `${out}/en-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); await p.waitForTimeout(150);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'vi' && await vis(p, '.vi') && !await vis(p, '.en'), `${w}: bấm nút đổi cả trang sang tiếng Việt`);
   m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} VI: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
   await p.screenshot({ path: `${out}/vi-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en', `${w}: bấm lại về tiếng Anh`);
   ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
@@ -65,5 +87,5 @@ for (const w of [390, 1280]) {
   await p.click('#rp-lang'); await p.waitForTimeout(150); ok(!await vis(p, '#rp-tr'), 'ở bản Việt: nút dịch tên việc ẩn'); await card(); await p.screenshot({ path: `${out}/f3.png` });
   ok(!errs.length, 'không lỗi JS'); await ctx.close();
 }
-ok(ext === 0, `không request nào ra ngoài file:// ngoài web font của khung book-layout (lạ: ${ext}; web font bị chặn mà trang vẫn chạy: ${fonts} request)`);
+ok(ext === 0, `không request nào ra ngoài (kể cả font): đếm ${ext}`);
 await b.close(); process.exit(bad ? 1 : 0);

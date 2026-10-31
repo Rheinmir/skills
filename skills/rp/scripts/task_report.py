@@ -260,9 +260,9 @@ def cover_svg(n, lang_en=True):
         rows.append(f'<text x="14" y="{y + 19}" font-size="17" fill="#3d3d3a">{L("c_" + k, "en")}</text>'
                     f'<rect x="136" y="{y}" width="206" height="26" rx="4" fill="none" stroke="#c9c9c2"/>'
                     + (f'<rect data-c="{k}" x="136" y="{y}" width="{max(w + 36, 36)}" height="26" rx="4" fill="{HEX[k]}"/>' if n[k] else "")
-                    + f'<text x="356" y="{y + 20}" font-size="20" font-weight="700" fill="#1d1d1b">{n[k]}</text>')
-    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" font-family="Be Vietnam Pro, Helvetica Neue, Helvetica, Arial, sans-serif">'   # ảnh SVG không tải được web font: lùi về sans hệ thống, không để rơi vào font có chân
-           '<rect width="400" height="260" fill="#fbfaf6"/><text x="14" y="26" font-size="15" fill="#6b6b66">' + L("cover_alt", "en") + "</text>" + "".join(rows) + "</svg>")
+                    + f'<text x="356" y="{y + 20}" font-size="20" font-weight="300" fill="#111">{n[k]}</text>')
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" font-family="Lexend Deca, Helvetica Neue, Segoe UI Light, system-ui, sans-serif" font-weight="300">'   # ảnh SVG nhúng không dùng được font của trang: lùi về sans hệ thống ở độ đậm 300 (chữ trong hình không phải Lexend; ghi trong task.md)
+           '<rect width="400" height="260" fill="#fbfaf6"/><text x="14" y="26" font-size="15" fill="#4a4a45">' + L("cover_alt", "en") + "</text>" + "".join(rows) + "</svg>")
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
@@ -300,11 +300,32 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
 
 
 # --- phần HTML sau book.py: đổi dấu đánh dấu thành span EN/VI + nút ngôn ngữ (không gọi mạng) ---
-CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
-       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page{min-height:0}@media (min-width:821px){.page{padding-bottom:calc(var(--page-pad) + 6px)}}"   # khổ rộng: bớt 22 px đệm đáy (chân trang tuyệt đối vẫn cách nội dung ≥ 20 px) để hai tờ lệch chiều cao ít trông hơn   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0): trang ôm nội dung, khối cách đều 28 px; nền sage xanh lá nhạt đổi xám ấm vì xanh lá chỉ dành cho «xong»
+FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+FONT_FACES = (("LexendDeca-vietnamese.woff2", "U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB"),
+              ("LexendDeca-latin.woff2", "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"))   # unicode-range của Google Fonts; font biến thiên wght 100–900, OFL (assets/fonts/OFL-Lexend.txt)
 
-       "#rp-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;font:600 13px/1.2 'Be Vietnam Pro',Helvetica,Arial,sans-serif}"
-       "#rp-bar button{font:inherit;color:#1d1d1b;background:#fbfaf6;border:1px solid #c9c9c2;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}"
+
+def font_css():
+    """@font-face Lexend Deca tự phục vụ (base64 trong HTML, 0 request ngoài; owner D-c2-001). Chỉ vietnamese + latin: ký tự ngoài (vd →, ≤) rơi về font dự phòng, vẫn độ đậm 300."""
+    out = []
+    for name, rng in FONT_FACES:
+        b = base64.b64encode((FONT_DIR / name).read_bytes()).decode()
+        out.append('@font-face{font-family:"Lexend Deca";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,' + b + ') format("woff2");unicode-range:' + rng + "}")
+    return "".join(out)
+
+
+# Độ đậm (owner m1a192fa92c41dfb + Kanade DUYỆT): thân và h2/h3 300 («Lexend Deca light thôi», cấm 400 và bold: luật D-c2-002); tiêu đề và số lớn tối thiểu 200; 100 CHỈ khi cỡ ≥ 48 px và khổ ≥ 1100 px.
+# Chữ mảnh (≤ 200) dùng màu gần đen #111: WCAG không tính độ mảnh của nét, bù bằng màu. Nút cũng 300.
+CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
+       ':root{--sans:"Lexend Deca",system-ui,-apple-system,"Segoe UI",sans-serif;--hand:var(--sans);--page-pad:clamp(24px,4.8vw,60px);--ink3:#5c5c56}'   # tên font ở MỘT chỗ; lề rộng hơn kiểu tạp chí; --ink3 (chữ phụ nhỏ) từ #8a8a82 (3,3:1) lên #5c5c56 (≥ 6:1) vì chữ Light mỏng cần tương phản cao hơn
+       "html body,html body *{font-weight:300!important}"   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
+       "body{font-size:16px;line-height:1.7}"
+       "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111;letter-spacing:-.015em}html body h3{color:#111;letter-spacing:-.015em}"
+       "h1,h2{line-height:1.2}.cover h1{font-size:clamp(44px,6.4vw,84px);line-height:1.2}h2{font-size:clamp(34px,4vw,52px)}"   # tiêu đề lớn mỏng canh trái như trang chủ lexend.com; line-height ≥ 1.2 để không cắt dấu Việt (check.mjs clip)
+       "@media (min-width:1100px){html body .cover h1,html body .stat .big{font-weight:100!important}}"
+       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page{min-height:0}@media (min-width:821px){.page{padding-bottom:calc(var(--page-pad) - 6px)}}"   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0); đệm đáy khổ rộng bớt 34 px (còn --page-pad − 6; chân trang tuyệt đối cách nội dung ≥ 18 px) để hai tờ của quyển lệch chiều cao ít hơn
+       "#rp-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;font:300 13px/1.2 var(--sans)}"
+       "#rp-bar button{font:inherit;color:#111;background:#fbfaf6;border:1px solid #c9c9c2;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}"
        "#rp-bar button:focus-visible{outline:2px solid #1d1d1b;outline-offset:2px}"
        "html[data-lang=vi] #rp-tr{display:none}")
 JS = """(function(){var h=document.documentElement,b=document.getElementById('rp-lang'),t=document.getElementById('rp-tr'),K='rp-lang',T=%(T)s;
@@ -332,7 +353,8 @@ def finish(page):
     bar = ('<div id="rp-bar"><button type="button" id="rp-tr" hidden aria-pressed="false" title="' + htmllib.escape(L("btn_tr_title", "en")) + '">' + L("btn_tr", "en") + "</button>"
            '<button type="button" id="rp-lang" title="' + htmllib.escape(L("btn_vi_title", "en")) + '">' + L("btn_vi", "en") + "</button></div>")
     page = re.sub(r"<html([^>]*)>", lambda m: "<html" + re.sub(r'\s(lang|data-lang)="[^"]*"', "", m.group(1)) + ' lang="en" data-lang="en">', page, count=1)
-    page = page.replace("</head>", f"<style>{CSS}</style></head>", 1) if "</head>" in page else CSS and page
+    page = re.sub(r"<link[^>]*fonts\.(?:googleapis|gstatic)\.com[^>]*>\s*", "", page)   # font của book-layout (Be Vietnam Pro, Patrick Hand) không còn dùng: bỏ link, 0 request ngoài
+    page = page.replace("</head>", f"<style>{font_css()}{CSS}</style></head>", 1) if "</head>" in page else CSS and page
     page = re.sub(r"(<body[^>]*>)", lambda m: m.group(1) + bar, page, count=1)
     return page.replace("</body>", "<script>" + JS % {"T": json.dumps(T, ensure_ascii=False)} + "</script></body>", 1)
 
@@ -494,6 +516,18 @@ def selftest():
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
     assert OPEN not in out and SEP not in out and NO not in out
     assert not re.search(r"https?://|src=\"http|@import|fetch\(|XMLHttpRequest|translate\.google", out), "trang song ngữ không được gọi ra ngoài"
+    # font tự phục vụ (owner D-c2-001/002): @font-face base64 woff2, không link Google Fonts, độ đậm ≤ 300, sàn mỏng
+    fake2 = fake.replace("</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro" rel="stylesheet"></head>')
+    o2 = finish(fake2)
+    assert "fonts.googleapis" not in o2 and "fonts.gstatic" not in o2, "gỡ link Google Fonts của book-layout"
+    assert o2.count("@font-face") == 2 and o2.count("data:font/woff2;base64,d09GMg") == 2, "hai @font-face (vietnamese, latin) nhúng base64 woff2"
+    assert 'font-family:"Lexend Deca"' in o2 and '--sans:"Lexend Deca"' in o2, "họ font Lexend Deca ở một chỗ (--sans)"
+    css = CSS
+    ws = sorted({int(w) for w in re.findall(r"font-weight:(\d+)", css) + re.findall(r"font:(\d+) ", css)})   # CSS của rp
+    assert ws and max(ws) <= 300 and min(ws) >= 100, ("độ đậm trong CSS phải trong 100–300", ws)
+    assert "@media (min-width:1100px){html body .cover h1,html body .stat .big{font-weight:100!important}}" in css and "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111" in css, "sàn mỏng: 100 chỉ ≥ 1100 px, mặc định 200 và màu gần đen"
+    svg0 = base64.b64decode(cover_svg({"red": 1, "yellow": 0, "blue": 0, "gray": 0, "green": 0}).split(",", 1)[1]).decode()
+    assert 'font-weight="700"' not in svg0 and 'font-weight="300"' in svg0, "hình bìa không còn chữ đậm"
     assert out.count("localStorage") == 2 and out.count("try{") >= 2, "mọi đọc/ghi localStorage bọc try/catch"
     assert "'Translator' in self" in out and out.index("'Translator' in self") < out.index("Translator.create"), "kiểm có API trước, không gọi thử rồi bắt lỗi"
     assert out.index("Translator.create") > out.index("t.onclick"), "chỉ dịch khi người xem bấm"
