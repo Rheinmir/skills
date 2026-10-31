@@ -27,7 +27,7 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 | In | máy đã nối Hang | có | `~/.hang/url` + `~/.hang/token` (script chỉ gửi token tới chính Hang đó, không in ra) |
 | In | chế độ | không | `task` (mặc định) |
 | Out | `rp-task-<ngày>-<giờ>.md` + `.html` | có | bìa, chú giải màu, tóm tắt, từng nhóm màu (đỏ, vàng, xanh dương, xám, xanh lá), trang «chưa đo» |
-| Out | hai dòng `ok` của `check.mjs` | có | bằng chứng 1280 + 390: không tràn, đủ dấu |
+| Out | hai dòng `ok` của `check.mjs` + không dòng FAIL của `check_lang.mjs` | có | bằng chứng 1280 + 390, EN và VI: không tràn, đủ dấu, đủ RULE-06..RULE-12 |
 
 ### Rules và capabilities
 - RULE-01 (MUST): chỉ ĐỌC Hang. Tin báo cáo là thứ duy nhất được ghi (gửi owner kèm tệp `.html`).
@@ -35,6 +35,15 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 - RULE-03 (MUST): màu của mỗi việc tính từ dữ liệu và xanh lá CHỈ khi việc thật sự xong (`deployed` true, đã lên Live). Đỏ = cần xử lý (agent chết, bị chặn, im > 12 giờ); vàng = chậm hoặc chờ (chờ owner, chờ review, đợi việc khác, im > 2 giờ); xanh dương = đang làm bình thường; xám = chưa bắt đầu. KHÔNG dùng danh sách «- » của book-layout cho dòng việc: nó vẽ dấu tích xanh trước mọi dòng và owner đọc tích là «xong» (31/10).
 - RULE-04 (MUST): trang dựng bằng skill `book-layout` (nền sáng, không bảng markdown, danh sách), không viết HTML tay; owner đọc trên điện thoại.
 - RULE-05 (MUST): không in token, không đưa token vào báo cáo hay tin gửi.
+- RULE-06 (MUST, owner m1a19291cd4a58d3 + m1a192aae03f1e9c «10-20 thôi, 25 vẫn dài»): mỗi dòng văn ≤ 20 chữ ở CẢ EN và VI (VI đếm theo khoảng trắng). «≥ 10 chữ» là mục tiêu cho câu văn, KHÔNG áp cho dòng nhãn–giá trị ngắn (Branch, Thread) vì RULE-07 thắng. Kiểm: `--selftest` (kể cả thẻ dài nhất).
+- RULE-07 (MUST, owner m1a192af76ee1bb0 «mỗi ý một dòng, có khoảng cách»): mỗi việc là MỘT thẻ: dòng tiêu đề (chấm màu + tên) rồi mỗi ý một dòng riêng (Status, Workers, Quiet for, Branch, Thread). Không gộp ý bằng «;» hay «·». Kiểm: `--selftest` (thẻ 3–5 dòng, chặn gộp).
+- RULE-08 (MUST, owner m1a19305e82029d5 «Status và Workers đã in bold đâu?»): nhãn đầu dòng trước «:» in đậm 600, chữ sau «:» giữ Light; đây là NGOẠI LỆ DUY NHẤT của RULE-10. Kiểm: `check_lang.mjs` (mọi dòng thẻ mở đầu bằng nhãn đậm).
+- RULE-09 (MUST, owner m1a192ced35a0c67 «hình quyển tập đâu?», m1a192e97d6f36b4 «bị chuột cắn», m1a192b837fe75fa «chừa quá nhiều khoảng trống»): khổ > 820 px là quyển tập hai tờ cao BẰNG NHAU (giấy chung, gáy giữa); khe giữa hai khối ≤ 80 px, chỗ trống dưới khối cuối ≤ 120 px; một thẻ mỗi tờ. Khổ ≤ 820 px một cột. Kiểm: `check_lang.mjs` (hai tờ lệch > 2 px là FAIL).
+- RULE-10 (MUST, owner m1a192fa92c41dfb): chữ Lexend Deca Light + mỏng, tự phục vụ (nhúng base64, 0 request ngoài). Thân, h3, nút 300; tiêu đề và số lớn ≥ 200; 100 chỉ khi ≥ 48 px và khổ ≥ 1100 px; không chữ nào ≥ 400 trừ RULE-08; chữ ≤ 200 màu #111; tương phản ≥ 4,5:1 (< 24 px) hoặc ≥ 3:1. Không áp hero đỏ của lexend.com. Kiểm: `check_lang.mjs` + `--selftest`.
+- RULE-11 (MUST, owner m1a19308ad5a5402 «Red, Yellow tô màu tương ứng»): tên màu (Red/Yellow/Blue/Gray/Green, Đỏ/Vàng/Xanh dương/Xám/Xanh lá) ở tiêu đề trang, chú giải, dòng tóm tắt và hình bìa tô đúng màu tương ứng (bảng `TXT`, đủ tương phản trên giấy). Kiểm: `--selftest` + `check_lang.mjs`.
+- RULE-12 (MUST, owner m1a192938f513344): báo cáo mở bằng tiếng Anh viết theo ASD-STE100 (kiểm CƠ HỌC, không phải chứng nhận) và có nút «VI» đổi cả trang sang tiếng Việt, không qua token Claude, không gọi mạng; tên việc giữ nguyên, nút «Translate task names» chỉ khi trình duyệt có Translator API và người xem bấm. Mọi câu do mã sinh nằm ở bảng `TX` (EN, VI). Kiểm: `--selftest` + `check_lang.mjs`.
+- RULE-13 (MUST, owner 31/10): không danh sách «- » (dấu tích xanh đọc là «xong»), không chữ nhấn «*…*» (book-layout tô xanh lá) ngoài nhãn đậm RULE-08; xanh lá CHỈ khi việc đã lên Live. Kiểm: `--selftest`.
+- RULE-14 (MUST, owner 31/10 + 1/11): trước khi gửi owner phải TỰ chụp 390 và 1280 (EN và VI), TỰ XEM, và gửi ảnh trước/sau kèm tệp; không nới luật kiểm khi FAIL, chỉnh bố cục.
 - Capabilities: chạy python3 và node; đọc `~/.hang`; gửi tin kèm tệp bằng `hang-room-hook send`.
 
 ### Failure boundaries

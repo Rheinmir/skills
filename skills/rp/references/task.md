@@ -51,6 +51,21 @@ Bìa dùng hình thanh số việc theo màu do chính script sinh (`cover_svg`,
 - `check_lang.mjs` thêm luật chữ ở mọi khổ và cả EN lẫn VI: độ đậm ≤ 300; < 200 chỉ khi ≥ 48 px; chữ ≤ 200 màu gần đen; tương phản ≥ 4,5:1 (< 24 px) hoặc ≥ 3:1; họ font là Lexend Deca; font thật sự nạp từ dữ liệu nhúng; request ngoài (kể cả font) = 0.
 - Giới hạn: ký tự ngoài bộ vietnamese + latin (vd →, ≤, ≥, ✓) rơi về font hệ thống ở độ đậm 300 (đã chụp dòng thử: dấu tiếng Việt đủ, mũi tên và ≤ đi font khác nhưng cùng độ nhẹ). Chữ trong hình bìa SVG dùng font hệ thống mảnh (ảnh nhúng không dùng được font của trang). Tệp HTML nặng thêm ~100 KB (font base64 ≈ 70 KB). Độ mảnh của nét: chưa đo bằng số.
 
+## Luật của owner đã chốt (mỗi luật có chỗ kiểm; chi tiết ở `SKILL.md` RULE-06..RULE-14)
+Danh sách theo thứ tự owner nói (31/10 → 1/11). Lời owner mới nhất thắng; luật mới đảo luật cũ thì sửa luật cũ ở đây, không để hai luật mâu thuẫn.
+1. Xanh lá chỉ khi XONG; không tick «- », không «*…*» (31/10). Kiểm: `--selftest`.
+2. Thoáng: mỗi việc một thẻ, mỗi ý một dòng có khoảng cách (31/10). Kiểm: `--selftest`.
+3. Mỗi dòng ≤ 20 chữ (10-20, sau đó 25 → 20) ở EN và VI. Kiểm: `--selftest`. «≥ 10» không bắt buộc cho dòng nhãn–giá trị ngắn.
+4. EN theo ASD-STE100 cơ học + nút VI không tốn token (31/10). Kiểm: `--selftest`, `check_lang.mjs`.
+5. Quyển tập hai tờ cao bằng nhau; khe ≤ 80, trống ≤ 120 (31/10 → 1/11). Kiểm: `check_lang.mjs`.
+6. Lexend Deca Light + mỏng, tự phục vụ (1/11). Kiểm: `check_lang.mjs`.
+7. Nhãn đầu dòng trước «:» đậm 600 (1/11): ngoại lệ duy nhất của luật 6. Kiểm: `check_lang.mjs`.
+8. Tên màu tô màu tương ứng (1/11). Kiểm: `--selftest`, `check_lang.mjs`.
+9. Quy trình: tự chụp 390 và 1280, tự xem, gửi ảnh trước/sau (31/10 → 1/11).
+
+## Màu chữ của tên màu (owner 1/11: «mấy chữ Red, Yellow tô màu tương ứng đi»)
+Bảng `TXT` trong `task_report.py`: đỏ #b3261e, vàng #8a6100, xanh dương #1f5fa8, xám #5b6168, xanh lá #2e6b1f. Đậm hơn màu thanh và chấm (vàng #e0a800 chỉ ~2:1 trên giấy) để tương phản ≥ 4,8:1. Áp ở: tiêu đề trang («Red», «Red continued», «Đỏ», «Đỏ tiếp»), nhãn chú giải, nhãn dòng tóm tắt («Red tasks:»), nhãn màu trong hình bìa. Dấu chấm màu ở đầu thẻ việc là emoji, đã có màu sẵn. Trong nhãn đậm thì cả tên màu đậm 600; trong h2 (mảnh 200 phải #111) tên màu dùng 300. Marker trong md: `⟬màu‖chữ⟭` → `<span class="c-màu">`; `check_lang.mjs` kiểm mọi tên màu có `.c-màu` và đúng màu.
+
 ## Giới hạn đã biết
 - Chỉ thread mở của MỘT phòng gốc (mặc định `vinh-hong`, tên phòng ghi ở brand và footer của báo cáo).
 - Không có smoke, không có sha từng nhánh: ghi «chưa đo». Cần thì thêm nguồn đọc ở Hang trước, rồi mới thêm vào báo cáo.

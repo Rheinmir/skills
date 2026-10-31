@@ -22,6 +22,8 @@ PER_PAGE = 1   # thẻ mỗi trang: hai tờ kề nhau (quyển tập) phải ca
 CAP = 20   # chữ tối đa mỗi dòng văn (owner 31/10: m1a19291cd4a58d3 «10-25», rồi m1a192aae03f1e9c «10-20 thôi, 25 vẫn dài»); VI đếm theo khoảng trắng (mỗi âm tiết một chữ)
 QUIET = 2 * 3600   # đang làm mà im quá mức này → vàng
 STALE = 12 * 3600   # đang làm mà im quá mức này → đỏ
+TXT = {"red": "#b3261e", "yellow": "#8a6100", "blue": "#1f5fa8", "gray": "#5b6168", "green": "#2e6b1f"}   # MÀU CHỮ của tên màu (owner 1/11: «Red, Yellow tô màu tương ứng»): đậm hơn màu thanh/chấm để đủ tương phản (≥ 4,8:1) trên giấy
+CB, CS, CE = "⟬", "‖", "⟭"   # ⟬màu‖chữ⟭ → <span class="c-màu">; book.py không đụng tới
 OPEN, SEP, CLOSE, NO, NC = "⟦", "¦", "⟧", "⟪", "⟫"   # dấu đánh dấu cặp EN/VI và tên việc trong md; book.py không đụng tới, finish() đổi thành HTML
 # (khoá, chấm, hạng) theo thứ tự hiện trong báo cáo; chữ nhãn/nghĩa ở bảng TX (khoá c_<màu>, m_<màu>)
 COLORS = (("red", "🔴"), ("yellow", "🟡"), ("blue", "🔵"), ("gray", "⚪"), ("green", "🟢"))
@@ -110,6 +112,10 @@ STE_ABBR = {"DONE", "ID", "UTC"}   # chữ HOA ≥ 2 ký tự được phép tro
 STE_BANNED = {"should", "may", "might", "shall", "get", "gets", "got", "make", "makes"}   # vài từ STE cấm hay gặp; không phải từ điển STE đầy đủ (bản quyền ASD)
 
 
+def clr(k, text):
+    return f"{CB}{k}{CS}{text}{CE}"
+
+
 def L(key, lang, **kw):
     """Một câu theo ngôn ngữ; kw có thể là hàm f(lang) để giá trị đổi theo ngôn ngữ (thời gian, tên trạng thái)."""
     i = 0 if lang == "en" else 1
@@ -132,6 +138,7 @@ def expand(md, lang):
     """md song ngữ → md một ngôn ngữ (cho selftest và cho ai muốn bản chữ thuần)."""
     i = 0 if lang == "en" else 1
     md = re.sub(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), lambda m: m.group(1 + i), md)
+    md = re.sub(re.escape(CB) + r"\w+" + re.escape(CS) + r"(.*?)" + re.escape(CE), r"\1", md, flags=re.S)
     return md.replace(NO, "").replace(NC, "")
 
 
@@ -257,7 +264,7 @@ def cover_svg(n, lang_en=True):
     top, mx, rows = 42, max(max(n.values()), 1), []
     for i, (k, _) in enumerate(COLORS):
         y, w = top + i * 40, round(n[k] / mx * 170)
-        rows.append(f'<text x="14" y="{y + 19}" font-size="17" fill="#3d3d3a">{L("c_" + k, "en")}</text>'
+        rows.append(f'<text x="14" y="{y + 19}" font-size="17" fill="{TXT[k]}">{L("c_" + k, "en")}</text>'
                     f'<rect x="136" y="{y}" width="206" height="26" rx="4" fill="none" stroke="#c9c9c2"/>'
                     + (f'<rect data-c="{k}" x="136" y="{y}" width="{max(w + 36, 36)}" height="26" rx="4" fill="{HEX[k]}"/>' if n[k] else "")
                     + f'<text x="356" y="{y + 20}" font-size="20" font-weight="300" fill="#111">{n[k]}</text>')
@@ -284,13 +291,13 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
          f"![{alt}]({cover_svg(n)})", "",
          "=== page", f"@ {bi('summary')}", f"# {bi('summary')}", "---",
           f"! {n['green']} | {bi('summary_stat', n=len(ts))} | " + (f"room:{room}, hang_open_work" if room else "hang_open_work")]
-    o += [f"{DOT[k]} " + mark(*(L("sum_row", lg, label=L("c_" + k, lg), n=n[k]) for lg in ("en", "vi"))) for k, _ in COLORS if n[k]]
+    o += [f"{DOT[k]} " + mark(*(L("sum_row", lg, label=clr(k, L("c_" + k, lg)), n=n[k]) for lg in ("en", "vi"))) for k, _ in COLORS if n[k]]
     o += [mark(L("sum_sha", "en", sha=sha), L("sum_sha", "vi", sha=sha_vi)), "---"]
-    o += [f"{DOT[k]} " + mark(*(f"**{L('c_' + k, lg)}:** {L('m_' + k, lg)}" for lg in ("en", "vi"))) for k, _ in COLORS] + [""]   # chú giải ngay dưới tóm tắt: bìa và trang này cao gần bằng nhau
+    o += [f"{DOT[k]} " + mark(*(f"**{clr(k, L('c_' + k, lg))}:** {L('m_' + k, lg)}" for lg in ("en", "vi"))) for k, _ in COLORS] + [""]   # chú giải ngay dưới tóm tắt: bìa và trang này cao gần bằng nhau
     for k, dot in COLORS:
         grp = [(t, w) for t, c, w in rows if c == k]
         for i in range(0, len(grp), PER_PAGE):
-            o += ["=== page", f"@ {bi('c_' + k)}", f"# {bi('c_' + k)}" + (f" {bi('cont')}" if i else ""), "---"]
+            o += ["=== page", f"@ {bi('c_' + k)}", f"# {clr(k, bi('c_' + k) + (' ' + bi('cont') if i else ''))}", "---"]
             o += [x for j, (t, w) in enumerate(grp[i:i + PER_PAGE]) for x in (["---"] if j else []) + card(t, k, w)] + [""]   # thanh ngắn giữa hai thẻ cho thấy ranh giới
     o += ["=== page", f"@ {bi('nm')}", f"# {bi('nm')}", "---", bi("nm_smoke"), bi("nm_sha"), bi("nm_done"), bi("nm_stage"), bi("nm_pass"),
           (mark(L("nm_closed", "en") + " " + L("nm_room", "en", room=room), L("nm_closed", "vi") + " " + L("nm_room", "vi", room=room)) if room
@@ -318,7 +325,7 @@ def font_css():
 # Chữ mảnh (≤ 200) dùng màu gần đen #111: WCAG không tính độ mảnh của nét, bù bằng màu. Nút cũng 300.
 CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
        ':root{--sans:"Lexend Deca",system-ui,-apple-system,"Segoe UI",sans-serif;--hand:var(--sans);--page-pad:clamp(24px,4.8vw,60px);--ink3:#5c5c56}'   # tên font ở MỘT chỗ; lề rộng hơn kiểu tạp chí; --ink3 (chữ phụ nhỏ) từ #8a8a82 (3,3:1) lên #5c5c56 (≥ 6:1) vì chữ Light mỏng cần tương phản cao hơn
-       "html body,html body *{font-weight:300!important}html body b,html body strong{font-weight:600!important}"   # NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
+       "html body,html body *{font-weight:300!important}html body b,html body strong{font-weight:600!important}" + "".join(f".c-{k}{{color:{v}}}" for k, v in TXT.items()) + 'html body h2 [class^="c-"]{font-weight:300!important}html body b [class^="c-"]{font-weight:600!important}'   # tên màu tô màu tương ứng (trong h2 mảnh 200 phải #111, nên dùng 300) · NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
        "body{font-size:16px;line-height:1.7}"
        "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111;letter-spacing:-.015em}html body h3{color:#111;letter-spacing:-.015em}"
        "h1,h2{line-height:1.2}.cover h1{font-size:clamp(44px,6.4vw,84px);line-height:1.2}h2{font-size:clamp(34px,4vw,52px)}"   # tiêu đề lớn mỏng canh trái như trang chủ lexend.com; line-height ≥ 1.2 để không cắt dấu Việt (check.mjs clip)
@@ -345,10 +352,12 @@ t.textContent=old;t.disabled=false}}})();"""
 def finish(page):
     """HTML của book.py → HTML song ngữ. Ngoài <title> và thuộc tính (chỉ lấy EN) mọi «⟦en¦vi⟧» thành hai span; «⟪tên⟫» thành span.tn; thêm thanh nút đầu trang."""
     pat = re.compile(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), re.S)
-    page = re.sub(r"<title>.*?</title>", lambda m: pat.sub(lambda x: x.group(1), m.group(0)), page, flags=re.S)
+    colp = re.compile(re.escape(CB) + r"(\w+)" + re.escape(CS) + r"(.*?)" + re.escape(CE), re.S)
+    page = re.sub(r"<title>.*?</title>", lambda m: colp.sub(lambda c: c.group(2), pat.sub(lambda x: x.group(1), m.group(0))), page, flags=re.S)
     page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + pat.sub(lambda x: x.group(1), m.group(2)) + m.group(3), page)
     page = pat.sub(lambda m: f'<span class="en" lang="en">{m.group(1)}</span><span class="vi" lang="vi">{m.group(2)}</span>', page)
     page = re.sub(re.escape(NO) + r"(.*?)" + re.escape(NC), r'<span class="tn">\1</span>', page)
+    page = colp.sub(lambda c: f'<span class="c-{c.group(1)}">{c.group(2)}</span>', page)
     T = {"en": {"t": L("btn_vi", "en"), "h": L("btn_vi_title", "en")}, "vi": {"t": L("btn_vi", "vi"), "h": L("btn_vi_title", "vi")}}
     bar = ('<div id="rp-bar"><button type="button" id="rp-tr" hidden aria-pressed="false" title="' + htmllib.escape(L("btn_tr_title", "en")) + '">' + L("btn_tr", "en") + "</button>"
            '<button type="button" id="rp-lang" title="' + htmllib.escape(L("btn_vi_title", "en")) + '">' + L("btn_vi", "en") + "</button></div>")
@@ -507,10 +516,25 @@ def selftest():
     assert "0 done." in e and e.count("=== page") >= 2 and "0 xong." in expand(build_md({"open": [], "running": ""}, now), "vi")
     assert "*" not in short("a *b* c") and OPEN not in short("x⟦y")
 
+    # 3b. tên màu tô màu tương ứng (owner 1/11): chú giải, dòng tóm tắt, tiêu đề trang; màu chữ đủ tương phản trên giấy #fbfaf6
+    def _lum(h):
+        v = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        v = [x / 12.92 if x <= .03928 else ((x + .055) / 1.055) ** 2.4 for x in v]
+        return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]
+    for k, hx in TXT.items():
+        a, b = _lum(hx), _lum("#fbfaf6")
+        assert (max(a, b) + .05) / (min(a, b) + .05) >= 4.5, ("màu chữ thiếu tương phản", k, hx)
+    assert set(TXT) == {k for k, _ in COLORS}
+    for k, _ in COLORS:
+        assert f"**{CB}{k}{CS}" in md, ("chú giải thiếu màu", k)                      # chú giải
+    assert md.count(f"# {CB}red{CS}") >= 1 and md.count(f"# {CB}yellow{CS}") >= 1, "tiêu đề trang màu phải tô màu"   # fx có đỏ và vàng
+    assert all(CB not in x and CE not in x for x in (expand(md, "en"), expand(md, "vi"))), "marker màu không được sót ở bản chữ thuần"
+
     # 4. finish(): span EN/VI, nút, tên việc, không URL ngoài, localStorage bọc try/catch, Translator chỉ khi 'Translator' in self và chỉ sau khi bấm
-    fake = '<!doctype html><html lang="vi"><head><title>⟦Task¦Việc⟧</title></head><body><p>⟦Red¦Đỏ⟧ ⟪Tên *việc*⟫</p><img alt="⟦A¦B⟧"></body></html>'
+    fake = '<!doctype html><html lang="vi"><head><title>⟬red‖⟦Task¦Việc⟧⟭</title></head><body><p>⟬red‖⟦Red¦Đỏ⟧⟭ ⟪Tên *việc*⟫</p><img alt="⟦A¦B⟧"></body></html>'
     out = finish(fake)
     assert "<title>Task</title>" in out and 'alt="A"' in out, out
+    assert '<span class="c-red"><span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span></span>' in out, "marker màu thành span.c-red"
     assert '<span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span>' in out and '<span class="tn">Tên *việc*</span>' in out
     assert '.stat{margin:28px 0' in out and '.page{min-height:0}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
     assert '.spread{align-items:start' not in out, "quyển tập hai tờ cao bằng nhau (giấy chung của book-layout), không tờ riêng lệch chiều cao"
@@ -524,8 +548,8 @@ def selftest():
     assert o2.count("@font-face") == 2 and o2.count("data:font/woff2;base64,d09GMg") == 2, "hai @font-face (vietnamese, latin) nhúng base64 woff2"
     assert 'font-family:"Lexend Deca"' in o2 and '--sans:"Lexend Deca"' in o2, "họ font Lexend Deca ở một chỗ (--sans)"
     css = CSS
-    css_no_b = css.replace("html body b,html body strong{font-weight:600!important}", "")   # ngoại lệ DUY NHẤT: nhãn đầu dòng <b> 600 (owner 1/11)
-    assert "html body b,html body strong{font-weight:600!important}" in css and css.count("600") == 1, "chỉ nhãn <b> được 600"
+    css_no_b = css.replace("html body b,html body strong{font-weight:600!important}", "").replace('html body b [class^="c-"]{font-weight:600!important}', "")   # ngoại lệ DUY NHẤT: nhãn đầu dòng <b> 600 (owner 1/11)
+    assert "html body b,html body strong{font-weight:600!important}" in css and 'html body b [class^="c-"]{font-weight:600!important}' in css and css.count("600") == 2, "chỉ nhãn <b> và chữ màu trong nhãn được 600"
     ws = sorted({int(w) for w in re.findall(r"font-weight:(\d+)", css_no_b) + re.findall(r"font:(\d+) ", css_no_b)})   # CSS còn lại ≤ 300
     assert ws and max(ws) <= 300 and min(ws) >= 100, ("độ đậm trong CSS phải trong 100–300", ws)
     assert "@media (min-width:1100px){html body .cover h1,html body .stat .big{font-weight:100!important}}" in css and "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111" in css, "sàn mỏng: 100 chỉ ≥ 1100 px, mặc định 200 và màu gần đen"
