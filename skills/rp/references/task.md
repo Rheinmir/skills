@@ -9,15 +9,24 @@ Chế độ đầu tiên của hub `rp`. Owner (31/10, Issue 452): «báo cáo t
 - `--src <tệp>.json` (đọc tệp thay cho mạng): báo cáo không ghi tên phòng và không khẳng định «ngoài phòng X không có».
 - Script gửi header `User-Agent: hang-rp/1`: cổng công khai từ chối UA mặc định của Python (403).
 
+## Màu (owner 31/10: «tick xanh là tui hiểu xong hết rồi hả»)
+Màu tính từ dữ liệu của chính thread (`judge()` trong `task_report.py`); xanh lá cần bằng chứng «xong», không có bằng chứng thì không bao giờ xanh lá.
+1. 🔴 Đỏ, cần xử lý: có agent đã chết (`down[]`), hoặc giai đoạn blocked/failed, hoặc đang làm mà im quá 12 giờ.
+2. 🟡 Vàng, chậm hoặc chờ: chờ owner (`owner_wait`), chờ review, đợi việc khác (`blocking[]`), đang làm mà im quá 2 giờ.
+3. 🔵 Xanh dương: đang làm bình thường, chưa xong.
+4. ⚪ Xám: backlog hoặc xếp hàng, chưa bắt đầu.
+5. 🟢 Xanh lá: XONG, cờ `deployed` true (đã lên Live) và không có agent chết.
+Thứ tự ưu tiên: xanh lá, đỏ, vàng, xám/xanh dương. Dòng có nhiều lý do liệt kê hết.
+
 ## Báo cáo gồm
-1. Bìa: số việc mở, số đang làm, giờ chốt.
-2. Tóm tắt: số theo từng giai đoạn, số agent đã chết, sha Live.
-3. Cần chú ý (chỉ khi có): chờ owner; agent đã chết kèm mã mở lại; bị chặn; đang làm mà im quá 2 giờ.
-4. Từng nhóm: Bị chặn, Đang làm, Chờ review, Xếp hàng, Backlog (4 thread mỗi trang). Mỗi dòng: tên, người làm (giai đoạn), nhánh, lên Live chưa, im bao lâu, `room:<mã>`.
+1. Bìa: số việc mở, số đã xong, giờ chốt.
+2. Chú giải màu (đầu báo cáo, để người đọc biết xanh lá mới là xong).
+3. Tóm tắt: số việc theo màu, sha Live.
+4. Từng nhóm màu (4 thread mỗi trang). Mỗi dòng là MỘT đoạn văn: chấm màu, tên, lý do, người làm (giai đoạn), nhánh, im bao lâu, `room:<mã>`.
 5. Chưa đo: smoke Live, sha từng nhánh, thứ ngoài phạm vi.
 
 ## Cách đọc cho đúng
-- `deployed` false = chưa lên Live; `status` review = chờ review. Không viết «xong» khi dữ liệu không nói.
+- `deployed` false = chưa lên Live; `status` review = chờ review (vàng, không phải xong). Không viết «xong» khi dữ liệu không nói.
 - «Im» là thời gian từ tin cuối trong thread (`idle`), không phải thời gian agent không làm gì.
 - `down` có mã mở lại thì việc mở lại do Điều phối làm; báo cáo chỉ nêu.
 - Thread backlog không có người làm là bình thường, không phải lỗi.
@@ -25,7 +34,7 @@ Chế độ đầu tiên của hub `rp`. Owner (31/10, Issue 452): «báo cáo t
 ## Giới hạn đã biết
 - Chỉ thread mở của MỘT phòng gốc (mặc định `vinh-hong`, tên phòng ghi ở brand và footer của báo cáo).
 - Không có smoke, không có sha từng nhánh: ghi «chưa đo». Cần thì thêm nguồn đọc ở Hang trước, rồi mới thêm vào báo cáo.
-- `book-layout` vẽ dấu tích xanh đầu mỗi dòng danh sách, kể cả dòng cảnh báo: đừng đọc dấu tích là «ổn».
+- Không dùng danh sách «- chữ» của `book-layout` cho dòng việc: nó vẽ dấu tích xanh trước MỌI dòng, kể cả dòng cảnh báo, và owner đọc tích là «xong». Báo cáo không có dấu tích nào (`ul.checks` = 0 trong HTML); selftest chặn dòng «- » quay lại.
 - Không dùng bảng markdown (điện thoại không đọc được); danh sách thay bảng.
 
 ## Thêm chế độ khác sau này

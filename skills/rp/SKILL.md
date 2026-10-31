@@ -26,13 +26,13 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 |---|---|---|---|
 | In | máy đã nối Hang | có | `~/.hang/url` + `~/.hang/token` (script chỉ gửi token tới chính Hang đó, không in ra) |
 | In | chế độ | không | `task` (mặc định) |
-| Out | `rp-task-<ngày>-<giờ>.md` + `.html` | có | một trang bìa, tóm tắt, cần chú ý, từng nhóm trạng thái, trang «chưa đo» |
+| Out | `rp-task-<ngày>-<giờ>.md` + `.html` | có | bìa, chú giải màu, tóm tắt, từng nhóm màu (đỏ, vàng, xanh dương, xám, xanh lá), trang «chưa đo» |
 | Out | hai dòng `ok` của `check.mjs` | có | bằng chứng 1280 + 390: không tràn, đủ dấu |
 
 ### Rules và capabilities
 - RULE-01 (MUST): chỉ ĐỌC Hang. Tin báo cáo là thứ duy nhất được ghi (gửi owner kèm tệp `.html`).
 - RULE-02 (MUST): mỗi dòng của báo cáo mang id kiểm được (room, nhánh, sha, id yêu cầu mở lại); thứ không đo được ghi «chưa đo», không đoán, không điền.
-- RULE-03 (MUST): không báo «xong» một việc khi dữ liệu chưa nói vậy: `deployed` false nghĩa là chưa lên Live; thread `review` là chờ review chứ không phải xong.
+- RULE-03 (MUST): màu của mỗi việc tính từ dữ liệu và xanh lá CHỈ khi việc thật sự xong (`deployed` true, đã lên Live). Đỏ = cần xử lý (agent chết, bị chặn, im > 12 giờ); vàng = chậm hoặc chờ (chờ owner, chờ review, đợi việc khác, im > 2 giờ); xanh dương = đang làm bình thường; xám = chưa bắt đầu. KHÔNG dùng danh sách «- » của book-layout cho dòng việc: nó vẽ dấu tích xanh trước mọi dòng và owner đọc tích là «xong» (31/10).
 - RULE-04 (MUST): trang dựng bằng skill `book-layout` (nền sáng, không bảng markdown, danh sách), không viết HTML tay; owner đọc trên điện thoại.
 - RULE-05 (MUST): không in token, không đưa token vào báo cáo hay tin gửi.
 - Capabilities: chạy python3 và node; đọc `~/.hang`; gửi tin kèm tệp bằng `hang-room-hook send`.
