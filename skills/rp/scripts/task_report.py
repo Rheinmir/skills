@@ -330,7 +330,10 @@ CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
        "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111;letter-spacing:-.015em}html body h3{color:#111;letter-spacing:-.015em}"
        "h1,h2{line-height:1.2}.cover h1{font-size:clamp(44px,6.4vw,84px);line-height:1.2}h2{font-size:clamp(34px,4vw,52px)}"   # tiêu đề lớn mỏng canh trái như trang chủ lexend.com; line-height ≥ 1.2 để không cắt dấu Việt (check.mjs clip)
        "@media (min-width:1100px){html body .cover h1,html body .stat .big{font-weight:100!important}}"
-       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page{min-height:0}@media (min-width:821px){.page{padding-bottom:calc(var(--page-pad) - 6px)}}"   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0); đệm đáy khổ rộng bớt 34 px (còn --page-pad − 6; chân trang tuyệt đối cách nội dung ≥ 18 px) để hai tờ của quyển lệch chiều cao ít hơn
+       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page{min-height:0}@media (min-width:821px){.page{padding-bottom:calc(var(--page-pad) - 6px)}"
+       # MỘT quyển liền (owner 1/11 «vẫn như một quyển tập bị cắt ngang»): book-layout vẽ mỗi cặp tờ là một khối riêng có bóng và khe 40 px; ở đây khe 0, bóng một lần cho cả quyển, gáy chạy liền, chỉ một đường kẻ mảnh giữa hai cặp như sang trang
+       ".book{gap:0;filter:drop-shadow(0 1px 2px #0000000f) drop-shadow(0 12px 32px #00000014)}.spread{box-shadow:none;border-radius:0}"
+       ".spread:first-of-type{border-radius:6px 6px 0 0}.spread:last-of-type{border-radius:0 0 6px 6px}.spread:only-of-type{border-radius:6px}.spread+.spread{border-top:1px solid var(--line)}}"   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0); đệm đáy khổ rộng bớt 34 px (còn --page-pad − 6; chân trang tuyệt đối cách nội dung ≥ 18 px) để hai tờ của quyển lệch chiều cao ít hơn
        "#rp-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;font:300 13px/1.2 var(--sans)}"
        "#rp-bar button{font:inherit;color:#111;background:#fbfaf6;border:1px solid #c9c9c2;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}"
        "#rp-bar button:focus-visible{outline:2px solid #1d1d1b;outline-offset:2px}"
@@ -537,6 +540,7 @@ def selftest():
     assert '<span class="c-red"><span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span></span>' in out, "marker màu thành span.c-red"
     assert '<span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span>' in out and '<span class="tn">Tên *việc*</span>' in out
     assert '.stat{margin:28px 0' in out and '.page{min-height:0}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
+    assert '.book{gap:0;filter:drop-shadow' in out and '.spread+.spread{border-top:1px solid var(--line)}' in out, "một quyển liền: không khe và không bóng giữa các cặp tờ"
     assert '.spread{align-items:start' not in out, "quyển tập hai tờ cao bằng nhau (giấy chung của book-layout), không tờ riêng lệch chiều cao"
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
     assert OPEN not in out and SEP not in out and NO not in out

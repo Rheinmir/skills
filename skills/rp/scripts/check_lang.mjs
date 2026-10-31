@@ -18,6 +18,12 @@ async function open(w, init) {
 const vis = (p, sel) => p.evaluate(s => [...document.querySelectorAll(s)].some(e => e.offsetParent !== null), sel);
 // Luật khoảng trống (owner 31/10 m1a192b837fe75fa: «chừa quá nhiều khoảng trống»): trong mỗi trang (trừ bìa) khe giữa hai khối kề nhau ≤ 80 px và chỗ trống dưới khối cuối ≤ 120 px.
 const GAP = 80, TAIL = 120;
+// «Một quyển liền» (owner 1/11: «vẫn như một quyển tập bị cắt ngang»): khổ rộng, hai cặp tờ kề nhau KHÔNG có khe nền (≤ 1 px) và không bóng riêng từng cặp (bóng một lần cho cả quyển).
+const seam = p => p.evaluate(() => { const sp = [...document.querySelectorAll('.spread')]; const bad = [];
+  if (innerWidth <= 820) return bad;
+  for (let i = 1; i < sp.length; i++) { const d = sp[i].getBoundingClientRect().top - sp[i - 1].getBoundingClientRect().bottom; if (Math.abs(d) > 1) bad.push(`khe ${Math.round(d)}px giữa cặp tờ ${i} và ${i + 1} (quyển bị cắt ngang)`); }
+  for (const [i, e] of sp.entries()) { const bs = getComputedStyle(e).boxShadow; if (bs && bs !== 'none') bad.push(`cặp tờ ${i + 1} còn bóng riêng (${bs.slice(0, 30)})`); }
+  return bad; });
 const blank = p => p.evaluate(([g, t]) => [...document.querySelectorAll('.spread')].filter(sp => sp.children.length === 2 && getComputedStyle(sp).gridTemplateColumns.split(' ').length === 2).flatMap(sp => {
   const [a, b] = [...sp.children].map(e => e.getBoundingClientRect().height); return Math.abs(a - b) > 2 ? [`hai tờ của quyển cao khác nhau ${Math.round(a)} và ${Math.round(b)} px (trông như bị cắn)`] : []; })
   .concat([...document.querySelectorAll('article.page:not(.cover)')].flatMap(pg => {
@@ -80,12 +86,12 @@ for (const w of [390, 1280]) {
   const { ctx, p, errs } = await open(w);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en' && await vis(p, '.en') && !await vis(p, '.vi'), `${w}: mở ra tiếng Anh, không thấy chữ Việt của trang`);
   let m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} EN: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const co = await colors(p); enColors[w] = co.n; ok(co.n >= 9 && !co.bad.length, `${w} EN: ${co.n} tên màu (tiêu đề, chú giải, tóm tắt) tô đúng màu ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); { const sm = await seam(p); ok(!sm.length, `${w} EN: một quyển liền, không khe giữa các cặp tờ ${sm.slice(0, 2).join('; ')}`); } const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const co = await colors(p); enColors[w] = co.n; ok(co.n >= 9 && !co.bad.length, `${w} EN: ${co.n} tên màu (tiêu đề, chú giải, tóm tắt) tô đúng màu ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
   await p.screenshot({ path: `${out}/en-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); await p.waitForTimeout(150);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'vi' && await vis(p, '.vi') && !await vis(p, '.en'), `${w}: bấm nút đổi cả trang sang tiếng Việt`);
   m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} VI: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const co = await colors(p); ok(co.n === enColors[w] && !co.bad.length, `${w} VI: ${co.n} tên màu tô đúng màu (phải bằng EN ${enColors[w]}) ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); { const sm = await seam(p); ok(!sm.length, `${w} VI: một quyển liền, không khe giữa các cặp tờ ${sm.slice(0, 2).join('; ')}`); } const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const co = await colors(p); ok(co.n === enColors[w] && !co.bad.length, `${w} VI: ${co.n} tên màu tô đúng màu (phải bằng EN ${enColors[w]}) ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
   await p.screenshot({ path: `${out}/vi-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en', `${w}: bấm lại về tiếng Anh`);
   ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
