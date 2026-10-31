@@ -3,7 +3,7 @@
 Chế độ đầu tiên của hub `rp`. Owner (31/10, Issue 452): «báo cáo tình trạng các task đi», «làm thành 1 skill báo cáo dùng skill tạo report hôm qua» (= `book-layout`, Issue 428).
 
 ## Nguồn số liệu (chỉ đọc)
-- `GET /work/open` của chính Hang (cùng dữ liệu MCP `hang_open_work`), Bearer token máy ở `~/.hang/token`. Mỗi thread mở có: `room`, `name`, `kind` (issue/epic), `status`, `workers[]` (tên, giai đoạn, `health`), `down[]` (agent đã chết, mã mở lại), `blocking[]`, `branch`, `deployed`, `owner_wait`, `idle`, `req[]`.
+- `GET /work/open?room=<phòng>` của chính Hang (cùng dữ liệu MCP `hang_open_work`; mặc định `vinh-hong`, đổi bằng `--room`; không kèm `room` thì Hang gộp mọi phòng gốc token máy thấy nên báo cáo phải luôn truyền), Bearer token máy ở `~/.hang/token`. Mỗi thread mở có: `room`, `name`, `kind` (issue/epic), `status`, `workers[]` (tên, giai đoạn, `health`), `down[]` (agent đã chết, mã mở lại), `blocking[]`, `branch`, `deployed`, `owner_wait`, `idle`, `req[]`.
 - `running` = sha đang chạy trên Live.
 - Script gửi header `User-Agent: hang-rp/1`: cổng công khai từ chối UA mặc định của Python (403).
 
@@ -21,7 +21,7 @@ Chế độ đầu tiên của hub `rp`. Owner (31/10, Issue 452): «báo cáo t
 - Thread backlog không có người làm là bình thường, không phải lỗi.
 
 ## Giới hạn đã biết
-- Chỉ thread mở của phòng gốc Vịnh Hồng (nguồn `GET /work/open` mặc định).
+- Chỉ thread mở của MỘT phòng gốc (mặc định `vinh-hong`, tên phòng ghi ở brand và footer của báo cáo).
 - Không có smoke, không có sha từng nhánh: ghi «chưa đo». Cần thì thêm nguồn đọc ở Hang trước, rồi mới thêm vào báo cáo.
 - `book-layout` vẽ dấu tích xanh đầu mỗi dòng danh sách, kể cả dòng cảnh báo: đừng đọc dấu tích là «ổn».
 - Không dùng bảng markdown (điện thoại không đọc được); danh sách thay bảng.

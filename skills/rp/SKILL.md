@@ -19,7 +19,7 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 - **Non-goals:** KHÔNG ghi gì lên Hang ngoài tin báo cáo; KHÔNG sửa, đóng hay giao lại thread; KHÔNG publish lên claude.ai Artifact (owner không mở được); KHÔNG tự đo smoke hay chạy test.
 
 ### Mental model
-`hang_open_work (GET /work/open, chỉ đọc) → task_report.py gom nhóm + lọc «cần chú ý» → markdown → book-layout (book.py + check.mjs) → HTML → gửi đính kèm`
+`hang_open_work (GET /work/open?room=vinh-hong, chỉ đọc) → task_report.py gom nhóm + lọc «cần chú ý» → markdown → book-layout (book.py + check.mjs) → HTML → gửi đính kèm`
 
 ### Input và output contract
 | | Field | Required? | Ý nghĩa |
@@ -49,7 +49,7 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 | Step | Type | Inputs | Action | Outputs/exit | Failure/next |
 |---|---|---|---|---|---|
 | W01 | deterministic | chế độ | chọn `references/<chế độ>.md` (mặc định `task`) rồi làm đúng các bước trong đó | — | chế độ lạ → liệt kê chế độ có |
-| W02 | deterministic | Hang | `python3 scripts/task_report.py --out <thư mục> --build` | `.md` + `.html` | đọc lỗi → blocked |
+| W02 | deterministic | Hang | `python3 scripts/task_report.py [--room vinh-hong] --out <thư mục> --build` | `.md` + `.html` | đọc lỗi → blocked |
 | W03 | judgment | `.md` | đọc lướt: dòng nào mâu thuẫn dữ liệu thì sửa nguồn/ghi chú, không thêm số không có nguồn | `.md` đã soát | — |
 | W04 | deterministic | `.html` | `node <book-layout>/scripts/check.mjs <tệp>.html` (macOS 13: `PW_CHANNEL=chrome`) | hai dòng `ok` | HỎNG → sửa 1 lần, lặp tối đa 2 |
 | W05 | effect | `.html` | gửi owner kèm tệp: `sh ~/.hang/bin/hang-room-hook send owner "<2 dòng tóm tắt>" --file <tệp>.html --from $HANG_SESSION --agent claude-code --req <id tin owner> --reply <id tin owner>` | tin có link tệp | — |
