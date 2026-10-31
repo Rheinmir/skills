@@ -1026,9 +1026,9 @@
     "rp": {
       "files": {
         "SKILL.md": "538459a9dddbdcaa0d2c972dd8e9179f491630103a4746692c4a0d64eb03be5e",
-        "references/task.md": "33d26054fa188d1bf56a306525d1f91162c95a2ee332f6e70a589e1cf8f01e12",
+        "references/task.md": "4c5dbc60b3dfc7d90a0d221c2883eb3c1d04dd8908ef3dac2e6edc2312cd2a25",
         "scripts/check_lang.mjs": "e40f934db3b0d1c530e4053e8744b017a60c6caae4447a1fb0887645397a9548",
-        "scripts/task_report.py": "ae0b2064c544abcb1661c67e3a991d5eeac94a3fd95dc53b9ab5861d1c082d27"
+        "scripts/task_report.py": "ca1b93ddf1607eb40425ef72f54d07eabaa27839cf3a5844f4d5b7e9ba8bd38c"
       },
       "recorded": "2026-10-31",
       "source": "local-authored"

@@ -19,7 +19,6 @@ from pathlib import Path
 
 ROOM = "vinh-hong"   # phòng gốc mặc định; tên hiển thị lấy từ chính tham số, không gõ cứng ở brand/footer
 PER_PAGE = 2   # thẻ mỗi trang: thoáng (book-layout muốn ≤ 120 chữ mỗi trang)
-MINW = 10   # dòng ngắn hơn mức này bị gộp vào dòng kề khi gộp được mà không vượt CAP (owner 31/10: «10-20 thôi»)
 CAP = 20   # chữ tối đa mỗi dòng văn (owner 31/10: m1a19291cd4a58d3 «10-25», rồi m1a192aae03f1e9c «10-20 thôi, 25 vẫn dài»); VI đếm theo khoảng trắng (mỗi âm tiết một chữ)
 QUIET = 2 * 3600   # đang làm mà im quá mức này → vàng
 STALE = 12 * 3600   # đang làm mà im quá mức này → đỏ
@@ -72,7 +71,8 @@ TX = {
     "s_nobody": ("none yet", "chưa có"),
     "s_more": ("{n} more", "{n} người nữa"),
     "s_idle": ("No news for {dur}.", "Im {dur}."),
-    "s_branch": ("Branch: {b}. Thread: room:{room}", "Nhánh: {b}. Thread: room:{room}"),
+    "s_branch": ("Branch: {b}.", "Nhánh: {b}."),
+    "s_thread": ("Thread: room:{room}", "Thread: room:{room}"),
     "s_nobranch": ("none", "chưa có"),
     # đơn vị thời gian
     "t_now": ("just now", "vừa xong"),
@@ -206,28 +206,8 @@ def words(s):
     return len(s.split())
 
 
-def pack(segs):
-    """Gộp các đoạn (EN, VI) thành dòng: mọi dòng ≤ CAP chữ ở CẢ hai ngôn ngữ, tránh dòng cụt (< MINW chữ), rồi chọn nhiều dòng nhất (thoáng)."""
-    n, best = len(segs), None
-    for mask in range(1 << (n - 1)):
-        grp, cur = [], [segs[0]]
-        for i in range(1, n):
-            if mask >> (i - 1) & 1:
-                grp.append(cur); cur = [segs[i]]
-            else:
-                cur.append(segs[i])
-        grp.append(cur)
-        lines = [(" ".join(x[0] for x in g), " ".join(x[1] for x in g)) for g in grp]
-        if all(words(e) <= CAP and words(v) <= CAP for e, v in lines):
-            lo = min(min(words(e), words(v)) for e, v in lines)
-            key = (lo < MINW, -lo if lo < MINW else -len(lines), -len(lines), -lo)   # có cách mọi dòng ≥ MINW thì chọn NHIỀU dòng nhất (thoáng); không có thì chọn cách dòng ngắn nhất dài nhất (không để dòng cụt)
-            if best is None or key < best[0]:
-                best = (key, lines)
-    return best[1] if best else [(x[0], x[1]) for x in segs]   # một đoạn đơn lẻ đã > CAP: để nguyên từng đoạn, selftest sẽ báo
-
-
 def card(t, color, why):
-    """Một việc = một thẻ: dòng tiêu đề (lead: chấm màu + tên) rồi 1–3 dòng văn ≤ 20 chữ có nhãn. Không «- » (tích xanh), không «*…*» (xanh lá)."""
+    """Một việc = một thẻ: dòng tiêu đề (lead: chấm màu + tên) rồi mỗi ý MỘT dòng (tình trạng, người làm, im bao lâu, nhánh, thread), mỗi dòng ≤ 20 chữ có nhãn. Không «- » (tích xanh), không «*…*» (xanh lá)."""
     idle = t.get("idle") or 0
     shown = list(why)
     while True:
@@ -241,10 +221,13 @@ def card(t, color, why):
     one = lambda lg: ", ".join(f"{w.get('name') or str(w.get('agent'))[:8]} ({L('w_' + str(w.get('status')), lg) if 'w_' + str(w.get('status')) in TX else w.get('status')})" for w in ws[:3])
     who = lambda lg: (one(lg) + (", " + L("s_more", lg, n=len(ws) - 3) if len(ws) > 3 else "")) if ws else L("s_nobody", lg)
     quiet = not any("im " in x[1] or "no news" in x[0] for x in why)   # lý do «đang làm mà im N» đã nói rồi thì không lặp
-    seg2 = tuple(L("s_who", lg, x=who(lg)) + (" " + L("s_idle", lg, dur=lambda l2: dur(idle, l2)) if quiet else "") for lg in ("en", "vi"))
+    seg2 = tuple(L("s_who", lg, x=who(lg)) for lg in ("en", "vi"))
+    seg3 = tuple(L("s_idle", lg, dur=lambda l2: dur(idle, l2)) for lg in ("en", "vi")) if quiet else None
     br = lambda lg: t.get("branch") or L("s_nobranch", lg)
-    seg3 = tuple(L("s_branch", lg, b=br, room=t.get("room")) for lg in ("en", "vi"))
-    return [f"> {DOT[color]} {NO}{short(t.get('name'), 60)}{NC}"] + [mark(e, v) for e, v in pack([seg1, seg2, seg3])]
+    seg4 = tuple(L("s_branch", lg, b=br) for lg in ("en", "vi"))
+    seg5 = tuple(L("s_thread", lg, room=t.get("room")) for lg in ("en", "vi"))
+    segs = [x for x in (seg1, seg2, seg3, seg4, seg5) if x]
+    return [f"> {DOT[color]} {NO}{short(t.get('name'), 60)}{NC}"] + [mark(e, v) for e, v in segs]   # MỖI Ý MỘT DÒNG (owner 31/10 m1a192af76ee1bb0): không gộp nhiều ý vào một khối chữ
 
 
 def cover_svg(n, lang_en=True):
@@ -298,6 +281,8 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
 
 # --- phần HTML sau book.py: đổi dấu đánh dấu thành span EN/VI + nút ngôn ngữ (không gọi mạng) ---
 CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
+       ".stat{margin-bottom:28px;background:#f1efe8}.lead{margin-bottom:12px}"   # book-layout: khối số lớn không có khoảng cách xuống dòng kế (owner 31/10 m1a192add91168b0); nền sage xanh lá đổi sang xám ấm vì xanh lá chỉ dành cho «xong"
+
        "#rp-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;font:600 13px/1.2 'Be Vietnam Pro',Helvetica,Arial,sans-serif}"
        "#rp-bar button{font:inherit;color:#1d1d1b;background:#fbfaf6;border:1px solid #c9c9c2;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}"
        "#rp-bar button:focus-visible{outline:2px solid #1d1d1b;outline-offset:2px}"
@@ -421,7 +406,7 @@ def selftest():
                     break
                 blk.append(y)
             cards += 1
-            assert 1 <= len(blk) <= 3, ("thẻ quá 3 dòng văn", lang, ln, blk)
+            assert 3 <= len(blk) <= 5, ("thẻ phải 3–5 dòng, mỗi ý một dòng", lang, ln, blk)
             mins += [(words(y), lang, y) for y in blk]
         assert cards == len(cases), (lang, cards)   # mỗi việc đúng một thẻ
         if lang == "en":
@@ -430,8 +415,7 @@ def selftest():
                     continue
                 for snt in sentences(ln[2:] if ln.startswith("> ") else ln):
                     assert len(snt.split()) <= 20 or "Branch:" in snt or "Workers:" in snt, ("câu EN > 20 chữ", snt)
-    lo = [m for m in mins if m[0] < 6]
-    assert not lo, ("dòng thẻ quá cụt (< 6 chữ), gộp vào dòng kề", lo)
+    assert all(not (" Branch:" in m[2] or " Thread:" in m[2] or " Workers:" in m[2]) for m in mins), "mỗi ý một dòng: không gộp Workers/Branch/Thread vào một dòng"
     # thẻ dài nhất có thể: ba worker + nhiều lý do + tên nhánh dài vẫn ≤ CAP chữ mỗi dòng
     big = T("z" * 3, "in_progress", idle=14 * 3600, name="Một tên việc rất dài " * 6, branch="nhanh/" + "x" * 60, owner_wait=True,
             blocking=["một việc rất dài cần chờ " * 6, "việc khác"], down=[{"name": "Kai", "health": "dead", "reopen": "s1"}], workers=[{"name": f"Agent{i}", "status": "review"} for i in range(5)])
@@ -439,7 +423,7 @@ def selftest():
     for lg in (0, 1):
         for ln in card(big, c, w)[1:]:
             assert words(expand(ln, "en" if lg == 0 else "vi")) <= CAP, (lg, ln)
-    assert len(card(big, c, w)) <= 4
+    assert len(card(big, c, w)) <= 6
 
     # 3. màu, bìa, tên phòng
     import re as _re
@@ -454,7 +438,7 @@ def selftest():
     assert "# 14 open tasks, 1 done." in ex and "# 14 việc mở, 1 xong." in vx
     assert len([ln for ln in ex.splitlines() if ln.startswith("> 🟢 ")]) == 1   # đúng MỘT thẻ xanh lá (việc đã lên Live)
     g = ex.splitlines().index(next(ln for ln in ex.splitlines() if ln.startswith("> 🟢 ")))
-    assert "room:j" in "\n".join(ex.splitlines()[g:g + 4])
+    assert "room:j" in "\n".join(ex.splitlines()[g:g + 7])
     assert "Only green means done." in ex and "Chỉ màu xanh lá mới là xong." in vx
     for k in ("room:a", "room:h", "Sha on Live: c031e2312e03", "not measured"):
         assert k in ex, k
@@ -474,6 +458,7 @@ def selftest():
     out = finish(fake)
     assert "<title>Task</title>" in out and 'alt="A"' in out, out
     assert '<span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span>' in out and '<span class="tn">Tên *việc*</span>' in out
+    assert '.stat{margin-bottom:28px' in out, "khối số lớn phải có khoảng cách xuống dưới"
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
     assert OPEN not in out and SEP not in out and NO not in out
     assert not re.search(r"https?://|src=\"http|@import|fetch\(|XMLHttpRequest|translate\.google", out), "trang song ngữ không được gọi ra ngoài"
