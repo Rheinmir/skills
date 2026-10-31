@@ -18,7 +18,7 @@ import argparse, base64, html as htmllib, json, os, re, subprocess, sys, time, u
 from pathlib import Path
 
 ROOM = "vinh-hong"   # phòng gốc mặc định; tên hiển thị lấy từ chính tham số, không gõ cứng ở brand/footer
-PER_PAGE = 2   # thẻ mỗi trang: thoáng (book-layout muốn ≤ 120 chữ mỗi trang)
+PER_PAGE = 1   # thẻ mỗi trang: hai tờ kề nhau (quyển tập) phải cao gần bằng nhau; một thẻ mỗi tờ thì chênh chiều cao chỉ vài dòng xuống dòng (owner 1/11: «quyển tập bị chuột cắn»)
 CAP = 20   # chữ tối đa mỗi dòng văn (owner 31/10: m1a19291cd4a58d3 «10-25», rồi m1a192aae03f1e9c «10-20 thôi, 25 vẫn dài»); VI đếm theo khoảng trắng (mỗi âm tiết một chữ)
 QUIET = 2 * 3600   # đang làm mà im quá mức này → vàng
 STALE = 12 * 3600   # đang làm mà im quá mức này → đỏ
@@ -100,7 +100,6 @@ TX = {
     "nm_closed": ("Closed threads are not in this report.", "Thread đã đóng không có trong báo cáo."),
     "nm_room": ("Tasks outside room {room} are not in this report.", "Việc ngoài phòng {room} cũng không có."),
     "nm_src": ("The room of the source file: not measured.", "Phạm vi phòng của tệp nguồn: chưa đo."),
-    "nm_hand": ("If a value is not measured, write not measured.", "Chưa đo thì ghi chưa đo."),
     # giao diện của trang (nút); nút ngắn tiếng Anh, giải thích tiếng Việt (luật UI Hang)
     "btn_vi": ("VI", "EN"),
     "btn_vi_title": ("Chuyển báo cáo sang tiếng Việt, không gọi mạng", "Switch the report to English"),
@@ -283,12 +282,11 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
          "=== cover", f"^ {bi('kick')}", f"# {bi('cover_h', n=len(ts), g=n['green'])}",
          f"> {bi('cover_lead', stamp=stamp)}", "---",
          f"![{alt}]({cover_svg(n)})", "",
-         "=== page", f"@ {bi('legend')}", f"# {bi('legend')}", "---"]
-    o += [f"{DOT[k]} {bi('c_' + k)}: {bi('m_' + k)}" for k, _ in COLORS] + [""]
-    o += ["=== page", f"@ {bi('summary')}", f"# {bi('summary')}", "---",
+         "=== page", f"@ {bi('summary')}", f"# {bi('summary')}", "---",
           f"! {n['green']} | {bi('summary_stat', n=len(ts))} | " + (f"room:{room}, hang_open_work" if room else "hang_open_work")]
     o += [f"{DOT[k]} " + mark(*(L("sum_row", lg, label=L("c_" + k, lg), n=n[k]) for lg in ("en", "vi"))) for k, _ in COLORS if n[k]]
-    o += [mark(L("sum_sha", "en", sha=sha), L("sum_sha", "vi", sha=sha_vi)), ""]
+    o += [mark(L("sum_sha", "en", sha=sha), L("sum_sha", "vi", sha=sha_vi)), "---"]
+    o += [f"{DOT[k]} {bi('c_' + k)}: {bi('m_' + k)}" for k, _ in COLORS] + [""]   # chú giải ngay dưới tóm tắt: bìa và trang này cao gần bằng nhau
     for k, dot in COLORS:
         grp = [(t, w) for t, c, w in rows if c == k]
         for i in range(0, len(grp), PER_PAGE):
@@ -297,17 +295,13 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
     o += ["=== page", f"@ {bi('nm')}", f"# {bi('nm')}", "---", bi("nm_smoke"), bi("nm_sha"), bi("nm_done"), bi("nm_stage"), bi("nm_pass"),
           (mark(L("nm_closed", "en") + " " + L("nm_room", "en", room=room), L("nm_closed", "vi") + " " + L("nm_room", "vi", room=room)) if room
            else mark(L("nm_closed", "en") + " " + L("nm_src", "en"), L("nm_closed", "vi") + " " + L("nm_src", "vi"))),
-          f"~ {bi('nm_hand')}", ""]
+          ""]   # không còn dòng chữ viết tay «chưa đo thì ghi chưa đo»: cao ~60 px làm tờ «Not measured» cao hơn tờ thẻ kề nó, quyển tập lệch chiều cao
     return "\n".join(o)
 
 
 # --- phần HTML sau book.py: đổi dấu đánh dấu thành span EN/VI + nút ngôn ngữ (không gọi mạng) ---
 CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
-       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page:not(.cover){min-height:0}"   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0): trang ôm nội dung, khối cách đều 28 px; nền sage xanh lá nhạt đổi xám ấm vì xanh lá chỉ dành cho «xong»
-       "@media (min-width:821px){.spread{align-items:start;background:none;box-shadow:none;overflow:visible;column-gap:0}.spread::after{display:none}"   # QUYỂN TẬP mở hai trang (owner m1a192ced35a0c67: «hình quyển tập đâu?»): mỗi tờ giấy riêng ôm nội dung, không kéo dãn theo tờ kề nên không để lại giấy trống; gáy là bóng trong ở mép giữa
-       ".spread .page{background:var(--paper);box-shadow:0 1px 2px #0000000f,0 12px 32px #00000014}"
-       ".spread .page:nth-child(odd){border-radius:6px 0 0 6px;box-shadow:inset -22px 0 22px -22px #00000030,0 1px 2px #0000000f,0 12px 32px #00000014}"
-       ".spread .page:nth-child(even){border-radius:0 6px 6px 0;box-shadow:inset 22px 0 22px -22px #00000030,0 1px 2px #0000000f,0 12px 32px #00000014}}"
+       ".stat{margin:28px 0;background:#f1efe8}.lead{margin-bottom:12px}.page{min-height:0}@media (min-width:821px){.page{padding-bottom:calc(var(--page-pad) + 6px)}}"   # khổ rộng: bớt 22 px đệm đáy (chân trang tuyệt đối vẫn cách nội dung ≥ 20 px) để hai tờ lệch chiều cao ít trông hơn   # book-layout: .stat có margin-top:auto (đẩy xuống đáy trang cao 760 px → khoảng trống lớn, owner m1a192b837fe75fa) và không có margin dưới (m1a192add91168b0): trang ôm nội dung, khối cách đều 28 px; nền sage xanh lá nhạt đổi xám ấm vì xanh lá chỉ dành cho «xong»
 
        "#rp-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;font:600 13px/1.2 'Be Vietnam Pro',Helvetica,Arial,sans-serif}"
        "#rp-bar button{font:inherit;color:#1d1d1b;background:#fbfaf6;border:1px solid #c9c9c2;border-radius:6px;padding:8px 12px;min-height:36px;cursor:pointer}"
@@ -487,7 +481,7 @@ def selftest():
     md2 = build_md(fx, now, "phong-khac")
     assert "brand: Hang · phong-khac" in md2 and "vinh-hong" not in md2   # tên phòng đi theo tham số, không gõ cứng
     e = expand(build_md({"open": [], "running": ""}, now), "en")
-    assert "0 done." in e and e.count("=== page") >= 3 and "0 xong." in expand(build_md({"open": [], "running": ""}, now), "vi")
+    assert "0 done." in e and e.count("=== page") >= 2 and "0 xong." in expand(build_md({"open": [], "running": ""}, now), "vi")
     assert "*" not in short("a *b* c") and OPEN not in short("x⟦y")
 
     # 4. finish(): span EN/VI, nút, tên việc, không URL ngoài, localStorage bọc try/catch, Translator chỉ khi 'Translator' in self và chỉ sau khi bấm
@@ -495,8 +489,8 @@ def selftest():
     out = finish(fake)
     assert "<title>Task</title>" in out and 'alt="A"' in out, out
     assert '<span class="en" lang="en">Red</span><span class="vi" lang="vi">Đỏ</span>' in out and '<span class="tn">Tên *việc*</span>' in out
-    assert '.stat{margin:28px 0' in out and '.page:not(.cover){min-height:0}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
-    assert '@media (min-width:821px){.spread{align-items:start' in out and '.spread::after{display:none}' in out, "khổ rộng giữ dáng quyển tập hai tờ, mỗi tờ ôm nội dung"
+    assert '.stat{margin:28px 0' in out and '.page{min-height:0}' in out, "khối số lớn không bị đẩy xuống đáy trang (margin-top:auto của book-layout) và trang không kéo cao 760 px"
+    assert '.spread{align-items:start' not in out, "quyển tập hai tờ cao bằng nhau (giấy chung của book-layout), không tờ riêng lệch chiều cao"
     assert 'lang="en" data-lang="en"' in out and 'id="rp-lang"' in out and 'id="rp-tr" hidden' in out
     assert OPEN not in out and SEP not in out and NO not in out
     assert not re.search(r"https?://|src=\"http|@import|fetch\(|XMLHttpRequest|translate\.google", out), "trang song ngữ không được gọi ra ngoài"

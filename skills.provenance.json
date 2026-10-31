@@ -1026,11 +1026,11 @@
     "rp": {
       "files": {
         "SKILL.md": "6eb6962b3ef6822ce70beb1469f179d30f0d6b384bb0661da0217d589d26dbf4",
-        "references/task.md": "b0a6b8e8e76d226df11ca33557c00b1d5708289df832883f8af074684e523e29",
-        "scripts/check_lang.mjs": "bd13e6ab1be69fb957c20b885a403cb7eaa8c92fb6feb04142a8e5996be443f8",
-        "scripts/task_report.py": "5206887bb459e8830f70fac037a842c2a41a3b0744bc0d6e3331fbd7ff480170"
+        "references/task.md": "ed4e094d18aa363085ec6e93d363e992626fc5be13765060ce1d3ea8a89ffbf0",
+        "scripts/check_lang.mjs": "c9ec04e0870713afe59f628d41e1a20449027bcf005c2ed68cf767e603672310",
+        "scripts/task_report.py": "6ae9ef6b40e96dda7ecee644be5e1b10b7e15ee727c1c80110ce83646fce59e7"
       },
-      "recorded": "2026-10-31",
+      "recorded": "2026-11-01",
       "source": "local-authored"
     },
     "safe-change": {

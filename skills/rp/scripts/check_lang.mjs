@@ -19,11 +19,13 @@ async function open(w, init) {
 const vis = (p, sel) => p.evaluate(s => [...document.querySelectorAll(s)].some(e => e.offsetParent !== null), sel);
 // Luật khoảng trống (owner 31/10 m1a192b837fe75fa: «chừa quá nhiều khoảng trống»): trong mỗi trang (trừ bìa) khe giữa hai khối kề nhau ≤ 80 px và chỗ trống dưới khối cuối ≤ 120 px.
 const GAP = 80, TAIL = 120;
-const blank = p => p.evaluate(([g, t]) => [...document.querySelectorAll('article.page:not(.cover)')].flatMap(pg => {
+const blank = p => p.evaluate(([g, t]) => [...document.querySelectorAll('.spread')].filter(sp => sp.children.length === 2 && getComputedStyle(sp).gridTemplateColumns.split(' ').length === 2).flatMap(sp => {
+  const [a, b] = [...sp.children].map(e => e.getBoundingClientRect().height); return Math.abs(a - b) > 2 ? [`hai tờ của quyển cao khác nhau ${Math.round(a)} và ${Math.round(b)} px (trông như bị cắn)`] : []; })
+  .concat([...document.querySelectorAll('article.page:not(.cover)')].flatMap(pg => {
   const kids = [...pg.children].filter(e => e.offsetParent && !e.matches('.run,.foot')), r = pg.getBoundingClientRect(), out = [];
   for (let i = 1; i < kids.length; i++) { const d = kids[i].getBoundingClientRect().top - kids[i - 1].getBoundingClientRect().bottom; if (d > g) out.push(`khe ${Math.round(d)}px trong trang «${(pg.querySelector('h2') || {}).textContent}»`); }
   const foot = pg.querySelector('.foot'), end = (foot ? foot.getBoundingClientRect().top : r.bottom) - (kids.length ? kids[kids.length - 1].getBoundingClientRect().bottom : r.top);
-  if (end > t) out.push(`trống ${Math.round(end)}px dưới khối cuối trang «${(pg.querySelector('h2') || {}).textContent}»`); return out; }), [GAP, TAIL]);
+  if (end > t) out.push(`trống ${Math.round(end)}px dưới khối cuối trang «${(pg.querySelector('h2') || {}).textContent}»`); return out; })), [GAP, TAIL]);
 const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - innerWidth,
   over: [...document.querySelectorAll('h1,h2,h3,p,li,.lead,button')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).length }));
 for (const w of [390, 1280]) {

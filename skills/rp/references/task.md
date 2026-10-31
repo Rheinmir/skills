@@ -20,10 +20,9 @@ Thứ tự ưu tiên: xanh lá, đỏ, vàng, xám/xanh dương. Dòng có nhi�
 
 ## Báo cáo gồm
 1. Bìa: số việc mở, số đã xong, giờ chốt, hình thanh số việc theo màu.
-2. Chú giải màu (đầu báo cáo, để người đọc biết xanh lá mới là xong).
-3. Tóm tắt: số việc theo màu, sha Live.
-4. Từng nhóm màu, 2 thẻ mỗi trang. MỖI VIỆC LÀ MỘT THẺ: dòng tiêu đề (chấm màu + tên việc) rồi MỖI Ý MỘT DÒNG có khoảng cách rõ (owner 31/10: «mỗi ý một dòng, có khoảng cách, đọc lần lượt từ trên xuống»): Tình trạng, Người làm, Im bao lâu, Nhánh, Thread. Thanh ngắn ngăn hai thẻ. Không nối ý bằng «;» trong một khối chữ liền.
-5. Chưa đo: smoke Live, sha từng nhánh, thứ ngoài phạm vi.
+2. Tóm tắt: số việc theo màu, sha Live, kèm CHÚ GIẢI màu ngay dưới (cùng trang, để người đọc biết xanh lá mới là xong).
+3. Từng nhóm màu, 1 thẻ mỗi trang. MỖI VIỆC LÀ MỘT THẺ: dòng tiêu đề (chấm màu + tên việc) rồi MỖI Ý MỘT DÒNG có khoảng cách rõ (owner 31/10: «mỗi ý một dòng, có khoảng cách, đọc lần lượt từ trên xuống»): Tình trạng, Người làm, Im bao lâu, Nhánh, Thread. Thanh ngắn ngăn hai thẻ. Không nối ý bằng «;» trong một khối chữ liền.
+4. Chưa đo: smoke Live, sha từng nhánh, thứ ngoài phạm vi.
 
 ## Cách đọc cho đúng
 - `deployed` false = chưa lên Live; `status` review = chờ review (vàng, không phải xong). Không viết «xong» khi dữ liệu không nói.
@@ -50,8 +49,8 @@ Bìa dùng hình thanh số việc theo màu do chính script sinh (`cover_svg`,
 - Không dùng danh sách «- chữ» của `book-layout` cho dòng việc: nó vẽ dấu tích xanh trước MỌI dòng, kể cả dòng cảnh báo, và owner đọc tích là «xong». Báo cáo không có dấu tích nào (`ul.checks` = 0 trong HTML); selftest chặn dòng «- » quay lại.
 - Chữ nhấn «*…*» của `book-layout` có màu XANH LÁ nên báo cáo không dùng nó ở bìa và tiêu đề (xanh lá chỉ dành cho «xong»); selftest chặn «*» quay lại.
 - Màu theo giai đoạn mà `/work/open` trả, chưa đọc giai đoạn trong sổ vòng đời: việc đã ĐẠT trong sổ vẫn có thể hiện xám hoặc vàng «chờ review». Đọc giai đoạn sổ là việc để sau.
-- Luật khoảng trống (owner 31/10 «chừa quá nhiều khoảng trống, sao không có luật kiểm»): `check_lang.mjs` đo mỗi trang (trừ bìa) ở 390 và 1280, EN và VI: khe giữa hai khối kề ≤ 80 px, chỗ trống dưới khối cuối ≤ 120 px, FAIL nếu vượt. Trước khi sửa, ở 1280 đo được khe 259 px (trang Tóm tắt) và chỗ trống 241–416 px; nguyên nhân là `.page{min-height:760px}` + `.stat{margin-top:auto}` + hai trang kề nhau kéo dãn theo trang cao hơn. Sửa: mỗi trang là một tờ giấy riêng ôm nội dung, không kéo dãn theo tờ kề.
-- Dáng QUYỂN TẬP (owner 31/10: «hình quyển tập đâu?»): ở khổ > 820 px vẫn hai tờ kề nhau có gáy; mỗi tờ có giấy và bóng riêng, tờ ngắn không để lại giấy trống (chỗ trống bên cạnh là nền bàn). Ở khổ ≤ 820 px một cột như `book-layout`. Một lượt trước tôi bỏ hẳn hai tờ để hết khoảng trống và mất dáng quyển: sửa gốc phải giữ thứ owner đang thích.
+- Luật khoảng trống (owner 31/10 «chừa quá nhiều khoảng trống, sao không có luật kiểm»): `check_lang.mjs` đo mỗi trang (trừ bìa) ở 390 và 1280, EN và VI: khe giữa hai khối kề ≤ 80 px, chỗ trống dưới khối cuối ≤ 120 px, FAIL nếu vượt. Trước khi sửa, ở 1280 đo được khe 259 px (trang Tóm tắt) và chỗ trống 241–416 px; nguyên nhân là `.page{min-height:760px}` + `.stat{margin-top:auto}` + hai trang kề nhau kéo dãn theo trang cao hơn. Sửa: xem «Dáng QUYỂN TẬP» ngay dưới (hai tờ cao bằng nhau, chia nội dung đều).
+- Dáng QUYỂN TẬP (owner 1/11: «quyển tập bị chuột cắn»): ở khổ > 820 px hai tờ kề nhau cao BẰNG NHAU, chung giấy và gáy giữa của `book-layout`. Hai bản trước đều sai: một cột 640 px mất dáng quyển, rồi mỗi tờ giấy riêng ôm nội dung thì tờ thấp hơn tạo vết khuyết như bị cắn. Cách chia nội dung để chỗ trống ≤ 120 px: một thẻ mỗi tờ (chênh chiều cao chỉ vài dòng xuống dòng), chú giải nằm dưới Tóm tắt (đối trọng với bìa), bỏ dòng chữ viết tay cuối trang «Not measured» (cao ~60 px), bớt 22 px đệm đáy ở khổ rộng. `check_lang.mjs` đo cả hai tờ của mỗi quyển cao khác nhau không quá 2 px. Thử trên dữ liệu thật (5 việc) và dữ liệu giả 11 việc: 0 FAIL. Số việc lẻ hay tên rất dài vẫn có thể vượt 120 px: luật báo FAIL, khi đó chỉnh bố cục thay vì nới luật. Ở khổ ≤ 820 px một cột như `book-layout`.
 - CSS riêng của rp (trong `finish()`, không sửa `book-layout`): khối số lớn `.stat` có khoảng cách dưới và nền xám ấm thay nền xanh lá nhạt (xanh lá chỉ dành cho «xong»); tiêu đề thẻ `.lead` cách dòng dưới 12 px.
 - Footer của trang bìa ở 390 px có thể chồng lên ảnh bìa (lỗi chung của `book-layout`, không sửa ở đây).
 - Dịch tên việc bằng Translator API chỉ kiểm bằng bản GIẢ trong Playwright (có API, chưa kiểm bản dịch thật của Chrome): chất lượng dịch và tải model lần đầu: chưa đo.
