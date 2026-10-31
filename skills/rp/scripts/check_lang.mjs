@@ -16,15 +16,16 @@ async function open(w, init) {
   await p.goto('file://' + f); await p.waitForTimeout(600); return { ctx, p, errs };
 }
 const vis = (p, sel) => p.evaluate(s => [...document.querySelectorAll(s)].some(e => e.offsetParent !== null), sel);
-// Luật khoảng trống (owner 31/10 m1a192b837fe75fa: «chừa quá nhiều khoảng trống»): trong mỗi trang (trừ bìa) khe giữa hai khối kề nhau ≤ 80 px và chỗ trống dưới khối cuối ≤ 120 px.
-const GAP = 80, TAIL = 120;
-const blank = p => p.evaluate(([g, t]) => [...document.querySelectorAll('.spread')].filter(sp => sp.children.length === 2 && getComputedStyle(sp).gridTemplateColumns.split(' ').length === 2).flatMap(sp => {
-  const [a, b] = [...sp.children].map(e => e.getBoundingClientRect().height); return Math.abs(a - b) > 2 ? [`hai tờ của quyển cao khác nhau ${Math.round(a)} và ${Math.round(b)} px (trông như bị cắn)`] : []; })
-  .concat([...document.querySelectorAll('article.page:not(.cover)')].flatMap(pg => {
-  const kids = [...pg.children].filter(e => e.offsetParent && !e.matches('.run,.foot')), r = pg.getBoundingClientRect(), out = [];
-  for (let i = 1; i < kids.length; i++) { const d = kids[i].getBoundingClientRect().top - kids[i - 1].getBoundingClientRect().bottom; if (d > g) out.push(`khe ${Math.round(d)}px trong trang «${(pg.querySelector('h2') || {}).textContent}»`); }
-  const foot = pg.querySelector('.foot'), end = (foot ? foot.getBoundingClientRect().top : r.bottom) - (kids.length ? kids[kids.length - 1].getBoundingClientRect().bottom : r.top);
-  if (end > t) out.push(`trống ${Math.round(end)}px dưới khối cuối trang «${(pg.querySelector('h2') || {}).textContent}»`); return out; })), [GAP, TAIL]);
+// Luật khoảng trống đã đổi (owner 1/11 qua Klau m1a1931ae86c7507: «để space cũng được, không cần cố nhét»): BỎ luật trống cuối ≤ 120 px; tờ ít nội dung để trống phía dưới.
+// Còn lại: (a) khổ > 820: MỌI tờ cao bằng nhau ±2 px (khổ chuẩn = bìa, quyển sổ thật); (b) khe giữa hai khối kề nhau trong tờ ≤ 80 px (trừ bìa, bìa là chuẩn).
+const GAP = 80;
+const blank = p => p.evaluate(([g]) => {
+  const out = [], pgs = [...document.querySelectorAll('article.page')];
+  if (innerWidth > 820 && pgs.length) { const hs = pgs.map(e => e.getBoundingClientRect().height), lo = Math.min(...hs), hi = Math.max(...hs); if (hi - lo > 2) out.push(`các tờ cao khác nhau: ${Math.round(lo)} đến ${Math.round(hi)} px (phải bằng nhau ±2)`); }
+  for (const pg of pgs) { if (pg.classList.contains('cover')) continue;
+    const kids = [...pg.children].filter(e => e.offsetParent && !e.matches('.run,.foot'));
+    for (let i = 1; i < kids.length; i++) { const d = kids[i].getBoundingClientRect().top - kids[i - 1].getBoundingClientRect().bottom; if (d > g) out.push(`khe ${Math.round(d)}px trong trang «${(pg.querySelector('h2') || {}).textContent}»`); } }
+  return out; }, [GAP]);
 // Luật chữ (owner m1a192fa92c41dfb, Kanade DUYỆT): độ đậm ≤ 300 (cấm Lexend thường và bold); < 200 chỉ khi cỡ ≥ 48 px; chữ ≤ 200 dùng màu gần đen (WCAG không tính độ mảnh);
 // tương phản ≥ 4.5:1 chữ < 24 px, ≥ 3:1 chữ lớn; họ font đầu tiên là Lexend Deca. Độ mảnh của nét: chưa đo bằng số, xem ảnh.
 const typo = p => p.evaluate(() => {
