@@ -90,6 +90,10 @@ const chips = p => p.evaluate(src => { const re = new RegExp(src); const bad = [
     const bgc = rgb(st.backgroundColor);
     if (!c.classList.contains('chip-' + want)) bad.push(`chip «${txt.slice(0, 20)}» phải thuộc nhóm ${want}, đang lớp «${c.className}»`);
     if (bgc.join() !== KIND[want].join()) bad.push(`chip «${txt.slice(0, 20)}» phải nền ${want} rgb(${KIND[want].join(', ')}) như trang mẫu, đang ${st.backgroundColor}`);
+    // KHÔNG tông đỏ / xanh lá (Kanade 1/11): đỏ = cần xử lý, xanh lá = xong; chip trang trí trùng tông sẽ đọc sai trạng thái. Chỉ xét khi nền có sắc (max−min ≥ 12).
+    { const mx = Math.max(...bgc), mn = Math.min(...bgc); if (mx - mn >= 12) { const [r, g, b] = bgc.map(v => v / 255), d = (mx - mn) / 255; let h = mx / 255 === r ? ((g - b) / d) % 6 : (mx / 255 === g ? (b - r) / d + 2 : (r - g) / d + 4); h = (h * 60 + 360) % 360;
+      if (h >= 335 || h <= 12 || (h >= 75 && h <= 150)) bad.push(`chip «${txt.slice(0, 20)}» có tông ${h >= 75 && h <= 150 ? 'xanh lá' : 'đỏ'} (hue ${Math.round(h)}°): trùng màu tình trạng`); } }
+    if (+st.fontWeight > 300) bad.push(`chữ chip độ đậm ${st.fontWeight} > 300`);
     if (rgb(st.color).join() !== '26,29,33') bad.push(`chữ chip phải #1a1d21 như trang mẫu, đang ${st.color}`);
     const bd = rgb(st.borderTopColor); if (st.borderTopWidth !== '1px' || !bd.every((v, i) => v < bgc[i])) bad.push(`chip phải có viền 1 px đậm hơn nền (viền ${st.borderTopColor}, nền ${st.backgroundColor})`);
     if (parseFloat(st.borderTopLeftRadius) < 14) bad.push(`chip phải bo tròn kiểu viên thuốc (bo ${st.borderTopLeftRadius})`);
