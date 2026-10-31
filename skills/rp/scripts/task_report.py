@@ -42,8 +42,8 @@ TX = {
     "legend": ("Legend", "Chú giải"),
     "summary": ("Summary", "Tóm tắt"),
     "summary_stat": ("tasks done out of {n} open tasks", "việc đã xong trong {n} việc đang mở"),
-    "sum_row": ("{label} tasks: {n}", "{label}: {n} việc"),
-    "sum_sha": ("Sha on Live: {sha}", "Sha đang chạy trên Live: {sha}"),
+    "sum_row": ("**{label} tasks:** {n}", "**{label}:** {n} việc"),
+    "sum_sha": ("**Sha on Live:** {sha}", "**Sha đang chạy trên Live:** {sha}"),
     "unknown": ("unknown", "chưa biết"),
     "c_red": ("Red", "Đỏ"), "c_yellow": ("Yellow", "Vàng"), "c_blue": ("Blue", "Xanh dương"), "c_gray": ("Gray", "Xám"), "c_green": ("Green", "Xanh lá"),
     "m_red": ("Act now. An agent is dead. Or the task stops. Or there is no news for 12 hours.", "cần xử lý: agent đã chết, hoặc bị chặn, hoặc đang làm mà im hơn 12 giờ"),
@@ -73,13 +73,13 @@ TX = {
     "r_other": ("The stage code is {st}.", "giai đoạn {st}"),
     "r_more": ("Plus {n} more.", "Còn {n} lý do nữa."),
     # thẻ
-    "s_status": ("Status: {x}", "Tình trạng: {x}"),
-    "s_who": ("Workers: {x}.", "Người làm: {x}."),
+    "s_status": ("**Status:** {x}", "**Tình trạng:** {x}"),   # nhãn đầu dòng in đậm (owner 1/11: «Status và Workers đã in bold đâu?»)
+    "s_who": ("**Workers:** {x}.", "**Người làm:** {x}."),
     "s_nobody": ("none yet", "chưa có"),
     "s_more": ("{n} more", "{n} người nữa"),
-    "s_idle": ("No news for {dur}.", "Im {dur}."),
-    "s_branch": ("Branch: {b}.", "Nhánh: {b}."),
-    "s_thread": ("Thread: room:{room}", "Thread: room:{room}"),
+    "s_idle": ("**Quiet for:** {dur}.", "**Im:** {dur}."),
+    "s_branch": ("**Branch:** {b}.", "**Nhánh:** {b}."),
+    "s_thread": ("**Thread:** room:{room}", "**Thread:** room:{room}"),
     "s_nobranch": ("none", "chưa có"),
     # đơn vị thời gian
     "t_now": ("just now", "vừa xong"),
@@ -92,8 +92,8 @@ TX = {
     # trang cuối
     "nm": ("Not measured", "Chưa đo"),
     "nm_h": ("Limits", "Giới hạn"),
-    "nm_smoke": ("Latest smoke result of Live: not measured. This report has no source for smoke.", "Kết quả smoke mới nhất của Live: chưa đo (báo cáo này không có nguồn đọc smoke)."),
-    "nm_sha": ("Sha of each branch in review: not measured. Hang gives the branch name, not the sha.", "Sha từng nhánh đang review: chưa đo (hang_open_work chỉ cho tên nhánh, không cho sha)."),
+    "nm_smoke": ("**Latest smoke result of Live:** not measured. This report has no source for smoke.", "**Kết quả smoke mới nhất của Live:** chưa đo (báo cáo này không có nguồn đọc smoke)."),
+    "nm_sha": ("**Sha of each branch in review:** not measured. Hang gives the branch name, not the sha.", "**Sha từng nhánh đang review:** chưa đo (hang_open_work chỉ cho tên nhánh, không cho sha)."),
     "nm_done": ("Done comes from the deployed flag. A thread without the flag is never green.", "«Xong» lấy từ cờ deployed của thread. Thread chưa có cờ thì không bao giờ ra xanh lá."),
     "nm_stage": ("The color follows the work list stage. The review log is not read.", "Màu theo giai đoạn của danh sách việc, chưa đọc sổ review."),
     "nm_pass": ("A task with a pass can still show yellow.", "Việc đã ĐẠT trong sổ vẫn có thể hiện vàng hoặc xám."),
@@ -286,7 +286,7 @@ def build_md(d, now, room=ROOM):   # room=None: nguồn là tệp JSON, không b
           f"! {n['green']} | {bi('summary_stat', n=len(ts))} | " + (f"room:{room}, hang_open_work" if room else "hang_open_work")]
     o += [f"{DOT[k]} " + mark(*(L("sum_row", lg, label=L("c_" + k, lg), n=n[k]) for lg in ("en", "vi"))) for k, _ in COLORS if n[k]]
     o += [mark(L("sum_sha", "en", sha=sha), L("sum_sha", "vi", sha=sha_vi)), "---"]
-    o += [f"{DOT[k]} {bi('c_' + k)}: {bi('m_' + k)}" for k, _ in COLORS] + [""]   # chú giải ngay dưới tóm tắt: bìa và trang này cao gần bằng nhau
+    o += [f"{DOT[k]} " + mark(*(f"**{L('c_' + k, lg)}:** {L('m_' + k, lg)}" for lg in ("en", "vi"))) for k, _ in COLORS] + [""]   # chú giải ngay dưới tóm tắt: bìa và trang này cao gần bằng nhau
     for k, dot in COLORS:
         grp = [(t, w) for t, c, w in rows if c == k]
         for i in range(0, len(grp), PER_PAGE):
@@ -318,7 +318,7 @@ def font_css():
 # Chữ mảnh (≤ 200) dùng màu gần đen #111: WCAG không tính độ mảnh của nét, bù bằng màu. Nút cũng 300.
 CSS = ("html[data-lang=en] .vi,html[data-lang=vi] .en{display:none}"
        ':root{--sans:"Lexend Deca",system-ui,-apple-system,"Segoe UI",sans-serif;--hand:var(--sans);--page-pad:clamp(24px,4.8vw,60px);--ink3:#5c5c56}'   # tên font ở MỘT chỗ; lề rộng hơn kiểu tạp chí; --ink3 (chữ phụ nhỏ) từ #8a8a82 (3,3:1) lên #5c5c56 (≥ 6:1) vì chữ Light mỏng cần tương phản cao hơn
-       "html body,html body *{font-weight:300!important}"   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
+       "html body,html body *{font-weight:300!important}html body b,html body strong{font-weight:600!important}"   # NGOẠI LỆ DUY NHẤT (owner 1/11 thắng luật «chỉ 300»): nhãn đầu dòng trước «:» đậm 600; chữ sau «:» giữ Light   # kể cả <b>, h1–h3, nhãn; font dự phòng cũng nhẹ
        "body{font-size:16px;line-height:1.7}"
        "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111;letter-spacing:-.015em}html body h3{color:#111;letter-spacing:-.015em}"
        "h1,h2{line-height:1.2}.cover h1{font-size:clamp(44px,6.4vw,84px);line-height:1.2}h2{font-size:clamp(34px,4vw,52px)}"   # tiêu đề lớn mỏng canh trái như trang chủ lexend.com; line-height ≥ 1.2 để không cắt dấu Việt (check.mjs clip)
@@ -430,7 +430,8 @@ def selftest():
         x = expand(md, lang)
         assert OPEN not in x and SEP not in x and CLOSE not in x and NO not in x, ("sót dấu đánh dấu", lang)
         assert not [ln for ln in x.splitlines() if ln.startswith("- ")], "còn danh sách «- » (tick xanh)"
-        assert "*" not in x, "còn chữ nhấn «*…*» (book-layout tô xanh lá)"
+        assert "*" not in re.sub(r"\*\*[^*\n]+:\*\*", "", x), "còn chữ nhấn «*…*» (book-layout tô xanh lá); chỉ cho phép nhãn đậm «**Nhãn:**» (owner 1/11)"
+        assert all(ln.startswith(("> ", "!")) or not ln.count("**") % 2 for ln in x.splitlines()), "«**» phải đi theo cặp"
         Ls = x.splitlines()
         body = Ls[Ls.index("=== cover"):]
         for ln in body:
@@ -493,9 +494,9 @@ def selftest():
     g = ex.splitlines().index(next(ln for ln in ex.splitlines() if ln.startswith("> 🟢 ")))
     assert "room:j" in "\n".join(ex.splitlines()[g:g + 7])
     assert "Only green means done." in ex and "Chỉ màu xanh lá mới là xong." in vx
-    for k in ("room:a", "room:h", "Sha on Live: c031e2312e03", "not measured"):
+    for k in ("room:a", "room:h", "**Sha on Live:** c031e2312e03", "not measured"):
         assert k in ex, k
-    for k in ("Sha đang chạy trên Live: c031e2312e03", "chưa đo"):
+    for k in ("**Sha đang chạy trên Live:** c031e2312e03", "chưa đo"):
         assert k in vx, k
     assert "brand: Hang · vinh-hong" in md and "room=vinh-hong" in ex and "outside room vinh-hong" in ex and "ngoài phòng vinh-hong" in vx
     mt = expand(build_md(fx, now, None), "en")   # --src: không biết phòng
@@ -523,7 +524,9 @@ def selftest():
     assert o2.count("@font-face") == 2 and o2.count("data:font/woff2;base64,d09GMg") == 2, "hai @font-face (vietnamese, latin) nhúng base64 woff2"
     assert 'font-family:"Lexend Deca"' in o2 and '--sans:"Lexend Deca"' in o2, "họ font Lexend Deca ở một chỗ (--sans)"
     css = CSS
-    ws = sorted({int(w) for w in re.findall(r"font-weight:(\d+)", css) + re.findall(r"font:(\d+) ", css)})   # CSS của rp
+    css_no_b = css.replace("html body b,html body strong{font-weight:600!important}", "")   # ngoại lệ DUY NHẤT: nhãn đầu dòng <b> 600 (owner 1/11)
+    assert "html body b,html body strong{font-weight:600!important}" in css and css.count("600") == 1, "chỉ nhãn <b> được 600"
+    ws = sorted({int(w) for w in re.findall(r"font-weight:(\d+)", css_no_b) + re.findall(r"font:(\d+) ", css_no_b)})   # CSS còn lại ≤ 300
     assert ws and max(ws) <= 300 and min(ws) >= 100, ("độ đậm trong CSS phải trong 100–300", ws)
     assert "@media (min-width:1100px){html body .cover h1,html body .stat .big{font-weight:100!important}}" in css and "html body h1,html body h2,html body .stat .big{font-weight:200!important;color:#111" in css, "sàn mỏng: 100 chỉ ≥ 1100 px, mặc định 200 và màu gần đen"
     svg0 = base64.b64decode(cover_svg({"red": 1, "yellow": 0, "blue": 0, "gray": 0, "green": 0}).split(",", 1)[1]).decode()

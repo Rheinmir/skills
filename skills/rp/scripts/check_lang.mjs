@@ -38,7 +38,8 @@ const typo = p => p.evaluate(() => {
     const c = getComputedStyle(e), w = +c.fontWeight, fs = parseFloat(c.fontSize), k = `${e.tagName}.${e.className}|${w}|${Math.round(fs)}|${c.color}`;
     if (seen.has(k)) continue; seen.add(k);
     const tag = `${e.tagName.toLowerCase()}${e.className ? '.' + e.className : ''} «${e.textContent.trim().slice(0, 24)}»`;
-    if (w > 300) bad.push(`độ đậm ${w} > 300: ${tag}`);
+    if (e.tagName === 'B') { if (w !== 600) bad.push(`nhãn đậm phải 600, đang ${w}: ${tag}`); if (!/[:：]\s*$/.test(e.textContent.trim())) bad.push(`nhãn đậm phải kết thúc bằng «:»: ${tag}`); }   // NGOẠI LỆ DUY NHẤT (owner 1/11): nhãn đầu dòng trước «:» đậm 600, chữ sau «:» giữ Light
+    else if (w > 300) bad.push(`độ đậm ${w} > 300: ${tag}`);
     if (w < 200 && fs < 48) bad.push(`độ đậm ${w} < 200 ở cỡ ${Math.round(fs)} px (< 48): ${tag}`);
     if (w <= 200 && cr(c.color, 'rgb(17, 17, 17)') > 1.3) bad.push(`chữ mảnh (${w}) không dùng màu gần đen (${c.color}): ${tag}`);
     const r = cr(c.color, bgOf(e)), need = fs >= 24 ? 3 : 4.5;
@@ -47,6 +48,17 @@ const typo = p => p.evaluate(() => {
   }
   return bad;
 });
+const labels = p => p.evaluate(() => { // mỗi dòng văn trong thẻ việc phải mở đầu bằng nhãn đậm; phần chữ sau nhãn ≤ 300
+  const bad = []; let n = 0;
+  for (const lead of document.querySelectorAll('p.lead')) {
+    if (!/[🔴🟡🔵⚪🟢]/u.test(lead.textContent)) continue;
+    for (let q = lead.nextElementSibling; q && q.tagName === 'P' && !q.classList.contains('lead'); q = q.nextElementSibling) {
+      if (q.offsetParent === null && !q.querySelector('span:not([style*="none"])')) continue;
+      n++; const b = q.querySelector('b'); if (!b || !q.textContent.trim().startsWith(b.textContent.trim().slice(0, 3)) || +getComputedStyle(b).fontWeight !== 600) bad.push(`dòng không mở đầu bằng nhãn đậm: «${q.textContent.trim().slice(0, 30)}»`);
+    }
+  }
+  return { n, bad };
+});
 const faces = p => p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'Lexend Deca' && f.status === 'loaded').length; });
 const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - innerWidth,
   over: [...document.querySelectorAll('h1,h2,h3,p,li,.lead,button')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).length }));
@@ -54,12 +66,12 @@ for (const w of [390, 1280]) {
   const { ctx, p, errs } = await open(w);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en' && await vis(p, '.en') && !await vis(p, '.vi'), `${w}: mở ra tiếng Anh, không thấy chữ Việt của trang`);
   let m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} EN: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
   await p.screenshot({ path: `${out}/en-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); await p.waitForTimeout(150);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'vi' && await vis(p, '.vi') && !await vis(p, '.en'), `${w}: bấm nút đổi cả trang sang tiếng Việt`);
   m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} VI: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
   await p.screenshot({ path: `${out}/vi-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en', `${w}: bấm lại về tiếng Anh`);
   ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
