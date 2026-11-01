@@ -31,6 +31,13 @@ Updates: an outside author owns the repository.
 - Bỏ (riêng task): chấm màu tình trạng, tên màu tô màu, nút Translator trên tên việc. `check_lang.mjs` đọc `data-mode` ở `<html>` (finish() ghi `task` hoặc `doc`) và chỉ chạy các luật đó khi `task`.
 - Bìa: hình phẳng trung tính do script sinh (số dòng mỗi trang, màu xám ấm), KHÔNG tranh núi xanh lá mặc định của book-layout, KHÔNG xanh lá, KHÔNG đỏ (xanh lá đọc là «xong», đỏ là «cần xử lý»).
 
+## Ảnh trong báo cáo (owner 02/11: hướng dẫn từng bước, một ảnh mỗi bước)
+- Dòng ảnh MỘT mình trên dòng: `![mô tả ngắn, tiếng Anh](tên-tệp.png)`. Ảnh nằm cạnh nguồn hoặc trong thư mục con của nguồn; PNG, JPEG, GIF hoặc WEBP thật (kiểm magic byte).
+- Dựng xong, ảnh được NHÚNG base64: trang là MỘT tệp, 0 request ngoài. Không URL, không «..», không đường dẫn tuyệt đối (script chặn và nói ảnh nào, sửa thế nào).
+- Cỡ: ≤ 3,5 MB mỗi ảnh, ≤ 12 MB cả trang. Chụp khung 1280 × 720 trở xuống; ảnh dọc rất cao làm tờ dài. GIF kèm ghim chú thích của book-layout chưa có cú pháp riêng ở chế độ doc: dùng GIF thường.
+- Một ảnh tính là một dòng (trang tối đa 9 dòng). Dòng ảnh không đóng chip.
+- `--check` kiểm cả ảnh. Alt viết theo STE như mọi dòng EN.
+
 ## Không làm
 - Không ghi gì lên Hang ngoài tin báo cáo (như `task`).
 - Không bịa số: số không có nguồn thì ghi «chưa đo».

@@ -228,6 +228,8 @@ def build_md(M, lang, now=None):
                 o.append(S(("**" + a[0] + ":** " + b[0], "**" + a[1] + ":** " + b[1]) if both else (None, "**" + a[1] + ":** " + b[1])))
             else:
                 en, vi = a
+                if not both and IMG_LINE.match(vi or ""):   # dòng ảnh: giữ nguyên, KHÔNG đóng chip (đường «shots/a.png» bị đọc là mã nhánh)
+                    o.append(vi); continue
                 if not both and re.match(r"^[^\s:*][^:*]{0,30}:\s+\S", vi):
                     k, v = vi.split(":", 1); vi = f"**{k.strip()}:** {v.strip()}"
                     o.append(S((en, vi)))
@@ -253,6 +255,47 @@ def add_translate(page):
     bar = '<div id="rp-bar"><button type="button" id="rp-tr" hidden aria-pressed="false" title="Translate this page to Vietnamese with the translator of your browser. It does not use the network of this page.">Translate</button></div>'
     page = re.sub(r"(<body[^>]*>)", lambda m: m.group(1) + bar, page, count=1)
     return page.replace("</body>", "<script>" + TR_JS + "</script></body>", 1)
+
+
+IMG_LINE = re.compile(r"^!\[([^\]]*)\]\(([^)\s]+)\)\s*$", re.M)
+IMG_MAGIC = ((b"\x89PNG\r\n\x1a\n", "image/png"), (b"\xff\xd8\xff", "image/jpeg"), (b"GIF87a", "image/gif"), (b"GIF89a", "image/gif"))
+IMG_MAX, IMG_TOTAL = 3_500_000, 12_000_000   # byte: một ảnh (GIF có ghim chú thích ~3,5 MB), cả trang
+
+
+def embed_images(md_text, base):
+    """Dòng ảnh «![mô tả](tệp)» trong nguồn → nhúng base64 vào md để trang HTML MỘT TỆP, 0 request ngoài (RULE-10). Chỉ nhận tệp ảnh nằm TRONG thư mục nguồn (không «..», không đường dẫn tuyệt đối,
+    không URL), đúng magic byte PNG / JPEG / GIF / WEBP, ≤ IMG_MAX mỗi ảnh và ≤ IMG_TOTAL cả trang. Lỗi: nói ảnh nào và sửa thế nào (SystemExit)."""
+    base, total, errs = Path(base).resolve(), [0], []
+    def one(m):
+        alt, ref = m.group(1), m.group(2)
+        if ref.startswith("data:"):
+            return m.group(0)
+        if re.match(r"^[a-z][a-z0-9+.-]*:|^//|^/|^~", ref, re.I) or ".." in Path(ref).parts:
+            errs.append(f"ảnh «{ref[:60]}»: chỉ nhận tệp trong thư mục nguồn (không URL, không đường dẫn tuyệt đối, không «..»); sửa: chép ảnh vào cạnh nguồn rồi viết tên tệp")
+            return m.group(0)
+        f = (base / ref).resolve()
+        if base not in f.parents or not f.is_file():
+            errs.append(f"ảnh «{ref[:60]}»: không thấy tệp trong thư mục nguồn; sửa: đặt ảnh cạnh nguồn và viết đúng tên")
+            return m.group(0)
+        raw = f.read_bytes()
+        mime = next((t for sig, t in IMG_MAGIC if raw.startswith(sig)), "image/webp" if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP" else None)
+        if not mime:
+            errs.append(f"ảnh «{ref[:60]}»: không phải PNG / JPEG / GIF / WEBP thật (magic byte); sửa: xuất lại ảnh đúng định dạng")
+        elif len(raw) > IMG_MAX:
+            errs.append(f"ảnh «{ref[:60]}»: {len(raw) // 1000} KB (> {IMG_MAX // 1000} KB); sửa: thu nhỏ chiều rộng hoặc giảm số khung GIF")
+        else:
+            total[0] += len(raw)
+            return f"![{alt}](data:{mime};base64,{base64.b64encode(raw).decode()})"
+        return m.group(0)
+    out = IMG_LINE.sub(one, md_text)
+    if total[0] > IMG_TOTAL:
+        errs.append(f"tổng ảnh {total[0] // 1000} KB (> {IMG_TOTAL // 1000} KB); sửa: bớt ảnh hoặc thu nhỏ")
+    if errs:
+        print(f"ảnh chưa đạt ({len(errs)} lỗi); sửa rồi chạy lại:", file=sys.stderr)
+        for x in errs:
+            print("  - " + x, file=sys.stderr)
+        sys.exit(1)
+    return out
 
 
 def book_py():
@@ -325,6 +368,18 @@ def selftest():
     assert any("semicolon" in x and "sửa:" in x for x in er) and any("phrasal-verb" in x for x in er), er
     assert not check_lines(normalize(parse_md("# T\n## P\nStep: remove the panel. Start the job.\n")[0], "en")[0], "en"), "câu đạt luật không được bị chặn"
     assert "Translator.create" in TR_JS and "closest('#rp-bar,script,style,.chip,svg')" in TR_JS, "nút Translate phải bỏ chip mã"
+    # ảnh trong nguồn: nhúng base64 (trang một tệp), chặn URL / «..» / tuyệt đối / sai magic byte / quá cỡ
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        t = Path(td); (t / "ok.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"x" * 20); (t / "fake.png").write_bytes(b"not an image at all"); (t / "big.gif").write_bytes(b"GIF89a" + b"0" * (IMG_MAX + 1))
+        got = embed_images("![step one](ok.png)\n", t)
+        assert got.startswith("![step one](data:image/png;base64,") and "ok.png" not in got, got
+        assert embed_images("![c](data:image/svg+xml;base64,AAAA)\n", t).startswith("![c](data:image/svg+xml"), "data: URI giữ nguyên"
+        for bad in ("![x](https://example.com/a.png)", "![x](//example.com/a.png)", "![x](../ok.png)", "![x](/etc/hosts)", "![x](~/a.png)", "![x](fake.png)", "![x](big.gif)", "![x](missing.png)"):
+            try:
+                embed_images(bad + "\n", t); raise AssertionError("phải chặn: " + bad)
+            except SystemExit:
+                pass
     print("doc_report selftest ok")
 
 
@@ -353,10 +408,11 @@ def main():
     for w in WARN:
         print("cảnh báo STE: " + w, file=sys.stderr)
     if a.check:
+        embed_images(build_md(M, a.lang), Path(a.src).resolve().parent)   # kiểm cả ảnh (đường dẫn, magic byte, cỡ); không ghi tệp
         print("nguồn đạt"); return
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     md = out / ("rp-doc-" + time.strftime("%Y%m%d-%H%M") + ".md")
-    md.write_text(build_md(M, a.lang), encoding="utf-8"); print(md)
+    md.write_text(embed_images(build_md(M, a.lang), Path(a.src).resolve().parent), encoding="utf-8"); print(md)
     if a.build:
         html = md.with_suffix(".html")
         subprocess.run([sys.executable, str(book_py()), str(md), "-o", str(html)], check=True)
