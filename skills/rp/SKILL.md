@@ -15,7 +15,7 @@ Hub MỘT TÊN cho các báo cáo của Hang (owner 31/10: «báo cáo tình tr�
 
 ### Purpose và context
 - **Purpose:** trả lời «các task đang tới đâu» bằng một trang HTML đọc được trên điện thoại, số liệu đọc thẳng từ Hang, mỗi dòng có id để kiểm lại.
-- **Trigger (when to use):** owner gõ `/rp task`, hoặc nói «báo cáo tình trạng task», «tình hình các task», «task đang tới đâu» (chế độ `task`). Owner gõ `/rp doc`, hoặc đòi «làm báo cáo / report / tài liệu / tổng kết / tóm tắt / so sánh / đề xuất» về bất kỳ chủ đề nào ngoài tình trạng task (chế độ `doc`, đặc tả ở `references/doc.md`: nguồn markdown hoặc JSON, mặc định tiếng Việt một ngôn ngữ). Báo cáo trang HTML cho owner mà tự viết HTML tay là SAI: dùng `/rp doc`. `/rp` trơn: làm `task`.
+- **Trigger (when to use):** owner gõ `/rp task`, hoặc nói «báo cáo tình trạng task», «tình hình các task», «task đang tới đâu» (chế độ `task`). Owner gõ `/rp doc`, hoặc đòi «làm báo cáo / report / tài liệu / tổng kết / tóm tắt / so sánh / đề xuất» về bất kỳ chủ đề nào ngoài tình trạng task (chế độ `doc`, đặc tả ở `references/doc.md`: nguồn markdown hoặc JSON, MẶC ĐỊNH TIẾNG ANH theo ASD-STE100 (`--lang en`, kiểm STE cơ học khi dựng) và trang có nút «Translate» dùng Translator API của trình duyệt, không token, không tự sinh bản Việt; `--lang vi` hoặc `both` CHỈ khi owner đòi rõ). Báo cáo trang HTML cho owner mà tự viết HTML tay là SAI: dùng `/rp doc`. `/rp` trơn: làm `task`.
 - **Non-goals:** KHÔNG ghi gì lên Hang ngoài tin báo cáo; KHÔNG sửa, đóng hay giao lại thread; KHÔNG publish lên claude.ai Artifact (owner không mở được); KHÔNG tự đo smoke hay chạy test.
 
 ### Mental model

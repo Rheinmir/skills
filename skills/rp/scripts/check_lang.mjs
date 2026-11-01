@@ -143,7 +143,7 @@ const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - 
 // chế độ (data-mode trên <html>, finish() ghi): task = báo cáo tình trạng task (đủ luật thẻ việc: nhãn đậm sau chấm màu, tên màu, chấm, Translator trên tên việc);
 // doc = báo cáo / tài liệu thường (/rp doc): chỉ luật hình thức chung (khổ, chữ Lexend, chip mã máy, khoảng trống, font nhúng, 0 request ngoài). SINGLE = trang MỘT ngôn ngữ (không nút EN/VI): bỏ mọi kiểm nút ngôn ngữ.
 const { ctx: c0, p: p0 } = await open(390);
-const MODE = await p0.evaluate(() => document.documentElement.dataset.mode || 'task'), SINGLE = await p0.evaluate(() => !document.querySelector('#rp-lang')), TASK = MODE === 'task'; await c0.close();
+const MODE = await p0.evaluate(() => document.documentElement.dataset.mode || 'task'), SINGLE = await p0.evaluate(() => !document.querySelector('#rp-lang')), TASK = MODE === 'task', HASTR = await p0.evaluate(() => !!document.getElementById('rp-tr')); await c0.close();
 console.log(`chế độ ${MODE}${SINGLE ? ', một ngôn ngữ' : ', song ngữ'}`);
 if (SINGLE) {
   for (const w of [390, 1280]) {
@@ -156,6 +156,22 @@ if (SINGLE) {
     ok(await p.evaluate(() => !document.querySelector('.dot') && !/[🔴🟡🔵⚪🟢]/u.test(document.body.innerText)), `${w}: không chấm tình trạng, không emoji màu (báo cáo doc không phải tình trạng task)`);
     await p.screenshot({ path: `${out}/doc-${w}.png`, fullPage: true });
     ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
+  }
+  if (HASTR) {   // trang EN một ngôn ngữ (doc mặc định): nút «Translate» dùng Translator API của trình duyệt, không token
+    { const { ctx, p } = await open(390, () => { try { delete self.Translator; } catch (e) {} Object.defineProperty(self, 'Translator', { get() { return undefined; }, configurable: true }); delete self.Translator; });
+      ok(!await p.evaluate(() => 'Translator' in self) && !await vis(p, '#rp-tr'), 'không có Translator API: nút «Translate» ẩn'); await ctx.close(); }
+    { const { ctx, p, errs } = await open(390, () => { self.__calls = 0; self.Translator = { create: async o => ({ translate: async s => { self.__calls++; return 'VI:' + s; } }) }; });
+      const txt = () => p.evaluate(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), a = []; for (let n; (n = w.nextNode());) { const e = n.parentElement; if (n.nodeValue.trim() && e && !e.closest('#rp-bar,script,style,.chip,svg')) a.push(n.nodeValue.trim()); } return a; });
+      const chipsTxt = () => p.evaluate(() => [...document.querySelectorAll('.chip')].map(c => c.textContent));
+      const before = await txt(), cb = await chipsTxt();
+      ok(await vis(p, '#rp-tr') && await p.evaluate(() => self.__calls) === 0 && !before.some(s => s.startsWith('VI:')), `có Translator: nút hiện, ${before.length} đoạn chữ chưa dịch, 0 lần gọi lúc tải`);
+      await p.click('#rp-tr'); await p.waitForTimeout(400); const after = await txt();
+      ok(after.length === before.length && after.every((s, i) => s === 'VI:' + before[i]), 'bấm nút: mọi đoạn chữ được dịch (giả lập trên máy)');
+      ok(JSON.stringify(await chipsTxt()) === JSON.stringify(cb), 'chip mã máy giữ nguyên khi dịch');
+      ok(await p.evaluate(() => document.documentElement.lang) === 'vi', 'lang của trang đổi sang vi khi đã dịch');
+      await p.screenshot({ path: `${out}/doc-translated-390.png`, fullPage: true });
+      await p.click('#rp-tr'); await p.waitForTimeout(200); ok(JSON.stringify(await txt()) === JSON.stringify(before) && await p.evaluate(() => document.documentElement.lang) === 'en', 'bấm lần nữa: trả về tiếng Anh gốc');
+      ok(!errs.length, 'không lỗi JS khi dịch ' + errs.join('|')); await ctx.close(); }
   }
   ok(ext === 0, `không request nào ra ngoài (kể cả font): đếm ${ext}`);
   await b.close(); process.exit(bad ? 1 : 0);
