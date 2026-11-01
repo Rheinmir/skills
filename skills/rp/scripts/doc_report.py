@@ -298,6 +298,12 @@ def embed_images(md_text, base):
     return out
 
 
+def eager_images(page):
+    """Ảnh nhúng (data: PNG / JPEG / GIF / WEBP) là dữ liệu có sẵn trong trang: bỏ loading=\"lazy\" của book.py. Ảnh lười chỉ nạp khi cuộn tới nên ảnh chụp kiểm (check.mjs, 1280 / 390) THIẾU ảnh ở các tờ dưới
+    và người kiểm không xem được bố cục thật (Kensa 02/11: 3 / 8 ảnh hiện trong ảnh chụp). Bìa SVG giữ nguyên."""
+    return re.sub(r'<img\b[^>]*\bsrc="data:image/(?:png|jpeg|gif|webp);base64,[^>]*>', lambda m: m.group(0).replace(' loading="lazy"', ""), page)
+
+
 def book_py():
     here = Path(__file__).resolve()
     for c in (here.parents[2] / "book-layout" / "scripts" / "book.py", Path.home() / ".claude/skills/book-layout/scripts/book.py", Path.home() / ".agents/skills/book-layout/scripts/book.py"):
@@ -380,6 +386,10 @@ def selftest():
                 embed_images(bad + "\n", t); raise AssertionError("phải chặn: " + bad)
             except SystemExit:
                 pass
+    # ảnh nhúng không lười (ảnh chụp kiểm thấy đủ); ảnh ngoài / bìa SVG giữ nguyên
+    pg = '<img src="data:image/png;base64,AAAA" alt="a" loading="lazy" decoding="async"><img src="data:image/svg+xml;base64,BBBB" alt="c" loading="lazy">'
+    got = eager_images(pg)
+    assert 'src="data:image/png;base64,AAAA" alt="a" decoding="async"' in got and 'loading="lazy"' in got.split("<img")[2], got
     print("doc_report selftest ok")
 
 
@@ -417,6 +427,7 @@ def main():
         html = md.with_suffix(".html")
         subprocess.run([sys.executable, str(book_py()), str(md), "-o", str(html)], check=True)
         out_html = T.finish(html.read_text(encoding="utf-8"), lang=None if a.lang == "both" else a.lang, mode="doc")
+        out_html = eager_images(out_html)
         html.write_text(add_translate(out_html) if a.lang == "en" else out_html, encoding="utf-8"); print(html)
         print("tiếp theo: node <book-layout>/scripts/check.mjs " + str(html) + " ; node " + str(Path(__file__).with_name("check_lang.mjs")) + " " + str(html) + " <thư mục ảnh>  (macOS 13: PW_CHANNEL=chrome)")
 
