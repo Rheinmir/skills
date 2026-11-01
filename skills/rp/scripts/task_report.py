@@ -412,16 +412,25 @@ STE_SHA256 = "6e241c386dce17c7c8e7e7ceaf641420efb6126d2b79b14687bcea0d27da1ac4"
 STE_FORBIDDEN = re.compile(r"\b(subprocess|socket|urllib|requests|os\.system|eval|exec|__import__)\b")
 
 
+def ste_check(raw):
+    """Kiểm byte THÔ của vendor/ste-lint.py (không chuẩn hoá xuống dòng): băm phải khớp, không có lời gọi cấm. Trả chuỗi lý do hoặc None. CRLF (Git for Windows autocrlf) làm băm lệch: sửa bằng .gitattributes «-text», KHÔNG nới băm."""
+    import hashlib
+    if hashlib.sha256(raw).hexdigest() != STE_SHA256:
+        eol = " (có CRLF: checkout đổi xuống dòng, xem .gitattributes «skills/rp/scripts/vendor/** -text»)" if b"\r\n" in raw else ""
+        return "vendor/ste-lint.py khác băm đã ghim (STE_SHA256)" + eol + ": đọc lại diff, rồi đổi băm ở vendor/SOURCE.md và task_report.py"
+    bad = STE_FORBIDDEN.findall(raw.decode("utf-8"))
+    if bad:
+        return "vendor/ste-lint.py có lời gọi không cho phép: " + ", ".join(sorted(set(bad)))
+    return None
+
+
 def load_ste_lint():
     """Nạp vendor/ste-lint.py bằng importlib (KHÔNG chạy như chương trình). Băm lệch → dừng: đọc lại diff rồi đổi băm ở SOURCE.md và STE_SHA256."""
     import hashlib, importlib.util
     f = Path(__file__).resolve().parent / "vendor" / "ste-lint.py"
-    raw = f.read_bytes()
-    if hashlib.sha256(raw).hexdigest() != STE_SHA256:
-        sys.exit("blocked: vendor/ste-lint.py khác băm đã ghim (STE_SHA256): đọc lại diff, rồi đổi băm ở vendor/SOURCE.md và task_report.py")
-    bad = STE_FORBIDDEN.findall(raw.decode("utf-8"))
-    if bad:
-        sys.exit("blocked: vendor/ste-lint.py có lời gọi không cho phép: " + ", ".join(sorted(set(bad))))
+    why = ste_check(f.read_bytes())
+    if why:
+        sys.exit("blocked: " + why)
     spec = importlib.util.spec_from_file_location("ste_lint_vendor", f); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
     return m
 

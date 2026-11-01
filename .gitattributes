@@ -1,0 +1,2 @@
+# vendor: giữ NGUYÊN byte (không đổi LF/CRLF): băm ghim của ste-lint.py tính trên byte thô; Git for Windows (autocrlf) từng đổi sang CRLF làm /rp bị chặn (master, 01/11).
+skills/rp/scripts/vendor/** -text

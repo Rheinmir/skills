@@ -237,7 +237,7 @@ def build_md(M, lang, now=None):
     return "\n".join(o)
 
 
-TR_JS = """(function(){var t=document.getElementById('rp-tr');if(!t||!('Translator' in self))return;t.hidden=false;
+TR_JS = r"""(function(){var t=document.getElementById('rp-tr');if(!t||!('Translator' in self))return;t.hidden=false;
 var tr=null,on=false,K=[],L0=t.textContent;
 function nodes(){var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){if(!n.nodeValue.trim())return 3;var p=n.parentElement;if(!p||p.closest('#rp-bar,script,style,.chip,svg'))return 3;return 1}}),a=[],n;while(n=w.nextNode())a.push(n);return a}
 function back(){K.forEach(function(k){k[0].nodeValue=k[1]});K=[];on=false;document.documentElement.lang='en';t.setAttribute('aria-pressed','false');t.textContent=L0;dispatchEvent(new Event('resize'))}
@@ -307,6 +307,16 @@ def selftest():
     M, e = normalize(badste, "both"); assert any("EN" in x and "sửa:" in x for x in check_lines(M, "both")), "STE phải bắt viết tắt PM"
     for code, k in (("2a12295", "sha"), ("room:vinh-hong", "room"), ("a/b", "branch"), ("s0123456789ab", "reopen")):
         assert kind_of(code) == k, code
+    # CRLF (Git for Windows autocrlf): băm tính trên byte thô nên CRLF phải bị CHẶN (không nới băm); sửa ở gốc bằng .gitattributes «-text»
+    raw = (Path(__file__).resolve().parent / "vendor" / "ste-lint.py").read_bytes()
+    assert T.ste_check(raw) is None, "vendor/ste-lint.py hiện tại phải đạt"
+    why = T.ste_check(raw.replace(b"\n", b"\r\n")); assert why and "CRLF" in why and ".gitattributes" in why, why
+    assert T.ste_check(raw + b"\n") is not None, "đổi một byte phải bị chặn"
+    root = Path(__file__).resolve().parents[3]
+    if (root / ".git").exists() and (root / ".gitattributes").is_file():   # trong checkout repo skills: thuộc tính phải là «unset» (chạy từ bản cài ở ~/.claude/skills thì bỏ qua)
+        import subprocess
+        out = subprocess.run(["git", "-C", str(root), "check-attr", "text", "--", "skills/rp/scripts/vendor/ste-lint.py"], capture_output=True, text=True).stdout
+        assert out.strip().endswith("text: unset"), "thiếu .gitattributes «skills/rp/scripts/vendor/** -text»: " + out
     # linter vendor: băm ghim, không có lời gọi cấm, bắt «;» và cụm động từ ghép (luật cứng)
     T.load_ste_lint()
     hard = [f["rule"] for f in ste_findings("The panel is removed; spin up the job.") if f["level"] != "advisory"]

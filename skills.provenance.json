@@ -1032,8 +1032,8 @@
         "references/doc.md": "850145cecf537b7125186cb147faae4c9bcbd22d39f795491b6d4d880efc7953",
         "references/task.md": "937f5081a3c7ac8c8e39a3f680c2d8a9ba7343ff718cb158083230f978359430",
         "scripts/check_lang.mjs": "83f31d064be84ca5a7a819c25e5aa2b870fccadaabfa24cc57955070bc2cab5f",
-        "scripts/doc_report.py": "02c04ebb249684a4a995755164aa3beb41865e2bc0480c35ad7cccdbaa250d49",
-        "scripts/task_report.py": "afbfc27257b34b4dc33b41308a6aac425d6d09e9a9454f6522543577559b679f",
+        "scripts/doc_report.py": "014978a3a1f808c221dfd05aec06d34170e604b683bcff4363c6e8af3bedd254",
+        "scripts/task_report.py": "45e8ef994a56baa876bc93baad12b7ca482ebfd9615d87c200857f5fa418d0bc",
         "scripts/vendor/LICENSE-asd-ste100-skill.txt": "d3c674e8592076c9021a59b55177adbcba6fd7e1710082becb922522b22ec672",
         "scripts/vendor/SOURCE.md": "fd43110864ce852c80fc6721f1971bd762802bfca894e8fae0233eea2e55b572",
         "scripts/vendor/ste-lint.py": "6e241c386dce17c7c8e7e7ceaf641420efb6126d2b79b14687bcea0d27da1ac4"

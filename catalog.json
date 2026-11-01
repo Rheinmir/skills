@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "version": "1.0.43",
+  "version": "1.0.44",
   "harness_floor": "1.3.127",
-  "catalog_sha": "21b16fefdef939c4",
+  "catalog_sha": "aea8781ff6fe74a7",
   "count": 108,
   "skills": [
     {
@@ -1197,7 +1197,7 @@
       "description": "Hub báo cáo (report) thành trang HTML đọc được trên điện thoại cho owner. Hai chế độ. /rp task = báo cáo tình trạng các task (thread Issue/Epic đang mở, ai làm, giai đoạn, nhánh, sha Live). /rp doc = MỌI báo cáo, tài liệu, tổng kết, tóm tắt, kết quả khảo sát, so sánh, đề xuất khác thành một trang HTML (bìa, trang, chip mã máy, chữ Lexend Deca Light), viết bằng book-layout. Dùng skill này khi owner đòi làm report, viết báo cáo, tài liệu, tổng kết, tóm tắt, so sánh hay đề xuất dạng trang HTML đọc trên điện thoại (make a report, write a report); KHÔNG tự viết HTML tay. Gọi khi owner nói rp, /rp, báo cáo, report, tình hình các task, task đang tới đâu.",
       "model_invocable": true,
       "requires": {},
-      "sha": "e49a9e9f0b763cec"
+      "sha": "cb770dfe6665671b"
     },
     {
       "name": "safe-change",
