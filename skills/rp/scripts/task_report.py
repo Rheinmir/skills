@@ -373,14 +373,21 @@ on=true;t.setAttribute('aria-pressed','true')}catch(e){t.title='Không dịch đ
 t.textContent=old;t.disabled=false;eq()}}})();"""
 
 
-def finish(page):
-    """HTML của book.py → HTML song ngữ. Ngoài <title> và thuộc tính (chỉ lấy EN) mọi «⟦en¦vi⟧» thành hai span; «⟪tên⟫» thành span.tn; thêm thanh nút đầu trang."""
+# trang MỘT ngôn ngữ (chế độ doc): chỉ phần cân chiều cao các tờ của JS trên (RULE-09: mọi tờ cao bằng nhau ở khổ > 820 px), không nút, không localStorage
+JS1 = "(function(){" + JS.split("\n")[1] + "\n" + JS.split("\n")[3].split("setTimeout(eq,400);")[0] + "setTimeout(eq,400);eq()})();"
+
+
+def finish(page, lang=None, mode="task"):
+    """HTML của book.py → HTML song ngữ (lang=None) hoặc MỘT ngôn ngữ (lang="vi"|"en": chọn nửa tương ứng của mọi «⟦en¦vi⟧», không nút ngôn ngữ, không JS; chế độ doc mặc định VI). mode ghi vào data-mode của <html> (task|doc) để check_lang.mjs biết luật nào áp. Ngoài <title> và thuộc tính (chỉ lấy EN) mọi «⟦en¦vi⟧» thành hai span; «⟪tên⟫» thành span.tn; thêm thanh nút đầu trang."""
     pat = re.compile(re.escape(OPEN) + r"(.*?)" + re.escape(SEP) + r"(.*?)" + re.escape(CLOSE), re.S)
     colp = re.compile(re.escape(CB) + r"(\w+)" + re.escape(CS) + r"(.*?)" + re.escape(CE), re.S)
     page = re.sub(r"<title>.*?</title>", lambda m: colp.sub(lambda c: c.group(2), pat.sub(lambda x: x.group(1), m.group(0))), page, flags=re.S)
     page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + re.sub(re.escape(DT) + r"\w+" + re.escape(DT), "", re.sub(re.escape(CHB) + r"[\w.]+" + re.escape(CS), "", m.group(2))).replace(CHE, "") + m.group(3), page)
     page = re.sub(r'(\b(?:alt|aria-label|title)=")([^"]*)(")', lambda m: m.group(1) + pat.sub(lambda x: x.group(1), m.group(2)) + m.group(3), page)
-    page = pat.sub(lambda m: f'<span class="en" lang="en">{m.group(1)}</span><span class="vi" lang="vi">{m.group(2)}</span>', page)
+    if lang in ("vi", "en"):
+        page = pat.sub(lambda m: m.group(2 if lang == "vi" else 1), page)
+    else:
+        page = pat.sub(lambda m: f'<span class="en" lang="en">{m.group(1)}</span><span class="vi" lang="vi">{m.group(2)}</span>', page)
     page = re.sub(re.escape(NO) + r"(.*?)" + re.escape(NC), r'<span class="tn">\1</span>', page)
     page = re.sub(re.escape(DT) + r"(\w+)" + re.escape(DT), r'<span class="dot dot-\1" aria-hidden="true"></span>', page)
     page = colp.sub(lambda c: f'<span class="c-{c.group(1)}">{c.group(2)}</span>', page)
@@ -388,11 +395,16 @@ def finish(page):
     T = {"en": {"t": L("btn_vi", "en"), "h": L("btn_vi_title", "en")}, "vi": {"t": L("btn_vi", "vi"), "h": L("btn_vi_title", "vi")}}
     bar = ('<div id="rp-bar"><button type="button" id="rp-tr" hidden aria-pressed="false" title="' + htmllib.escape(L("btn_tr_title", "en")) + '">' + L("btn_tr", "en") + "</button>"
            '<button type="button" id="rp-lang" title="' + htmllib.escape(L("btn_vi_title", "en")) + '">' + L("btn_vi", "en") + "</button></div>")
-    page = re.sub(r"<html([^>]*)>", lambda m: "<html" + re.sub(r'\s(lang|data-lang)="[^"]*"', "", m.group(1)) + ' lang="en" data-lang="en">', page, count=1)
+    page = re.sub(r"<html([^>]*)>", lambda m: "<html" + re.sub(r'\s(lang|data-lang)="[^"]*"', "", m.group(1)) + f' lang="{lang or "en"}" data-lang="{lang or "en"}" data-mode="{mode}">', page, count=1)
     page = re.sub(r"<link[^>]*fonts\.(?:googleapis|gstatic)\.com[^>]*>\s*", "", page)   # font của book-layout (Be Vietnam Pro, Patrick Hand) không còn dùng: bỏ link, 0 request ngoài
     page = page.replace("</head>", f"<style>{font_css()}{CSS}</style></head>", 1) if "</head>" in page else CSS and page
+    if lang in ("vi", "en"):   # một ngôn ngữ: không thanh nút; chỉ script cân chiều cao tờ
+        return page.replace("</body>", "<script>" + JS1 + "</script></body>", 1)
     page = re.sub(r"(<body[^>]*>)", lambda m: m.group(1) + bar, page, count=1)
-    return page.replace("</body>", "<script>" + JS % {"T": json.dumps(T, ensure_ascii=False)} + "</script></body>", 1)
+    js = JS % {"T": json.dumps(T, ensure_ascii=False)}
+    if mode == "doc":   # báo cáo doc không có «tên việc» để dịch: nút Translator không bao giờ hiện
+        js = js.replace("if('Translator' in self){", "if(false){")
+    return page.replace("</body>", "<script>" + js + "</script></body>", 1)
 
 
 # --- kiểm tra STE cơ học ---

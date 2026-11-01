@@ -140,17 +140,37 @@ const dots = p => p.evaluate(D => { const bad = []; let n = 0;
 const faces = p => p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'Lexend Deca' && f.status === 'loaded').length; });
 const lay = p => p.evaluate(() => ({ sw: document.documentElement.scrollWidth - innerWidth,
   over: [...document.querySelectorAll('h1,h2,h3,p,li,.lead,button')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).length }));
+// chế độ (data-mode trên <html>, finish() ghi): task = báo cáo tình trạng task (đủ luật thẻ việc: nhãn đậm sau chấm màu, tên màu, chấm, Translator trên tên việc);
+// doc = báo cáo / tài liệu thường (/rp doc): chỉ luật hình thức chung (khổ, chữ Lexend, chip mã máy, khoảng trống, font nhúng, 0 request ngoài). SINGLE = trang MỘT ngôn ngữ (không nút EN/VI): bỏ mọi kiểm nút ngôn ngữ.
+const { ctx: c0, p: p0 } = await open(390);
+const MODE = await p0.evaluate(() => document.documentElement.dataset.mode || 'task'), SINGLE = await p0.evaluate(() => !document.querySelector('#rp-lang')), TASK = MODE === 'task'; await c0.close();
+console.log(`chế độ ${MODE}${SINGLE ? ', một ngôn ngữ' : ', song ngữ'}`);
+if (SINGLE) {
+  for (const w of [390, 1280]) {
+    const { ctx, p, errs } = await open(w); const m = await lay(p);
+    ok(m.sw <= 0 && m.over === 0, `${w}: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
+    const bl = await blank(p); ok(!bl.length, `${w}: không khoảng trống thừa ${bl.join('; ')}`);
+    const ty = await typo(p); ok(!ty.length, `${w}: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`);
+    const ch = await chips(p); ok(!ch.bad.length, `${w}: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`);
+    ok(await faces(p) >= 1, `${w}: font Lexend Deca nạp từ dữ liệu nhúng`);
+    ok(await p.evaluate(() => !document.querySelector('.dot') && !/[🔴🟡🔵⚪🟢]/u.test(document.body.innerText)), `${w}: không chấm tình trạng, không emoji màu (báo cáo doc không phải tình trạng task)`);
+    await p.screenshot({ path: `${out}/doc-${w}.png`, fullPage: true });
+    ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
+  }
+  ok(ext === 0, `không request nào ra ngoài (kể cả font): đếm ${ext}`);
+  await b.close(); process.exit(bad ? 1 : 0);
+}
 const enColors = {};
 for (const w of [390, 1280]) {
   const { ctx, p, errs } = await open(w);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en' && await vis(p, '.en') && !await vis(p, '.vi'), `${w}: mở ra tiếng Anh, không thấy chữ Việt của trang`);
   let m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} EN: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok(ch.n >= 8 && !ch.bad.length, `${w} EN: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const dt = await dots(p); ok(dt.n >= 8 && !dt.bad.length, `${w} EN: ${dt.n} chấm tròn pastel đặc, không emoji ${dt.bad.slice(0, 3).join('; ')}`); const co = await colors(p); enColors[w] = co.n; ok(co.n >= 9 && !co.bad.length, `${w} EN: ${co.n} tên màu (tiêu đề, chú giải, tóm tắt) tô đúng màu ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} EN: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} EN: luật chữ (độ đậm, tương phản, họ font) ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok((!TASK || lb.n >= 3) && !lb.bad.length, `${w} EN: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok((!TASK || ch.n >= 8) && !ch.bad.length, `${w} EN: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const dt = await dots(p); ok((!TASK || dt.n >= 8) && !dt.bad.length, `${w} EN: ${dt.n} chấm tròn pastel đặc, không emoji ${dt.bad.slice(0, 3).join('; ')}`); const co = await colors(p); enColors[w] = co.n; ok((!TASK || co.n >= 9) && !co.bad.length, `${w} EN: ${co.n} tên màu (tiêu đề, chú giải, tóm tắt) tô đúng màu ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 1, `${w} EN: font Lexend Deca nạp từ dữ liệu nhúng`); }
   await p.screenshot({ path: `${out}/en-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); await p.waitForTimeout(150);
   ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'vi' && await vis(p, '.vi') && !await vis(p, '.en'), `${w}: bấm nút đổi cả trang sang tiếng Việt`);
   m = await lay(p); ok(m.sw <= 0 && m.over === 0, `${w} VI: không cuộn ngang, không chữ tràn ${JSON.stringify(m)}`);
-  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok(lb.n >= 3 && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok(ch.n >= 8 && !ch.bad.length, `${w} VI: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const dt = await dots(p); ok(dt.n >= 8 && !dt.bad.length, `${w} VI: ${dt.n} chấm tròn pastel đặc, không emoji ${dt.bad.slice(0, 3).join('; ')}`); const co = await colors(p); ok(co.n === enColors[w] && !co.bad.length, `${w} VI: ${co.n} tên màu tô đúng màu (phải bằng EN ${enColors[w]}) ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
+  { const bl = await blank(p); ok(!bl.length, `${w} VI: không khoảng trống thừa ${bl.join('; ')}`); const ty = await typo(p); ok(!ty.length, `${w} VI: luật chữ ${ty.slice(0, 4).join('; ')}`); const lb = await labels(p); ok((!TASK || lb.n >= 3) && !lb.bad.length, `${w} VI: ${lb.n} dòng thẻ đều mở đầu bằng nhãn đậm ${lb.bad.slice(0, 3).join('; ')}`); const ch = await chips(p); ok((!TASK || ch.n >= 8) && !ch.bad.length, `${w} VI: ${ch.n} chip mã máy, mọi mã nằm trong chip ${ch.bad.slice(0, 3).join('; ')}`); const dt = await dots(p); ok((!TASK || dt.n >= 8) && !dt.bad.length, `${w} VI: ${dt.n} chấm tròn pastel đặc, không emoji ${dt.bad.slice(0, 3).join('; ')}`); const co = await colors(p); ok(co.n === enColors[w] && !co.bad.length, `${w} VI: ${co.n} tên màu tô đúng màu (phải bằng EN ${enColors[w]}) ${co.bad.slice(0, 3).join('; ')}`); ok(await faces(p) >= 2, `${w} VI: nạp cả bộ chữ Việt và Latin`); }
   await p.screenshot({ path: `${out}/vi-${w}.png`, fullPage: true });
   await p.click('#rp-lang'); ok(await p.evaluate(() => document.documentElement.dataset.lang) === 'en', `${w}: bấm lại về tiếng Anh`);
   ok(!errs.length, `${w}: không lỗi JS ${errs.join('|')}`); await ctx.close();
@@ -166,7 +186,7 @@ for (const w of [390, 1280]) {
   const { ctx, p } = await open(390, () => { try { delete self.Translator; } catch (e) {} Object.defineProperty(self, 'Translator', { get() { return undefined; }, configurable: true }); delete self.Translator; });
   ok(!await p.evaluate(() => 'Translator' in self) && !await vis(p, '#rp-tr'), 'không có Translator API: nút «Translate task names» ẩn'); await ctx.close();
 }
-{ // có Translator (giả): không tự dịch lúc tải, chỉ dịch khi bấm, bấm lần nữa trả về gốc
+if (TASK) { // có Translator (giả): không tự dịch lúc tải, chỉ dịch khi bấm, bấm lần nữa trả về gốc
   const { ctx, p, errs } = await open(390, () => { self.__calls = 0; self.Translator = { create: async () => ({ translate: async s => { self.__calls++; return 'EN:' + s; } }) }; });
   const names = () => p.evaluate(() => [...document.querySelectorAll('.tn')].map(e => e.textContent));
   const before = await names(); ok(await vis(p, '#rp-tr') && before.length > 0 && !before.some(s => s.startsWith('EN:')) && await p.evaluate(() => self.__calls) === 0, `có Translator: nút hiện; ${before.length} tên việc chưa dịch, 0 lần gọi lúc tải`);
