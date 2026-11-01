@@ -1029,11 +1029,14 @@
         "assets/fonts/LexendDeca-latin.woff2": "e16222b5909f61ca5c7cbf9e1ab7cead1dd9aa7eae3292fe079d56e1c5470981",
         "assets/fonts/LexendDeca-vietnamese.woff2": "7438c2336b7c145fcfb19c4f1abc44b2bda3ca3e02bbb53836e55c1cd2014f7e",
         "assets/fonts/OFL-Lexend.txt": "5da8505887d0fa7fe963445fd58852707fda34adfeb65af25c99d152bab285bd",
-        "references/doc.md": "e65a5276a38812b1a918f1dcd849a6edc32a72387daca675b06e23425bf831a7",
+        "references/doc.md": "850145cecf537b7125186cb147faae4c9bcbd22d39f795491b6d4d880efc7953",
         "references/task.md": "937f5081a3c7ac8c8e39a3f680c2d8a9ba7343ff718cb158083230f978359430",
         "scripts/check_lang.mjs": "83f31d064be84ca5a7a819c25e5aa2b870fccadaabfa24cc57955070bc2cab5f",
-        "scripts/doc_report.py": "07806eb167cd9c369c0c02f4035f3128bbb6481195b233821f51a3cfbbbd5827",
-        "scripts/task_report.py": "5b609fe2088e4da57e7c682e3dfb8100aa146f933d6e237bbc75a4a5e1932a7d"
+        "scripts/doc_report.py": "02c04ebb249684a4a995755164aa3beb41865e2bc0480c35ad7cccdbaa250d49",
+        "scripts/task_report.py": "afbfc27257b34b4dc33b41308a6aac425d6d09e9a9454f6522543577559b679f",
+        "scripts/vendor/LICENSE-asd-ste100-skill.txt": "d3c674e8592076c9021a59b55177adbcba6fd7e1710082becb922522b22ec672",
+        "scripts/vendor/SOURCE.md": "fd43110864ce852c80fc6721f1971bd762802bfca894e8fae0233eea2e55b572",
+        "scripts/vendor/ste-lint.py": "6e241c386dce17c7c8e7e7ceaf641420efb6126d2b79b14687bcea0d27da1ac4"
       },
       "recorded": "2026-11-01",
       "source": "local-authored"

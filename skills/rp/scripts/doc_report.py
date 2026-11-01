@@ -139,6 +139,18 @@ def normalize(doc, lang):
     return M, errs
 
 
+WARN = []   # cảnh báo advisory của linter STE (in, không chặn)
+_STE = None
+
+
+def ste_findings(text):
+    """Phát hiện của vendor/ste-lint.py trên MỘT dòng chữ (đã bỏ nhấn đậm và dấu chip). Chỉ gọi lint(); không --fix, không ghi tệp."""
+    global _STE
+    if _STE is None:
+        _STE = T.load_ste_lint()
+    return _STE.lint(vis(text), "doc")[0]
+
+
 def check_lines(M, lang):
     """Luật hình thức theo từng dòng; lỗi nói dòng nào và sửa thế nào (cho agent tự sửa vòng sau)."""
     errs = []
@@ -155,9 +167,16 @@ def check_lines(M, lang):
             if n > CAP:
                 errs.append(f"{path}{' ' + tag if tag else ''}: {n} chữ (> {CAP}): «{txt[:50]}…»; sửa: tách thành hai dòng hoặc cắt ý phụ")
             if (lang == "both" and i == 0) or lang == "en":   # en: chữ nằm ở ô thứ hai (ô «vi» của chế độ một ngôn ngữ)
-                for pr in T.ste_problems(txt):
-                    hint = "viết lại không dùng chữ viết tắt (vd PM → product manager, JSON → data file, MCP → tool server, PRD → product spec)" if "viết tắt chưa cho phép" in pr else "viết câu EN ngắn hơn, một ý một câu, tối đa 1 dấu phẩy, chủ động, không từ cấm (should may might shall get make)"
-                    errs.append(f"{path} EN: {pr}: «{txt[:50]}»; sửa: {hint}")
+                # STE theo linter của repo ngoài (vendor/ste-lint.py, ghim băm): luật CỨNG chặn dựng, advisory chỉ cảnh báo. Giữ luật viết tắt chữ hoa của /rp (linter không bắt PM/JSON/MCP/PRD).
+                for f in ste_findings(txt):
+                    msg = f"{path} EN: {f['rule']}: {f['message']} [{f['match']}]"
+                    if f["level"] == "advisory":
+                        WARN.append(msg + " (cảnh báo, không chặn)")
+                    else:
+                        errs.append(msg + f"; sửa: viết lại câu «{txt[:50]}» theo luật trên")
+                for x in re.findall(r"\b[A-Z]{2,}\b", vis(txt)):
+                    if x not in T.STE_ABBR:
+                        errs.append(f"{path} EN: viết tắt chưa cho phép {x}: «{txt[:50]}»; sửa: viết lại không dùng chữ viết tắt (vd PM → product manager, JSON → data file, MCP → tool server, PRD → product spec)")
     for t, lines in M["pages"]:
         one(t, "tiêu đề trang")
         for kind, a, b, path in lines:
@@ -288,6 +307,13 @@ def selftest():
     M, e = normalize(badste, "both"); assert any("EN" in x and "sửa:" in x for x in check_lines(M, "both")), "STE phải bắt viết tắt PM"
     for code, k in (("2a12295", "sha"), ("room:vinh-hong", "room"), ("a/b", "branch"), ("s0123456789ab", "reopen")):
         assert kind_of(code) == k, code
+    # linter vendor: băm ghim, không có lời gọi cấm, bắt «;» và cụm động từ ghép (luật cứng)
+    T.load_ste_lint()
+    hard = [f["rule"] for f in ste_findings("The panel is removed; spin up the job.") if f["level"] != "advisory"]
+    assert "semicolon" in hard and "phrasal-verb" in hard, hard
+    d, e = parse_md("# T\n## P\nStep: remove the panel; spin up the job.\n"); M, e2 = normalize(d, "en"); er = check_lines(M, "en")
+    assert any("semicolon" in x and "sửa:" in x for x in er) and any("phrasal-verb" in x for x in er), er
+    assert not check_lines(normalize(parse_md("# T\n## P\nStep: remove the panel. Start the job.\n")[0], "en")[0], "en"), "câu đạt luật không được bị chặn"
     assert "Translator.create" in TR_JS and "closest('#rp-bar,script,style,.chip,svg')" in TR_JS, "nút Translate phải bỏ chip mã"
     print("doc_report selftest ok")
 
@@ -314,6 +340,8 @@ def main():
         for x in errs:
             print("  - " + x, file=sys.stderr)
         sys.exit(1)
+    for w in WARN:
+        print("cảnh báo STE: " + w, file=sys.stderr)
     if a.check:
         print("nguồn đạt"); return
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)

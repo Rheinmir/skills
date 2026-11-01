@@ -407,6 +407,25 @@ def finish(page, lang=None, mode="task"):
     return page.replace("</body>", "<script>" + js + "</script></body>", 1)
 
 
+# --- linter STE của repo ngoài (vendor/ste-lint.py, ghim băm; xem vendor/SOURCE.md) ---
+STE_SHA256 = "6e241c386dce17c7c8e7e7ceaf641420efb6126d2b79b14687bcea0d27da1ac4"
+STE_FORBIDDEN = re.compile(r"\b(subprocess|socket|urllib|requests|os\.system|eval|exec|__import__)\b")
+
+
+def load_ste_lint():
+    """Nạp vendor/ste-lint.py bằng importlib (KHÔNG chạy như chương trình). Băm lệch → dừng: đọc lại diff rồi đổi băm ở SOURCE.md và STE_SHA256."""
+    import hashlib, importlib.util
+    f = Path(__file__).resolve().parent / "vendor" / "ste-lint.py"
+    raw = f.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != STE_SHA256:
+        sys.exit("blocked: vendor/ste-lint.py khác băm đã ghim (STE_SHA256): đọc lại diff, rồi đổi băm ở vendor/SOURCE.md và task_report.py")
+    bad = STE_FORBIDDEN.findall(raw.decode("utf-8"))
+    if bad:
+        sys.exit("blocked: vendor/ste-lint.py có lời gọi không cho phép: " + ", ".join(sorted(set(bad))))
+    spec = importlib.util.spec_from_file_location("ste_lint_vendor", f); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    return m
+
+
 # --- kiểm tra STE cơ học ---
 def ste_problems(sentence):
     """Lỗi cơ học của một câu EN (rỗng = qua). KHÔNG phải chứng nhận ASD-STE100: chỉ chặn vài lỗi dễ đo."""
@@ -605,6 +624,13 @@ def selftest():
     assert out.count("localStorage") == 2 and out.count("try{") >= 2, "mọi đọc/ghi localStorage bọc try/catch"
     assert "'Translator' in self" in out and out.index("'Translator' in self") < out.index("Translator.create"), "kiểm có API trước, không gọi thử rồi bắt lỗi"
     assert out.index("Translator.create") > out.index("t.onclick"), "chỉ dịch khi người xem bấm"
+    # linter STE của repo ngoài trên câu TX tiếng Anh: chỉ ĐẾM và in (đổi chữ báo cáo task làm đổi byte md, nên không làm đỏ; việc riêng nếu owner muốn)
+    ste = load_ste_lint(); hard = adv = 0
+    for k, v in TX.items():
+        for f in ste.lint(re.sub(r"\{[^}]*\}", "x", v[0]), k)[0]:
+            if f["level"] == "advisory": adv += 1
+            else: hard += 1
+    print(f"STE vendor trên {len(TX)} câu TX tiếng Anh: {hard} cứng, {adv} cảnh báo (chỉ in)")
     print("task_report selftest ok")
 
 

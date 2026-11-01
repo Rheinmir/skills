@@ -15,7 +15,8 @@ Scope: user level, Mac mini only.
 ## Risks
 Updates: an outside author owns the repository.
 ```
-2. `python3 scripts/doc_report.py <nguồn>.md --check`: nguồn chưa đạt thì script in TỪNG lỗi kèm dòng nào và sửa thế nào (quá 20 chữ, dòng mở đầu bằng «- », chữ nhấn «*…*», trang trống, trang quá 9 dòng, lỗi STE như viết tắt PM/JSON/MCP/PRD kèm cách diễn đạt lại…). Sửa rồi chạy lại. `--build` cũng chặn khi nguồn chưa đạt.
+2. STE kiểm bằng linter của repo ngoài `danyuchn/asd-ste100-skill` (đóng gói ở `scripts/vendor/ste-lint.py`, MIT, ghim commit f5493be + băm, xem `vendor/SOURCE.md`; không có từ điển ASD, chỉ luật cấu trúc): luật CỨNG (như «;», cụm động từ ghép, câu quá dài…) chặn dựng, luật advisory (bị động…) chỉ cảnh báo; luật viết tắt chữ hoa của /rp giữ. Cập nhật linter = đọc lại diff + đổi băm, không kéo tự động.
+   `python3 scripts/doc_report.py <nguồn>.md --check`: nguồn chưa đạt thì script in TỪNG lỗi kèm dòng nào và sửa thế nào (quá 20 chữ, dòng mở đầu bằng «- », chữ nhấn «*…*», trang trống, trang quá 9 dòng, lỗi STE như viết tắt PM/JSON/MCP/PRD kèm cách diễn đạt lại…). Sửa rồi chạy lại. `--build` cũng chặn khi nguồn chưa đạt.
 3. `python3 scripts/doc_report.py <nguồn>.md --out <thư mục> --build` → `rp-doc-<giờ>.md` + `.html`.
 4. Cổng kiểm như `task` (W04, W04a, W04b): `check.mjs` hai dòng `ok`, `check_lang.mjs` không FAIL, XEM ảnh 390 và 1280.
 5. Gửi owner kèm tệp (W05).
