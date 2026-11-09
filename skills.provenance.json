@@ -572,6 +572,17 @@
       "recorded": "2026-10-14",
       "source": "local-authored"
     },
+    "hang-onboard": {
+      "files": {
+        "SKILL.md": "e99ff3f0707e6d4256cd4bf8581c3962903e9ee263a968be6f7ea1387e9d4e42",
+        "assets/docs-site-skeleton.html": "b99fb9bd32c5042d61ddf2ab537032b979e6fab28271ebd94583a871c904a7a7",
+        "scripts/check_output.py": "00c9844ba6b5554fb1e7347a2f1ce9fa902d4f7b31823d2239aa67c5994d076c",
+        "scripts/cost_footer.py": "2c434ae8018e89c91caa8582426d30320b9464221a555750c6bedfa9d4eaa86d",
+        "scripts/gloss.py": "1c31e15c266f5519c050c76bcee08657b54257bd3cf67a06affbac1b6a21ec22"
+      },
+      "recorded": "2026-11-09",
+      "source": "local-authored"
+    },
     "harness-tour": {
       "files": {
         "SKILL.md": "287e0a5d951df8fe7640b977cb95c7410223c0cdcf0840125d394cc79d4e002b"

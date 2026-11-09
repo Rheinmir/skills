@@ -31,6 +31,7 @@
       "strict": false,
       "skills": [
         "./skills/orca-dispatch-reference",
+        "./skills/hang-onboard",
         "./skills/orca-onboard",
         "./skills/orca-issue",
         "./skills/orca-sec-scans",

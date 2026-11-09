@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "version": "1.0.44",
+  "version": "1.0.45",
   "harness_floor": "1.3.127",
-  "catalog_sha": "aea8781ff6fe74a7",
-  "count": 108,
+  "catalog_sha": "3af329d022d49bba",
+  "count": 109,
   "skills": [
     {
       "name": "blur",
@@ -611,6 +611,27 @@
       "sha": "97b432b03809976e"
     },
     {
+      "name": "hang-onboard",
+      "dir": "skills/hang-onboard",
+      "external": false,
+      "loop": "orchestrate",
+      "description": "Onboard một codebase và giao việc qua Hang, không cần skill Orca hay opencode. Dựng graph (scan + git history + phân tích tĩnh + layers/tour), domain graph, wiki, trang HTML có sơ đồ khối, sơ đồ trình tự và bản đồ tour. Gọi khi user nói hang-onboard, onboard qua hang, onboard dự án trong phòng Hang, /hang-onboard.",
+      "model_invocable": true,
+      "requires": {
+        "harness": ">=1.3.127",
+        "bin": [
+          "python3"
+        ],
+        "scripts": [
+          "fdk/tools/build-wiki-graph.py",
+          "fdk/tools/frontend-antipattern.py",
+          "fdk/tools/surface-coverage.py",
+          "harness/scripts/dep-health.py"
+        ]
+      },
+      "sha": "64044f4c26dd5bf4"
+    },
+    {
       "name": "harness-tour",
       "dir": "skills/harness-tour",
       "external": false,
@@ -1197,7 +1218,7 @@
       "description": "Hub báo cáo (report) thành trang HTML đọc được trên điện thoại cho owner. Hai chế độ. /rp task = báo cáo tình trạng các task (thread Issue/Epic đang mở, ai làm, giai đoạn, nhánh, sha Live). /rp doc = MỌI báo cáo, tài liệu, tổng kết, tóm tắt, kết quả khảo sát, so sánh, đề xuất khác thành một trang HTML (bìa, trang, chip mã máy, chữ Lexend Deca Light), viết bằng book-layout. Dùng skill này khi owner đòi làm report, viết báo cáo, tài liệu, tổng kết, tóm tắt, so sánh hay đề xuất dạng trang HTML đọc trên điện thoại (make a report, write a report); KHÔNG tự viết HTML tay. Gọi khi owner nói rp, /rp, báo cáo, report, tình hình các task, task đang tới đâu.",
       "model_invocable": true,
       "requires": {},
-      "sha": "cb770dfe6665671b"
+      "sha": "93380a510a54ff8e"
     },
     {
       "name": "safe-change",
@@ -1581,5 +1602,5 @@
       "sha": "f2f24c68c8f48647"
     }
   ],
-  "generated_at": "2026-11-01"
+  "generated_at": "2026-11-09"
 }
