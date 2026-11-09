@@ -26,7 +26,7 @@ TERMS = [
 ]
 ALL = re.compile("|".join(f"(?<![\\w-])(?:{v})(?![\\w-])" for v, _ in TERMS), re.I)
 EN = [(re.compile(f"^(?:{v})$", re.I), e) for v, e in TERMS]
-SKIP_KEYS = {"file", "files", "color", "line", "img", "x", "y", "w", "h", "cost", "ver"}
+SKIP_KEYS = {"file", "color", "line", "img", "x", "y", "w", "h", "cost", "ver"}
 PROTECT = re.compile(r"```.*?```|`[^`\n]*`|\[\[[^\]]*\]\]|\]\([^)]*\)|https?://\S+|^---\n.*?\n---\n", re.S | re.M)
 
 

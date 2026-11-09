@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "version": "1.0.45",
+  "version": "1.0.46",
   "harness_floor": "1.3.127",
-  "catalog_sha": "3af329d022d49bba",
+  "catalog_sha": "d57002c8221acc3e",
   "count": 109,
   "skills": [
     {
@@ -629,7 +629,7 @@
           "harness/scripts/dep-health.py"
         ]
       },
-      "sha": "64044f4c26dd5bf4"
+      "sha": "290b71e5f3088c7b"
     },
     {
       "name": "harness-tour",

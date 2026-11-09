@@ -574,11 +574,11 @@
     },
     "hang-onboard": {
       "files": {
-        "SKILL.md": "e99ff3f0707e6d4256cd4bf8581c3962903e9ee263a968be6f7ea1387e9d4e42",
-        "assets/docs-site-skeleton.html": "b99fb9bd32c5042d61ddf2ab537032b979e6fab28271ebd94583a871c904a7a7",
-        "scripts/check_output.py": "00c9844ba6b5554fb1e7347a2f1ce9fa902d4f7b31823d2239aa67c5994d076c",
+        "SKILL.md": "1c5a2f0cf9058dc4227e2bbc3acb6dd2510b052bd25c579eff1353f23f4eae28",
+        "assets/docs-site-skeleton.html": "1767a7e33a5213043b04a014a5583d4de6f22c3663a9757951863d31bc511ee7",
+        "scripts/check_output.py": "5c0a8ba40568e9899c0bb1bb55bfacc0b15a427e6d2f08d4be95175dbcb6e92a",
         "scripts/cost_footer.py": "2c434ae8018e89c91caa8582426d30320b9464221a555750c6bedfa9d4eaa86d",
-        "scripts/gloss.py": "1c31e15c266f5519c050c76bcee08657b54257bd3cf67a06affbac1b6a21ec22"
+        "scripts/gloss.py": "2a72c3e233e6b19e339f565c74d4a5e54fc498927618724c0a076fccfdd3d767"
       },
       "recorded": "2026-11-09",
       "source": "local-authored"

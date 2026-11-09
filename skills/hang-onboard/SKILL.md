@@ -62,8 +62,8 @@ Onboard codebase via distilled understand-anything pipeline (graph + git history
 - RULE-11 (MUST): code-graph chỉ index khi `dep-health.py --json` báo `status == "ok"` — khai báo trong config ≠ server sống.
 - RULE-13 (MUST): **Mọi lệnh có thể treo phải có hạn thời gian cứng** (`perl -e 'alarm N; exec @ARGV' ...`), gồm trình duyệt, worker và mạng. Xong sản phẩm thì báo phòng ngay; bước kiểm tra chậm không được giữ báo cáo lại.
 - RULE-14 (MUST): **Không tin lời worker báo xong.** Chạy `scripts/check_output.py`; rc khác 0 thì sửa hoặc tự làm phần đó.
-- RULE-15 (MUST): **Sơ đồ do máy xếp.** Sơ đồ khối và sơ đồ trình tự chỉ khai dữ liệu; model không khai toạ độ. Mỗi hình trả lời một câu hỏi, tiêu đề là kết luận. Riêng `architecture.diagram` vẫn khai toạ độ và phải xếp để mũi tên không cắt qua ô.
-- RULE-16 (MUST): **Viết cho người mới.** Mỗi layer có `plain` (lời thường), `example` và `files`. Mỗi bước tour có `group` để hiện trên bản đồ.
+- RULE-15 (MUST): **Sơ đồ do máy xếp, và đúng loại.** Sơ đồ khối (block diagram) cho biết hệ thống gồm những phần nào và cái gì đi qua giữa chúng: mọi đường nối có nhãn, hai chiều thì `both`, không ngụ ý thứ tự. Thứ tự theo thời gian chỉ nằm ở sơ đồ trình tự (sequence diagram). Chỉ khai dữ liệu, không khai toạ độ. Mỗi hình trả lời một câu hỏi, tiêu đề là kết luận. Bỏ `architecture.diagram` nếu nó lặp lại sơ đồ khối.
+- RULE-16 (MUST): **Giải thích chỉ dùng tên có trong sơ đồ.** Mỗi nhóm trong `block` có đúng một thẻ `layers[]` cùng `name`, `files` trùng `blocks`, `uses` suy từ `links`; actor của sơ đồ trình tự là tên nhóm hoặc tên khối. `plain`, `desc`, `example` viết lời thường và không nhắc định danh ngoài sơ đồ. `check_output.py` đỏ nếu lệch. Mỗi bước tour có `group` để hiện trên bản đồ.
 - RULE-17 (MUST): **Luôn ghi chi phí như footer** trên trang HTML, mọi trang wiki, draft và tin báo phòng. Số do `scripts/cost_footer.py` đo từ transcript, gồm cả phiên worker; không tự gõ, không đoán. Tiền chỉ ghi khi có bảng giá, và ghi rõ là quy đổi khi chạy gói tháng.
 - RULE-18 (MUST): **Thuật ngữ có tiếng Anh ngay cạnh:** bề mặt (surface), lớp (layer). Dev Việt không nói các từ này thuần Việt. `scripts/gloss.py` ghi tự động trên trang wiki, `ONBOARDING.md` và `onboard.json`; `check_output.py` đỏ nếu còn sót. Gặp thuật ngữ mới thì thêm vào `TERMS`. Viết SPEC cho worker cũng theo luật này.
 - Capabilities: đọc repo đích + lịch sử VCS; chạy script cục bộ (bash/python); giao worker Hang cho việc cơ học; ghi `.overstack/`, `llmwiki/`; mạng để bootstrap/cài phụ thuộc.
@@ -689,10 +689,10 @@ Phát ra MỘT object JSON (KHÔNG markdown, KHÔNG giải thích) theo ĐÚNG s
 $SKELETON, ghi vào $JSON_OUT. Yêu cầu chất lượng:
 - project: name/subtitle/about thật; stack[] + versions[] từ manifest; stats[] (files, services, layers, tour steps).
 - project.what = 2–4 câu LỜI THƯỜNG: dự án làm gì, cho ai, giải quyết vấn đề gì (không thuật ngữ nội bộ); project.how[] = 3–7 bước {t,d} kể luồng chạy đầu→cuối bằng lời người.
-- architecture.layers[] = layers thật, mỗi layer có plain (1 câu lời thường), example (1 việc cụ thể), files[], uses[] (layer nó gọi).
-- architecture.block = sơ đồ khối: title là kết luận; rows[] từ trên xuống, mỗi row có 1–3 nhóm {name,color,blocks[]}. Hai row liền nhau: một bên phải có 1 nhóm, hoặc hai bên cùng số nhóm. KHÔNG khai toạ độ.
-- architecture.sequences[] = 1–3 sơ đồ trình tự của luồng chính; title là kết luận; actors[]; steps[] {from,to,label,reply}. from/to phải nằm trong actors; đúng thứ tự gọi trong mã.
-- architecture.diagram = sơ đồ quan hệ: nodes[] (toạ độ trong ~760 rộng, rect≥70×30), edges[]. Xếp cột để mũi tên không cắt qua ô.
+- architecture.block = sơ đồ khối: title là kết luận; rows[] mỗi row có các nhóm {name,color,span,blocks[]} hoặc {spacer:true}; blocks là tên tệp hoặc thành phần thật; links[] {from,to,label,both} nhãn nói cái gì đi qua, chỉ nối hàng kề nhau hoặc cùng hàng. KHÔNG khai toạ độ.
+- architecture.layers[] = một thẻ cho MỖI nhóm trong block, cùng name; plain (1 câu lời thường), example (1 việc cụ thể), files[] = blocks của nhóm, uses[] = nhóm nối với nó. Không nhắc tên ngoài sơ đồ.
+- architecture.sequences[] = 1–3 sơ đồ trình tự của luồng chính; title là kết luận; actors[] là tên nhóm hoặc tên khối; steps[] {from,to,label,reply} đúng thứ tự gọi trong mã.
+- architecture.diagram: bỏ nếu lặp lại block; nếu giữ thì toạ độ trong ~760 rộng, rect≥70×30, mũi tên không cắt qua ô.
 - tour[] 5–15 bước, MỖI bước GIÀU: group (chặng), role(1-2 câu), file+line THẬT, in[]/out[], hot(churn), narr — KHÔNG 1–2 dòng. Các bước cùng group phải liền nhau.
 - modules[] = mỗi container/image (đọc $DKFILE): name,img,meta(port/env/volume),life[[read|proc|write,desc]],arch. Repo mono ($N_SVC≤1) → modules:[].
 - docker = {strategy, cmd[[text,c|p|]], table[[svc,img,cmd/port,deps]], order[]} nếu có compose; mono → docker:null."
@@ -818,7 +818,7 @@ Kiểm tất định bằng script: gate cuối Phase 1 (2 file bắt buộc), v
 | Duyệt và báo cáo | terminal | thẻ `hang_ask`, báo trong phòng kèm HTML |
 | Bootstrap | clone repo 50 MB | bản local trước, clone khi thiếu |
 | Sync push cuối | đẩy `SKILL.md` vào `rheinmir/setup` (đường dẫn đã bỏ từ `23e53d2c`) | bỏ |
-| Layer | tên + mô tả | giải thích layer là gì, lời thường, ví dụ, tệp, layer nó gọi |
+| Layer | danh sách tên + mô tả | thẻ masonry, mỗi thẻ đúng một nhóm trong sơ đồ khối, cùng tên, lời thường, ví dụ |
 | Sơ đồ | một sơ đồ quan hệ | thêm sơ đồ khối và sơ đồ trình tự do máy xếp |
 | Tour | danh sách trái, chi tiết phải | bản đồ thứ tự theo chặng, chi tiết bên dưới |
 | Thuật ngữ | thuần Việt | tiếng Anh ngay cạnh, `scripts/gloss.py` |
