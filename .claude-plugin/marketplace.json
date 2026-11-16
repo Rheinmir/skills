@@ -133,6 +133,7 @@
         "./skills/tour-guide-supademo",
         "./skills/trace-grader",
         "./skills/uat-nonit-testcase",
+        "./skills/ui-inventory",
         "./skills/verify-before-commit",
         "./skills/visual-qa",
         "./skills/wayfinder",

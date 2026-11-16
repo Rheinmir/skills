@@ -1193,6 +1193,23 @@
       "recorded": "2026-10-14",
       "source": "local-authored"
     },
+    "ui-inventory": {
+      "files": {
+        "SKILL.md": "3890be980ca212e375cc1840a4d4cdab64c5fa044c5df24faf6dedb72fd4f6b3",
+        "assets/page.html": "f410dc27df457a794bdb81c1440abe9b38c7bead278d374e2f527af9d9bca1f5",
+        "references/agent-prompts.md": "7a6975e40e835e7d4a0101193f9f858e4ee2bb9ba92aaf5debf6f4b154edb6a3",
+        "references/demo-spec.md": "27aa3ccced866819556eccf015189457044f749108deb6a46f6590eedda55492",
+        "scripts/aggregate.mjs": "ae55860a6bacf063b061632e03b124654b7f50af6178c7facdb75b5fa292761a",
+        "scripts/browser-check.mjs": "620a47f23b42c4f8eb693b8b158dbcee630b9b3d6538c5e0b4f9b1a28585f9e9",
+        "scripts/build-page.mjs": "3fc71f57d4549b951d72a055d7b7aff54f1a3e1422ebf9b3b3de027274987b30",
+        "scripts/compile-demos.mjs": "717702fef07e059bf4637b3cd7dc967cb627168b45f5788d25fbd975ba9557cd",
+        "scripts/fetch-catalogue.mjs": "32791b536ba027d38c71742bd88790ec2cd6bf4b7f381027157560363782c8ba",
+        "scripts/validate-demos.mjs": "559421a59185102874635a91ccb8eb47bc8a797fafb6873a564d70d67e0c94a4",
+        "scripts/verify-refs.mjs": "08f2da928a00c26eaafbd4e3bcf709d9e1e5a04347c8300eacc09da5097d4c5a"
+      },
+      "recorded": "2026-11-16",
+      "source": "local-authored"
+    },
     "ui-kit-from-code": {
       "files": {
         "SKILL.md": "c5eebc6f73b7f58381a24dcbddee611c6177f5716da97a5b5a3b216786aef18a",
