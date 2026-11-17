@@ -23,7 +23,7 @@
   const skinSel = $("#skin");
   if (!skins.length) skinSel.closest("label").hidden = true;
   skinSel.innerHTML = skins.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
-  const setSkin = (id) => { if (!id) return; root.dataset.skin = id; skinSel.value = id; store.set("g-skin", id); requestAnimationFrame(fitAll); };
+  const setSkin = (id) => { if (!id) return; root.setAttribute(meta.skinAttr || "data-skin", id); skinSel.value = id; store.set("g-skin", id); requestAnimationFrame(fitAll); };
   skinSel.onchange = () => setSkin(skinSel.value);
 
   // ── previews fit their stage ──

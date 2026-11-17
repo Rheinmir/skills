@@ -28,7 +28,7 @@ if (!existsSync(at("demos"))) { console.error(`no demos/ in ${inv}: see SKILL.md
 
 const meta = {
   product: "Site", wordmark: null, title: "Thành phần này tên là gì", lede: null, css: "site.css", fontsDir: null,
-  fontKeep: "(latin|latin-ext|vietnamese)", skins: [], defaultSkin: null, houseFont: null, frames: null, ownLabel: "Riêng app",
+  fontKeep: "(latin|latin-ext|vietnamese)", skins: [], skinAttr: "data-skin", defaultSkin: null, stageBg: "var(--color-app)", houseFont: null, frames: null, ownLabel: "Riêng app",
   ...JSON.parse(readIf(at("meta.json")) || "{}"),
 };
 meta.wordmark ??= `${meta.product.split(/\s+/)[0]}.`;
@@ -100,8 +100,10 @@ const table = new Map();
     table.set(slug(m[1]), { group, name: m[1], count: Number(m[2]), defs, raw: m[5].split(/[;,]\s*/).map((s) => s.trim()).filter(Boolean) });
   }
 }
-const statusOf = (s = "") => (s.includes("🟡") || /partial|một phần/i.test(s) ? "partial" : s.includes("❌") || /\bnone\b|không có|chưa có/i.test(s) ? "none" : "full");
-const firstSentence = (s) => { const m = /^(.+?[.!?])(\s|$)/.exec(s.replace(/`/g, "")); return (m ? m[1] : s).trim(); };
+// The mark decides (✅ 🟡 ❌); words only when there is no mark, so "✅ Có … (không có X)" stays full.
+const statusOf = (s = "") => s.includes("✅") ? "full" : s.includes("🟡") ? "partial" : s.includes("❌") ? "none"
+  : /partial|một phần/i.test(s) ? "partial" : /\bnone\b|^\s*(không có|chưa có)/i.test(s) ? "none" : "full";
+const firstSentence = (s) => { const t = s.replace(/`/g, "").trim(); if (t.length <= 180) return t; const m = /^(.+?[.!?])(\s|$)/.exec(t); return (m ? m[1] : t).trim(); };
 
 const items = [];
 for (const file of readdirSync(at("demos")).filter((f) => f.endsWith(".html")).sort((a, b) => a.localeCompare(b, "en", { numeric: true }))) {
@@ -115,7 +117,10 @@ for (const file of readdirSync(at("demos")).filter((f) => f.endsWith(".html")).s
     const f = section ? fields(section.body) : {};
     items.push({
       id, kind: "catalogue", number: n, group: cat.slug.startsWith("macos/") ? "macOS" : "Web", name: cat.name, slug: cat.slug,
-      status: statusOf(f["Trạng thái"] ?? f["Status"]), statusText: pick(f, "Trạng thái", "Status"), line: cat.line, description: cat.line,
+      status: statusOf(f["Trạng thái"] ?? f["Status"]), statusText: pick(f, "Trạng thái", "Status"),
+      // the card and the detail page read the site's own description when the report has one; the ontology's cue stays
+      // the catalogue's recognition sentence (catLine), which is what mapping matches on
+      line: firstSentence(pick(f, "Mô tả", "Description")) || cat.line, description: pick(f, "Mô tả", "Description") || cat.line, catLine: cat.line,
       omb: pick(f, "Tên trong code", "Tên trong OMB", "Implemented by"), definitions: pick(f, "Định nghĩa", "Defined at"), usage: pick(f, "Nơi dùng", "Used"),
       variants: pick(f, "Biến thể", "Variants"), notes: pick(f, "Ghi chú refactor", "Notes"), aliases: (pick(f, "Tên gọi khác", "Aliases")).split(/[;,]\s*/).filter(Boolean),
       samples: section ? samples(section.body) : [], source, html,
@@ -154,15 +159,32 @@ let siteCss = readIf(cssPath);
 if (!siteCss) console.warn(`warning: no ${meta.css} in ${inv}; previews will be unstyled`);
 const fontsDir = meta.fontsDir ? at(meta.fontsDir) : dirname(cssPath);
 const keep = new RegExp(meta.fontKeep);
+// Every font file the @font-face rules point at (woff2, woff, ttf, otf; by name or path in fontsDir) is inlined. A face
+// whose file name names a subset (…-cyrillic-…) outside meta.fontKeep is dropped to keep the page light.
+const MIME = { woff2: "font/woff2", woff: "font/woff", ttf: "font/ttf", otf: "font/otf" };
+const fontFile = (url) => {
+  const name = url.split(/[?#]/)[0].split("/").filter(Boolean).pop() ?? "";
+  const file = [join(fontsDir, name), join(fontsDir, url.split(/[?#]/)[0].replace(/^\/+/, ""))].find((p) => name && existsSync(p));
+  const ext = /\.(woff2|woff|ttf|otf)$/i.exec(name)?.[1]?.toLowerCase();
+  return file && ext ? { name, file, ext } : null;
+};
 siteCss = siteCss.replace(/@font-face\s*\{[^}]*\}/g, (face) => {
-  const url = /url\(\s*["']?([^"')]+\.woff2)["']?\s*\)/.exec(face)?.[1];
-  if (!url) return face;
-  const name = url.split(/[/?#]/).filter(Boolean).pop();
-  const file = [join(fontsDir, name), join(fontsDir, url.replace(/^\/+/, ""))].find((p) => existsSync(p));
-  const subset = /-(latin|latin-ext|vietnamese|cyrillic|cyrillic-ext|greek|greek-ext|symbols\w*)-/.test(name);
-  if (!file || (subset && !keep.test(name))) return file ? "" : face;
-  return face.replace(/url\([^)]+\.woff2[^)]*\)/, `url(data:font/woff2;base64,${readFileSync(file).toString("base64")})`).replace(/,\s*url\([^)]+\)\s*format\("woff"\)/, "");
+  const urls = [...face.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map((m) => m[1]).filter((u) => !u.startsWith("data:"));
+  const found = urls.map(fontFile).filter(Boolean);
+  if (!found.length) return face;
+  if (found.some((f) => /-(latin|latin-ext|vietnamese|cyrillic|cyrillic-ext|greek|greek-ext|symbols\w*)-/.test(f.name) && !keep.test(f.name))) return "";
+  return face.replace(/url\(\s*["']?([^"')]+)["']?\s*\)/g, (m, u) => {
+    const f = fontFile(u);
+    return f ? `url(data:${MIME[f.ext]};base64,${readFileSync(f.file).toString("base64")})` : m;
+  });
 });
+
+// The site's CSS goes into its own cascade layer, so the gallery's chrome (unlayered) always wins over it whatever the
+// specificity, while previews keep every site rule. A bundle of many pages' CSS often carries page rules on bare
+// elements (body { max-width: 720px }) that would otherwise squeeze the gallery. @charset/@import cannot sit in a layer.
+const hoisted = [];
+siteCss = siteCss.replace(/@charset[^;]*;/g, "").replace(/@import[^;]*;/g, (m) => { hoisted.push(m); return ""; });
+const layeredCss = `${hoisted.join("\n")}\n@layer site {\n${siteCss}\n}`;
 
 // ── ontology ───────────────────────────────────────────────────────────────────────────────────────────────────
 const plain = (s) => String(s ?? "").replace(/\*\*|`/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").split("\n")[0].trim();
@@ -194,7 +216,7 @@ const ontology = {
   groups: groups.map((g) => ({ name: g, components: items.filter((i) => i.group === g).map((i) => i.id) })),
   components: items.map((i) => ({
     id: i.id, name: i.name, group: i.group, kind: i.kind, slug: i.slug || undefined,
-    cue: plain(i.kind === "catalogue" ? i.line : i.description), aliases: i.aliases?.length ? i.aliases : undefined,
+    cue: plain(i.kind === "catalogue" ? i.catLine : i.description), aliases: i.aliases?.length ? i.aliases : undefined,
     implementedBy: plain(i.omb) || undefined, definedAt: files(i.definitions || i.source), status: i.status, hasSample: i.samples.length > 0,
   })),
 };
@@ -252,14 +274,15 @@ const ICON = {
 };
 const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 const page = `<!doctype html>
-<html lang="vi"${meta.defaultSkin ? ` data-skin="${esc(meta.defaultSkin)}"` : ""} data-g-theme="light">
+<html lang="vi"${meta.defaultSkin ? ` ${esc(meta.skinAttr)}="${esc(meta.defaultSkin)}"` : ""} data-g-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(meta.product)} UIUX Map</title>
 <meta name="description" content="${counts.all} thành phần giao diện của ${esc(meta.product)}: bản xem trước thật, tên chuẩn, code mẫu, ontology cho agent.">
-<style>${siteCss}</style>
+<style>${layeredCss}</style>
 <style>${readFileSync(join(here, "gallery.css"), "utf8")}</style>
+<style>:root { --g-stage-site: ${meta.stageBg}; }</style>
 </head>
 <body class="g">
 <header class="g-top">
@@ -304,7 +327,7 @@ ${frames}
 </main>
 </div>
 <script id="ui-ontology" type="application/ld+json">${JSON.stringify(ontology, null, 1).replace(/</g, "\\u003c")}</script>
-<script id="g-data" type="application/json">${json({ items, layouts, skins: meta.skins, meta: { product: meta.product, houseFont: meta.houseFont, defaultSkin: meta.defaultSkin } })}</script>
+<script id="g-data" type="application/json">${json({ items, layouts, skins: meta.skins, meta: { product: meta.product, houseFont: meta.houseFont, defaultSkin: meta.defaultSkin, skinAttr: meta.skinAttr } })}</script>
 <script>${readFileSync(join(here, "gallery.js"), "utf8")}</script>
 </body>
 </html>

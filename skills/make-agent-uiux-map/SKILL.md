@@ -101,6 +101,7 @@ Chi tiết từng bước (nguồn chân lý cho W01–W06). Đặt `S=~/.claude
   dịch (cho phép một `*`: `"../../dist/assets/styles-*.css"`), `fontsDir`, `skins` theo `data-skin` của app; build.
 - **B02 · Trang có theme/skin** → khai `skins` + `defaultSkin` trong `meta.json`; nút Skin hiện và đổi bản xem trước tại chỗ.
 - **B03 · Không có skin** → `skins: []`, nút Skin tự ẩn.
+- **B04 · Theme đọc thuộc tính khác** (`data-theme`, `class`…) → `skinAttr` + `stageBg` (biến nền của site) trong `meta.json`.
 
 ### Validation và stopping
 Dừng khi: build in "without a description: 0", audit `file://` đạt (cuộn, 0 lỗi JS, không tràn ngang 390px, không thẻ
@@ -109,5 +110,8 @@ trống) và đã soát ảnh. Giao bằng ba dòng đường dẫn; không mở
 ### Examples
 - `/make-agent-uiux-map https://uiux.giatbh.io.vn/namethatui/` → 2 trang, `site.css` 153 KB, 11 font, 65 vùng ứng viên →
   5 demo (Header/Navbar, Tabs, Search Field, Segmented Control, Site Footer) → `goi-ten-ui-uiux-map.html` 0,8 MB.
+- `/make-agent-uiux-map https://uiux.giatbh.io.vn/` → 8 trang, `site.css` 292 KB (`@import` Google Fonts và font icon
+  nhúng sẵn), 15 thành phần (7 danh mục + 8 riêng: Hero Title, KPI Strip, Kit Card…), code CSS thật từ `site.css`, theme
+  Sáng/Tối qua `skinAttr: data-theme` + `stageBg` → `uiux-asset-uiux-map.html` 0,4 MB.
 - Bộ kiểm kê CTD Bot (203 thành phần, 14 skin): `node $S/scripts/build-gallery.mjs docs/ui-inventory --out docs/ui-gallery`
   → `docs/ui-gallery/ctd-bot-uiux-map.html` 2,9 MB, 195 thành phần có code mẫu.

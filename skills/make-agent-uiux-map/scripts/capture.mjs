@@ -10,6 +10,7 @@
 //   candidates.json   regions worth naming, per page: role, a unique selector, tag, classes, size, a text hint
 //   meta.json         a starting point (product from <title>); edit it, it is never overwritten
 // Visits the start page and same-origin links breadth-first, up to --pages.
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { playwright } from "./pw.mjs";
@@ -97,15 +98,32 @@ while (queue.length && seen.size < maxPages) {
 
 // One stylesheet: url()s absolute; woff2 fonts downloaded and referenced by file name (build-gallery inlines them).
 let css = "", fonts = 0;
-for (const { base, css: text } of sheets.values()) {
-  css += text.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/g, (m, q, u) => { try { return u.startsWith("data:") ? m : `url("${new URL(u, base).href}")`; } catch { return m; } }) + "\n";
+const absolute = (text, base) => text.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/g, (m, q, u) => { try { return u.startsWith("data:") ? m : `url("${new URL(u, base).href}")`; } catch { return m; } });
+for (const { base, css: text } of sheets.values()) css += absolute(text, base) + "\n";
+// @import (Google Fonts and the like) is pulled in, so the file needs no network. Fetched with the browser's own
+// user-agent: font services answer an unknown client with ttf, a real Chromium with woff2.
+const ua = await page.evaluate(() => navigator.userAgent);
+for (let round = 0; round < 3; round++) {
+  const imports = [...css.matchAll(/@import\s+url\("([^"]+)"\)[^;]*;/g)];
+  if (!imports.length) break;
+  for (const [stmt, href] of imports) {
+    let text = "";
+    try { const res = await page.request.get(href, { headers: { "user-agent": ua } }); if (res.ok()) text = await res.text(); } catch {}
+    css = css.split(stmt).join(text ? absolute(text, href) : stmt);
+  }
 }
-const fontUrls = [...new Set([...css.matchAll(/url\("([^"]+\.woff2[^"]*)"\)/g)].map((m) => m[1]))];
+// Every url() inside an @font-face, extension or not (icon fonts are often served as /font?kit=…): downloaded into
+// fonts/ under a stable name whose extension follows the content type.
+const fontUrls = [...new Set([...css.matchAll(/@font-face\s*\{[^}]*\}/g)].flatMap((m) => [...m[0].matchAll(/url\("(https?:[^"]+)"\)/g)].map((u) => u[1])))];
+const EXT = { "font/woff2": "woff2", "font/woff": "woff", "font/ttf": "ttf", "font/otf": "otf", "application/font-woff2": "woff2", "application/font-woff": "woff", "application/x-font-ttf": "ttf", "font/sfnt": "ttf" };
 for (const u of fontUrls) {
-  const name = new URL(u).pathname.split("/").pop();
   try {
-    const res = await page.request.get(u);
-    if (res.ok()) { writeFileSync(join(dir, "fonts", name), await res.body()); css = css.split(u).join(name); fonts++; }
+    const res = await page.request.get(u, { headers: { "user-agent": ua } });
+    if (!res.ok()) continue;
+    const type = (res.headers()["content-type"] ?? "").split(";")[0].trim();
+    const ext = EXT[type] ?? /\.(woff2|woff|ttf|otf)(?:$|[?#])/.exec(u)?.[1] ?? "woff2";
+    const name = `${createHash("sha1").update(u).digest("hex").slice(0, 12)}.${ext}`;
+    writeFileSync(join(dir, "fonts", name), await res.body()); css = css.split(u).join(name); fonts++;
   } catch {}
 }
 writeFileSync(join(dir, "site.css"), css);

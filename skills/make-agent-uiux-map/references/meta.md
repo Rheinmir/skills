@@ -12,6 +12,8 @@
   "fontsDir": "fonts",                  // nơi tìm tệp .woff2 mà site.css trỏ tới (để nhúng vào file)
   "fontKeep": "(latin|latin-ext|vietnamese)",  // chỉ nhúng các subset font này
   "skins": [{ "id": "light", "name": "Sáng" }], // giá trị data-skin trang hỗ trợ; [] thì ẩn nút Skin
+  "skinAttr": "data-theme",              // thuộc tính trên <html> mà theme của trang đọc (mặc định data-skin)
+  "stageBg": "var(--aw-bg-primary)",     // biến nền trang của site: nền sân khấu bản xem trước theo theme (mặc định var(--color-app))
   "defaultSkin": "light",
   "houseFont": "Lexend Deca Light",     // font chuẩn, nhắc trong quy tắc map và prompt
   "ownLabel": "Riêng app",              // tên tab cho các thành phần ngoài danh mục

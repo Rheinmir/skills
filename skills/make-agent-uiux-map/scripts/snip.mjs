@@ -27,7 +27,16 @@ let done = 0, current = "";
 for (const pick of picks) {
   if (!/^(\d+|x)-[a-z0-9-]+$/.test(pick.id)) { console.warn(`skip ${pick.id}: ids look like 12-segmented-control or x-pricing-card`); continue; }
   try {
-    if (pick.url !== current || pick.before?.length) { await page.goto(pick.url, { waitUntil: "networkidle", timeout: 30000 }); current = pick.url; await page.waitForTimeout(500); }
+    if (pick.url !== current || pick.before?.length) {
+      await page.goto(pick.url, { waitUntil: "networkidle", timeout: 30000 }); current = pick.url;
+      // Walk the page once so lazy images and backgrounds load before anything is cut out, then return to the top.
+      await page.evaluate(async () => {
+        for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight * 0.8) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); }
+        scrollTo(0, 0);
+      });
+      await page.waitForLoadState("networkidle").catch(() => {});
+      await page.waitForTimeout(500);
+    }
     for (const step of pick.before ?? []) {
       const [verb, ...rest] = step.split(":"), target = rest.join(":");
       if (verb === "click") await page.click(target, { timeout: 5000 });
@@ -37,13 +46,20 @@ for (const pick of picks) {
     }
     const html = await page.$eval(pick.selector, (el) => {
       const copy = el.cloneNode(true);
+      // lazy images load only when on screen in the gallery itself; cut them out eager
+      copy.querySelectorAll("[loading='lazy']").forEach((n) => n.setAttribute("loading", "eager"));
       for (const [attr, prop] of [["src", "src"], ["href", "href"], ["poster", "poster"]]) {
         const live = el.querySelectorAll(`[${attr}]`), cloned = copy.querySelectorAll(`[${attr}]`);
         cloned.forEach((c, i) => { if (live[i]?.[prop]) c.setAttribute(attr, live[i][prop]); });
       }
       const r = el.getBoundingClientRect();
       let bg = "transparent";
-      for (let e = el; e; e = e.parentElement) { const c = getComputedStyle(e).backgroundColor; if (c && !/rgba?\([^)]*,\s*0\)$|transparent/.test(c)) { bg = c; break; } }
+      // The nearest painted ancestor; the page ground itself (body/html) is left to the gallery's stage, which follows
+      // the chosen theme, so a dark theme is not cut out onto a fixed light ground.
+      for (let e = el; e; e = e.parentElement) {
+        const c = getComputedStyle(e).backgroundColor;
+        if (c && !/rgba?\([^)]*,\s*0\)$|transparent/.test(c)) { if (e !== document.body && e !== document.documentElement) bg = c; break; }
+      }
       return { outer: copy.outerHTML, w: Math.ceil(r.width), h: Math.ceil(r.height), bg };
     });
     writeFileSync(join(dir, "demos", `${pick.id}.html`),
