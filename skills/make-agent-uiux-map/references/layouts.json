@@ -1,0 +1,390 @@
+{
+  "about": "Page layouts the map tries its own components in. Each layout is a CSS grid (areas) of slots; at build each slot takes the best-matching component (keywords against name, code names and cue; status full first; no repeats within a layout). An empty match draws a wireframe block. 'key' marks the layout's signature slot. Add or edit layouts here.",
+  "layouts": [
+    {
+      "id": "bento-grid",
+      "name": "Bento Grid",
+      "cue": "Lưới ô to nhỏ khác nhau, mỗi ô một khối nội dung, ô chính lớn nhất.",
+      "columns": "1.4fr 1fr 1fr",
+      "rows": "1fr 1fr",
+      "areas": [
+        "a b c",
+        "a d d"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "card",
+            "chart",
+            "usage",
+            "meter",
+            "stat"
+          ],
+          "key": true
+        },
+        "b": {
+          "want": [
+            "avatar",
+            "badge"
+          ]
+        },
+        "c": {
+          "want": [
+            "switch",
+            "toggle",
+            "checkbox"
+          ]
+        },
+        "d": {
+          "want": [
+            "progress",
+            "timeline",
+            "level"
+          ]
+        }
+      }
+    },
+    {
+      "id": "command-palette",
+      "name": "Command Palette",
+      "cue": "Hộp lệnh nổi giữa màn hình trên trang đang mờ đi, gõ để tìm và chạy lệnh.",
+      "columns": "1fr",
+      "rows": "1fr",
+      "areas": [
+        "a"
+      ],
+      "overlay": "b",
+      "slots": {
+        "a": {
+          "wire": "page"
+        },
+        "b": {
+          "want": [
+            "command palette",
+            "palette",
+            "slash command",
+            "search field",
+            "combobox"
+          ],
+          "key": true
+        }
+      }
+    },
+    {
+      "id": "canvas-editor",
+      "name": "Canvas Editor",
+      "cue": "Thanh công cụ một bên, vùng vẽ lưới chấm ở giữa, bảng thuộc tính bên kia.",
+      "columns": "0.5fr 2.2fr 1fr",
+      "rows": "1fr",
+      "areas": [
+        "a b c"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "icon rail",
+            "rail",
+            "dock",
+            "toolbar"
+          ]
+        },
+        "b": {
+          "wire": "canvas",
+          "key": true
+        },
+        "c": {
+          "want": [
+            "inspector",
+            "properties",
+            "panel",
+            "settings row"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mega-menu",
+      "name": "Mega Menu",
+      "cue": "Thanh đầu trang, mở ra một tấm menu rộng nhiều cột liên kết.",
+      "columns": "1fr",
+      "rows": "auto 1.3fr 1fr",
+      "areas": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "header",
+            "navbar",
+            "menu bar",
+            "toolbar"
+          ]
+        },
+        "b": {
+          "want": [
+            "mega menu",
+            "cascading",
+            "context menu",
+            "menu",
+            "popover"
+          ],
+          "key": true
+        },
+        "c": {
+          "wire": "text"
+        }
+      }
+    },
+    {
+      "id": "sticky-sidebar",
+      "name": "Sticky Sidebar",
+      "cue": "Nội dung dài bên trái, một khối ghim bên phải đi theo khi cuộn.",
+      "columns": "2fr 1fr",
+      "rows": "1fr",
+      "areas": [
+        "a b"
+      ],
+      "slots": {
+        "a": {
+          "wire": "text"
+        },
+        "b": {
+          "want": [
+            "sticky",
+            "card",
+            "checklist",
+            "summary",
+            "inspector"
+          ],
+          "key": true
+        }
+      }
+    },
+    {
+      "id": "three-pane-inbox",
+      "name": "Three-Pane Inbox",
+      "cue": "Ba cột: điều hướng, danh sách thư, nội dung thư đang mở.",
+      "columns": "0.8fr 1.3fr 1.6fr",
+      "rows": "1fr",
+      "areas": [
+        "a b c"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "sidebar",
+            "rail",
+            "nav",
+            "source list"
+          ]
+        },
+        "b": {
+          "want": [
+            "inbox",
+            "list",
+            "activity",
+            "thread"
+          ],
+          "key": true
+        },
+        "c": {
+          "want": [
+            "transcript",
+            "message list",
+            "reader",
+            "chat",
+            "detail"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kanban-board",
+      "name": "Kanban Board",
+      "cue": "Các cột trạng thái cạnh nhau, mỗi cột xếp thẻ việc, kéo thẻ sang cột khác.",
+      "columns": "1fr 1fr 1fr",
+      "rows": "1fr",
+      "areas": [
+        "a b c"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "kanban",
+            "approval",
+            "task"
+          ],
+          "key": true
+        },
+        "b": {
+          "want": [
+            "tool call",
+            "run status",
+            "task",
+            "card"
+          ]
+        },
+        "c": {
+          "want": [
+            "run status",
+            "status",
+            "notice",
+            "card"
+          ]
+        }
+      }
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "cue": "Trục dọc có mốc thời gian, sự kiện xếp hai bên theo thứ tự.",
+      "columns": "1fr",
+      "rows": "1fr",
+      "areas": [
+        "a"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "timeline",
+            "activity",
+            "history",
+            "progress"
+          ],
+          "key": true
+        }
+      }
+    },
+    {
+      "id": "zig-zag",
+      "name": "Zig-Zag",
+      "cue": "Các hàng ảnh và chữ so le trái phải, kể từng tính năng một.",
+      "columns": "1fr 1fr",
+      "rows": "1fr 1fr",
+      "areas": [
+        "a b",
+        "c d"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "card",
+            "welcome",
+            "empty state",
+            "hero"
+          ],
+          "key": true
+        },
+        "b": {
+          "wire": "text"
+        },
+        "c": {
+          "wire": "text"
+        },
+        "d": {
+          "want": [
+            "image",
+            "media",
+            "preview",
+            "avatar"
+          ]
+        }
+      }
+    },
+    {
+      "id": "map-list",
+      "name": "Map + List",
+      "cue": "Danh sách kết quả một bên, bản đồ có ghim vị trí bên kia.",
+      "columns": "1fr 1.4fr",
+      "rows": "1fr",
+      "areas": [
+        "a b"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "list",
+            "row",
+            "table",
+            "results"
+          ]
+        },
+        "b": {
+          "want": [
+            "map",
+            "canvas",
+            "screen",
+            "stream"
+          ],
+          "key": true
+        }
+      }
+    },
+    {
+      "id": "product-page",
+      "name": "Product Page",
+      "cue": "Ảnh sản phẩm lớn kèm dải ảnh nhỏ, khung mua hàng có giá và nút bên cạnh.",
+      "columns": "1.5fr 1fr",
+      "rows": "1fr",
+      "areas": [
+        "a b"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "image",
+            "gallery",
+            "lightbox",
+            "carousel",
+            "media"
+          ]
+        },
+        "b": {
+          "want": [
+            "plan",
+            "price",
+            "checkout",
+            "buy",
+            "choice card",
+            "radio card",
+            "card"
+          ],
+          "key": true
+        }
+      }
+    },
+    {
+      "id": "chat-artifact",
+      "name": "Chat + Artifact",
+      "cue": "Cuộc trò chuyện một bên, sản phẩm đang làm (trang, tệp, bản xem trước) mở bên kia.",
+      "columns": "1fr 1.4fr",
+      "rows": "1fr",
+      "areas": [
+        "a b"
+      ],
+      "slots": {
+        "a": {
+          "want": [
+            "composer",
+            "message",
+            "chat",
+            "transcript"
+          ]
+        },
+        "b": {
+          "want": [
+            "artifact",
+            "preview",
+            "page",
+            "file",
+            "panel",
+            "browser"
+          ],
+          "key": true
+        }
+      }
+    }
+  ]
+}

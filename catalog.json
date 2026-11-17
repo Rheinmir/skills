@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "version": "1.0.47",
+  "version": "1.0.48",
   "harness_floor": "1.3.127",
-  "catalog_sha": "57fb34576bdd7eb6",
-  "count": 110,
+  "catalog_sha": "bc0c3f8a8d561b6d",
+  "count": 111,
   "skills": [
     {
       "name": "blur",
@@ -813,6 +813,16 @@
       "sha": "b06b2d4ec7b9313f"
     },
     {
+      "name": "make-agent-uiux-map",
+      "dir": "skills/make-agent-uiux-map",
+      "external": false,
+      "loop": "utils",
+      "description": "Bóc giao diện của MỘT trang web bất kỳ (URL) hoặc một bộ kiểm kê có sẵn ra MỘT file HTML tự chứa kiểu Name That UI — lưới mọi thành phần có bản xem trước chạy bằng chính CSS của trang, trang chi tiết kèm code mẫu thật, và ONTOLOGY (JSON nhúng script#ui-ontology) để agent tự map một thiết kế bất kỳ vào đúng thành phần mà áp giao diện. Standalone: mọi công cụ nằm trong thư mục skill (capture.mjs, snip.mjs, build-gallery.mjs, giao diện, danh mục 91 thành phần). Giao FILE, không host: in đường dẫn khi xong. Gọi khi user nói 'make-agent-uiux-map', 'uiux map', 'gallery thành phần', 'showcase kiểu name that ui', 'bóc component của web này ra html', 'kiểm kê giao diện trang X', 'ontology giao diện cho agent', 'gói UI thành một file để đưa agent', hoặc /make-agent-uiux-map <url>. KHÁC extract-site (trích token/DESIGN.md) và ui-kit-from-code (chép hệ thiết kế thành UI kit): skill này GỌI TÊN từng thành phần theo danh mục Name That UI và sinh ontology map.",
+      "model_invocable": true,
+      "requires": {},
+      "sha": "55320b9512b7c5df"
+    },
+    {
       "name": "mask-reveal-transition",
       "dir": "skills/mask-reveal-transition",
       "external": false,
@@ -1473,7 +1483,7 @@
       "description": "Kiểm kê TOÀN BỘ thành phần UI của một frontend có kiểm chứng (mỗi path:line và code mẫu được máy đối chiếu với mã nguồn), đối chiếu danh mục chuẩn Name That UI (91 thành phần macOS + web, 14 phong cách, 18 cặp so sánh), đặt tên chuẩn cho mọi thành phần ngoài danh mục, dựng demo tĩnh từng component bằng chính class/token của app rồi xuất MỘT trang HTML có tab, Gallery và so sánh A/B cũ–mới (song song, thanh trượt, chỉ A, chỉ B) giữa skin cũ và skin/giao diện mới. Gọi khi user nói \"kiểm kê UI\", \"quét toàn bộ component\", \"đối chiếu namethatui\", \"ui inventory\", \"liệt kê thành phần giao diện\", \"render component tượng trưng\", \"so sánh A/B giao diện cũ mới\", \"chuẩn bị refactor giao diện\", hoặc /ui-inventory. KHÁC `design-prim` (dọn slop, sửa code UI) và `visual-qa` (chấm ảnh chụp màn hình) — skill này KHÔNG sửa UI của app, chỉ lập bản đồ + demo + so sánh.",
       "model_invocable": true,
       "requires": {},
-      "sha": "2069eb9529c20ef1"
+      "sha": "acb06ab89d960044"
     },
     {
       "name": "ui-kit-from-code",
@@ -1483,7 +1493,7 @@
       "description": "Rút hệ thiết kế ĐANG CÓ của một dự án — từ code (token màu, thang kích thước, component) hoặc từ URL site đang chạy thành MỘT trang HTML tham chiếu kiểu Figma UI kit: foundations + component theo nhóm + màn mẫu mobile/desktop, đổi palette/sáng-tối/shape, copy token/HTML/hex. Giá trị lấy bằng cách CHẠY hàm token thật (hoặc đọc style thật bằng Playwright) chứ không gõ tay; có vòng KHÁM PHÁ tự đi theo link + bấm mở phần ẩn, bỏ trùng theo chữ ký, dừng khi bão hoà, và cổng PHỦ bắt mọi pattern tìm được phải có mặt trong kit (không dừng ở phần xương). Mẫu output chuẩn: references/ui-kit-reference.html. KHÁC hallmark (dựng/đổi thiết kế mới): skill này chỉ CHÉP LẠI hệ đang có, không sáng tác. Gọi khi user nói 'ui kit', 'figma ui kit bằng html', 'bóc design system ra', 'trang tham chiếu component', 'design token page', 'component gallery', 'style guide từ code', 'bóc trang này ra html kit', 'làm giàu kit', hoặc /ui-kit-from-code.",
       "model_invocable": true,
       "requires": {},
-      "sha": "baff7a64dff95615"
+      "sha": "bd1606f44adb49f0"
     },
     {
       "name": "ui-snapshot",
@@ -1612,5 +1622,5 @@
       "sha": "f2f24c68c8f48647"
     }
   ],
-  "generated_at": "2026-11-16"
+  "generated_at": "2026-11-17"
 }

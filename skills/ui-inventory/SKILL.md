@@ -86,6 +86,7 @@ Chạy thật lần đầu trên OpenMausBot (React 19 + Tailwind 4, 629 tệp `
 | B02 | App không dùng Tailwind | Bỏ `compile-demos`; build app một lần, đưa tệp CSS ra cho `build-page --css`, `validate-demos` vẫn chạy với CSS đó (đặt vào `.demo-build/out/assets/`) | W09 |
 | B03 | Không có danh mục chuẩn / user chỉ muốn bản đồ | Bỏ W01, W03 (agent đối chiếu), giữ agent bản đồ + nền móng; trang vẫn có tab Gallery cho thành phần riêng | W04 |
 | B04 | User chỉ muốn so sánh A/B trên bộ kiểm kê có sẵn | Chỉ W07–W10 | — |
+| B05 | User cần một file để giao cho agent áp giao diện (gallery + ontology + layout) | Sau W06, thêm `docs/ui-inventory/meta.json` rồi chạy skill `/make-agent-uiux-map` trên bộ kiểm kê này (`build-gallery.mjs docs/ui-inventory --out docs/ui-gallery`) | — |
 
 ### Workflow
 ```text
@@ -96,6 +97,7 @@ W01 → W02 → W03 ⇉ (mỗi phần xong) W04 → W05 → W06 → W07 → W08 
 ### Validation và handoff
 - Output schema: báo cáo đúng khuôn trong `references/agent-prompts.md`; mỗi tệp kết thúc bằng một khối ```json parse được; `canon.json` là `{nhóm: {tên chuẩn: [tên thô…]}}`.
 - Validation: `verify-refs.mjs` 0 FAIL trên mọi `parts/*.md` và `README.md`; `aggregate.mjs` "uncovered: none"; `validate-demos.mjs` 0 lỗi; `browser-check.mjs` 0 lỗi kèm ảnh A|B đã xem.
+- Bước tiếp: bộ kiểm kê này là đầu vào của `/make-agent-uiux-map` (B05), ra một tệp `<product>-uiux-map.html` cho agent.
 - Handoff: báo cho user số liệu thật (✅/🟡/❌, số thành phần riêng, số tệp, số tham chiếu đã kiểm), các chỗ demo còn mô phỏng (avatar, iframe, phần do OS vẽ), đường dẫn tệp HTML và commit.
 
 ### Examples và anti-patterns
