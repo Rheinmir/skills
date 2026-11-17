@@ -17,8 +17,10 @@ metadata:
 
 ### Purpose và context
 - **Purpose:** biến giao diện của một trang (hoặc một bộ kiểm kê có sẵn) thành MỘT file HTML vừa xem bằng mắt vừa đọc
-  bằng agent: lưới thành phần có bản xem trước thật, trang chi tiết có code mẫu, và ontology để map thiết kế mới vào đúng
-  thứ đã có.
+  bằng agent: lưới thành phần có bản xem trước thật, trang chi tiết có code mẫu, ontology để map thiết kế mới vào đúng
+  thứ đã có, và tab **Layout**: 12 bố cục trang (Bento Grid, Command Palette, Canvas Editor, Mega Menu, Sticky Sidebar,
+  Three-Pane Inbox, Kanban Board, Timeline, Zig-Zag, Map + List, Product Page, Chat + Artifact) dựng bằng chính thành phần
+  của map, để thấy giao diện này trông thế nào ở mỗi dạng bố cục.
 - **Trigger (when to use):** cần "gọi tên" toàn bộ UI của một site/app; cần một tài liệu tự chứa để giao cho agent áp
   giao diện; cần showcase thành phần kiểu Name That UI.
 - **Non-goals:** không trích bộ token/DESIGN.md (đó là `extract-site`); không dựng lại cả trang chạy được; không host;
@@ -35,7 +37,9 @@ thẳng bước build.
 - **Output:** `<inventory>/<product>-uiux-map.html` (không bao giờ `index.html`), tự chứa CSS, font, demo, dữ liệu,
   ontology JSON trong `script#ui-ontology`. Mở thẳng bằng `file://`.
 - **Định dạng:** `references/report-template.md` (một mục `###` mỗi thành phần), `references/meta.md` (`meta.json`),
-  `references/catalogue.md` (91 thành phần: số, slug, tên, một câu nhận diện).
+  `references/catalogue.md` (91 thành phần: số, slug, tên, một câu nhận diện), `references/layouts.json` (bố cục: lưới CSS
+  các ô, từ khoá vai trò mỗi ô, ô đặc trưng; inventory có thể đặt `layouts.json` riêng để ghi đè).
+- **Ontology** có thêm `layouts`: mỗi bố cục → ô → id thành phần (hoặc `(wire)` khi map chưa có thành phần hợp).
 
 ### Rules và capabilities
 - Công cụ (đều trong thư mục skill, gọi bằng `node`):
@@ -48,6 +52,9 @@ thẳng bước build.
   | `scripts/gallery.css`, `gallery.js`, `pw.mjs` | giao diện (nhúng vào file); `pw.mjs` tự tìm Playwright cục bộ hoặc toàn máy |
 
 - Id demo: `N-slug` cho mục danh mục (N = số trong `catalogue.md`), `x-<slug(tên chuẩn)>` cho thành phần riêng.
+- Layout: lúc build mỗi ô lấy thành phần khớp nhất (từ khoá trúng tên ×3, trúng tên trong code/cue ×1, ưu tiên status full,
+  không lặp trong một bố cục); không khớp → khung wireframe xám. Thẻ bấm được → `#/layouts/<id>` bản lớn đọc được từng ô.
+  Ghép sai vai → sửa `want` trong `layouts.json` rồi build lại.
 - Câu đầu của **Mô tả** là dòng "Map khi…" trong ontology: viết như cách người ta *nhận ra* nó (hình dạng, vị trí, hành vi).
 - Giao diện file: phong cách Name That UI (nền xám, header nổi, logo chữ, tấm trắng, hero căn giữa với ô tìm kiếm lớn, tab
   gạch chân); header mỗi mục = icon + **tối đa 2 từ**; bản xem trước khung theo vùng nội dung thật, không phóng quá 1:1,
@@ -84,7 +91,8 @@ Chi tiết từng bước (nguồn chân lý cho W01–W06). Đặt `S=~/.claude
    skins nếu trang có theme, frames: 1 demo desktop + 1–2 demo điện thoại).
 5. **Đóng gói** — `node $S/scripts/build-gallery.mjs ./inventory` → `./inventory/<product>-uiux-map.html`.
 6. **Kiểm tra rồi giao** — KHÔNG dựng localhost. Kiểm bằng `file://` qua Playwright: cuộn được (đo `scrollY`), không lỗi
-   JS, 390px không cuộn ngang, mỗi thẻ có bản xem trước; chụp hero, lưới, một trang chi tiết, Ontology. Rồi in ba dòng
+   JS, 390px không cuộn ngang, mỗi thẻ có bản xem trước, tab Layout không ô nào trống; chụp hero, lưới, một trang chi tiết,
+   Ontology, Layout. Rồi in ba dòng
    `HTML:` / `URL:` / `Open:` cho user.
 
 ### Branches

@@ -200,6 +200,32 @@ const ontology = {
 };
 for (const i of items) i.cue = ontology.components.find((c) => c.id === i.id).cue;
 
+// ── layouts: try the map's own components in common page layouts ──────────────────────────────────────────────
+// Each slot takes the best match: keyword hits in the name weigh 3, in code names or cue 1; status full first; a
+// component is used once per layout. No match → a wireframe block. The inventory may carry its own layouts.json.
+const layoutSpec = JSON.parse(readIf(at("layouts.json")) || readIf(join(here, "../references/layouts.json")) || '{"layouts":[]}');
+const hay = new Map(items.map((i) => [i.id, { name: i.name.toLowerCase(), rest: `${plain(i.omb)} ${i.cue} ${(i.aliases ?? []).join(" ")}`.toLowerCase() }]));
+const layouts = layoutSpec.layouts.map((l) => {
+  const used = new Set();
+  const slots = Object.fromEntries(Object.entries(l.slots).map(([area, slot]) => {
+    if (slot.wire || !slot.want?.length) return [area, { wire: slot.wire ?? "block", key: !!slot.key }];
+    let best = null, bestScore = 0;
+    for (const i of items) {
+      if (used.has(i.id)) continue;
+      const h = hay.get(i.id);
+      let score = 0;
+      slot.want.forEach((w, rank) => { const k = w.toLowerCase(); const weight = (slot.want.length - rank) / slot.want.length; if (h.name.includes(k)) score += 3 * weight; else if (h.rest.includes(k)) score += weight; });
+      if (score > 0 && i.status === "full") score += 0.25;
+      if (score > bestScore) { best = i; bestScore = score; }
+    }
+    if (best) used.add(best.id);
+    return [area, best ? { id: best.id, key: !!slot.key } : { wire: "block", key: !!slot.key }];
+  }));
+  return { id: l.id, name: l.name, cue: l.cue, columns: l.columns, rows: l.rows, areas: l.areas, overlay: l.overlay ?? null, slots };
+});
+ontology.layouts = layouts.map((l) => ({ id: l.id, name: l.name, cue: l.cue,
+  slots: Object.fromEntries(Object.entries(l.slots).map(([a, s]) => [a, s.id ?? `(${s.wire})`])) }));
+
 // ── page ───────────────────────────────────────────────────────────────────────────────────────────────────────
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const json = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
@@ -222,6 +248,7 @@ const ICON = {
   find: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   skin: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.9 1.2-1.8-.5-1-.1-2.2 1.1-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/>',
   moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+  layout: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>',
 };
 const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 const page = `<!doctype html>
@@ -241,6 +268,7 @@ const page = `<!doctype html>
     <nav class="g-nav" aria-label="Mục">
       <a href="#/" data-nav="list">${svg("grid")}Thành phần</a>
       <a href="#/ontology" data-nav="ontology">${svg("graph")}Ontology</a>
+      <a href="#/layouts" data-nav="layouts">${svg("layout")}Layout</a>
     </nav>
     <div class="g-tools">
       <button class="g-tool" id="find" type="button">${svg("find")}Tìm kiếm</button>
@@ -271,11 +299,12 @@ ${frames}
     <div class="g-grid" id="grid"></div>
   </section>
   <section id="ontology" hidden></section>
+  <section id="layouts" hidden></section>
   <section id="detail" hidden></section>
 </main>
 </div>
 <script id="ui-ontology" type="application/ld+json">${JSON.stringify(ontology, null, 1).replace(/</g, "\\u003c")}</script>
-<script id="g-data" type="application/json">${json({ items, skins: meta.skins, meta: { product: meta.product, houseFont: meta.houseFont, defaultSkin: meta.defaultSkin } })}</script>
+<script id="g-data" type="application/json">${json({ items, layouts, skins: meta.skins, meta: { product: meta.product, houseFont: meta.houseFont, defaultSkin: meta.defaultSkin } })}</script>
 <script>${readFileSync(join(here, "gallery.js"), "utf8")}</script>
 </body>
 </html>

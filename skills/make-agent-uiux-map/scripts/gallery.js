@@ -1,6 +1,6 @@
 // The gallery: a grid of live previews, filters and search, and a detail page per component (#/c/<id>).
 (() => {
-  const { items, skins, meta } = JSON.parse(document.getElementById("g-data").textContent);
+  const { items, layouts = [], skins, meta } = JSON.parse(document.getElementById("g-data").textContent);
   const PRODUCT = meta.product, PAGE = `${meta.product} UIUX Map`;
   const $ = (s, el = document) => el.querySelector(s);
   const byId = new Map(items.map((i) => [i.id, i]));
@@ -56,7 +56,8 @@
     if (!box) return;
     box.style.transform = "none";
     const big = stage.hasAttribute("data-big");
-    const pad = big ? 32 : 18;
+    // room around the content: 18px on a card, less on a narrow layout slot so a thin column is not all margin
+    const pad = big ? 32 : Math.max(3, Math.min(18, Math.min(stage.clientWidth, stage.clientHeight) * 0.08));
     const c = drawn(box);
     const sw = stage.clientWidth;
     const k = Math.min(1, (sw - 2 * pad) / c.w, big ? Infinity : (stage.clientHeight - 2 * pad) / c.h);
@@ -194,7 +195,7 @@
   }
 
   // ── routes: #/, #/catalogue, #/outside, #/c/<id> ──
-  const views = { list, ontology: $("#ontology"), detail };
+  const views = { list, ontology: $("#ontology"), layouts: $("#layouts"), detail };
   function show(view) {
     for (const [k, el] of Object.entries(views)) el.hidden = k !== view;
     document.body.dataset.view = view;
@@ -204,6 +205,8 @@
     const h = location.hash.replace(/^#/, "") || "/";
     const m = /^\/c\/(.+)$/.exec(h);
     if (m) { show("detail"); return showDetail(decodeURIComponent(m[1])); }
+    const lm = /^\/layouts(?:\/(.+))?$/.exec(h);
+    if (lm) { show("layouts"); renderLayouts(lm[1] && decodeURIComponent(lm[1])); scrollTo(0, 0); document.title = `Layout · ${PAGE}`; return; }
     if (h === "/ontology") { show("ontology"); renderOntology(); scrollTo(0, 0); document.title = `Ontology · ${PAGE}`; return; }
     if (h === "/catalogue" || h === "/outside" || h === "/") state.scope = h === "/catalogue" ? "catalogue" : h === "/outside" ? "outside" : "all";
     detail.innerHTML = ""; show("list");
@@ -234,6 +237,46 @@
     </div>`;
     $("#copy-onto").onclick = (e) => copy(e.currentTarget, JSON.stringify(onto, null, 2));
     $("#copy-rules").onclick = (e) => copy(e.currentTarget, onto.mappingRules.map((r, n) => `${n + 1}. ${r}`).join("\n"));
+  }
+
+  // ── layouts: common page layouts drawn with this map's own components ──
+  function renderLayouts(one) {
+    const el = views.layouts;
+    const want = one && layouts.some((l) => l.id === one) ? one : "";
+    if (el.dataset.ready !== `:${want}`) {
+      el.dataset.ready = `:${want}`;
+      const slot = (area, s) => s.id && byId.has(s.id)
+        ? `<div class="g-prev g-slot" style="grid-area:${area}"${s.key ? " data-key" : ""}><div class="g-fit" inert>${byId.get(s.id).html}</div></div>`
+        : `<div class="g-wire" data-wire="${esc(s.wire ?? "block")}" style="grid-area:${area}"${s.key ? " data-key" : ""}><i></i><i></i><i></i></div>`;
+      const card = (l) => {
+        const base = Object.entries(l.slots).filter(([a]) => a !== l.overlay);
+        const over = l.overlay && l.slots[l.overlay];
+        const used = Object.values(l.slots).filter((s) => s.id && byId.has(s.id)).map((s) => s.id);
+        return `<article class="g-lay"${want ? " data-big" : ` data-href="#/layouts/${l.id}" tabindex="0" role="link" aria-label="${esc(l.name)}"`}>
+          <h3>${esc(l.name)}</h3>
+          <div class="g-lay-frame">
+            <div class="g-lay-bar"><i></i><i></i><i></i><span></span></div>
+            <div class="g-lay-grid" style="grid-template-columns:${esc(l.columns)};grid-template-rows:${esc(l.rows)};grid-template-areas:${l.areas.map((r) => `'${esc(r)}'`).join(" ")}">
+              ${base.map(([a, s]) => slot(a, s)).join("")}
+              ${over ? `<div class="g-lay-over">${over.id && byId.has(over.id) ? `<div class="g-prev g-slot" data-key><div class="g-fit" inert>${byId.get(over.id).html}</div></div>` : `<div class="g-wire" data-key><i></i><i></i><i></i></div>`}</div>` : ""}
+            </div>
+          </div>
+          <p class="g-lay-cue">${esc(l.cue)}</p>
+          <p class="g-lay-uses">${used.length ? `Dùng: ${used.map((id) => `<a href="#/c/${id}">${esc(byId.get(id).name)}</a>`).join(", ")}.` : "Chưa có thành phần khớp: khung xám là chỗ cần dựng."}</p>
+        </article>`;
+      };
+      el.innerHTML = want
+        ? `<div class="g-doc g-doc-wide"><div class="g-crumbs"><span class="g-path"><a href="#/layouts">Layout</a> / ${esc(layouts.find((l) => l.id === want).name)}</span></div>
+            <div class="g-lays g-lays-one">${card(layouts.find((l) => l.id === want))}</div></div>`
+        : `<div class="g-doc g-doc-wide">
+        <p class="g-eyebrow">Layout</p><h1 class="g-h1">Bố cục trang, dựng bằng chính thành phần này</h1>
+        <p>Mỗi bố cục lấy thành phần khớp nhất trong map cho từng ô; ô viền cam là ô đặc trưng của bố cục. Khung xám là chỗ map chưa có thành phần phù hợp. Bấm một bố cục để xem lớn. Ghép này cũng nằm trong ontology (<code>layouts</code>) để agent dựng đúng bố cục.</p>
+        <div class="g-lays">${layouts.map(card).join("")}</div></div>`;
+      el.onclick = (e) => { if (e.target.closest("a")) return; const c = e.target.closest(".g-lay[data-href]"); if (c) location.hash = c.dataset.href; };
+      el.onkeydown = (e) => { const c = e.target.closest(".g-lay[data-href]"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); location.hash = c.dataset.href; } };
+      el.querySelectorAll(".g-prev").forEach((p) => io.observe(p));
+    }
+    requestAnimationFrame(() => el.querySelectorAll(".g-prev").forEach(fit));
   }
 
   addEventListener("hashchange", route);

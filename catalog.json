@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "version": "1.0.47",
+  "version": "1.0.48",
   "harness_floor": "1.3.127",
-  "catalog_sha": "716e7ce07a7aa1ba",
+  "catalog_sha": "b02635bc864e17d1",
   "count": 110,
   "skills": [
     {
@@ -820,7 +820,7 @@
       "description": "Bóc giao diện của MỘT trang web bất kỳ (URL) hoặc một bộ kiểm kê có sẵn ra MỘT file HTML tự chứa kiểu Name That UI — lưới mọi thành phần có bản xem trước chạy bằng chính CSS của trang, trang chi tiết kèm code mẫu thật, và ONTOLOGY (JSON nhúng script#ui-ontology) để agent tự map một thiết kế bất kỳ vào đúng thành phần mà áp giao diện. Standalone: mọi công cụ nằm trong thư mục skill (capture.mjs, snip.mjs, build-gallery.mjs, giao diện, danh mục 91 thành phần). Giao FILE, không host: in đường dẫn khi xong. Gọi khi user nói 'make-agent-uiux-map', 'uiux map', 'gallery thành phần', 'showcase kiểu name that ui', 'bóc component của web này ra html', 'kiểm kê giao diện trang X', 'ontology giao diện cho agent', 'gói UI thành một file để đưa agent', hoặc /make-agent-uiux-map <url>. KHÁC extract-site (trích token/DESIGN.md) và ui-kit-from-code (chép hệ thiết kế thành UI kit): skill này GỌI TÊN từng thành phần theo danh mục Name That UI và sinh ontology map.",
       "model_invocable": true,
       "requires": {},
-      "sha": "eaa7ecf6385e7f21"
+      "sha": "f6d6a448318c5b41"
     },
     {
       "name": "mask-reveal-transition",
