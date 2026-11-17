@@ -826,6 +826,23 @@
       "recorded": "2026-10-14",
       "source": "local-authored"
     },
+    "make-agent-uiux-map": {
+      "files": {
+        "SKILL.md": "3c680e6d305cf1714925b6a7b226576bc4755881a257c1b109c1c1fcea1118d0",
+        "references/catalogue.md": "2dec7fb2b24ec8480e9ebf00e9e54432f170fdae4ebfa2ddfb2c90ad0682acd4",
+        "references/layouts.json": "1a87a60758ac40698e0033c909a3eae20809a4a462b62c8bc0b80b1199929da8",
+        "references/meta.md": "4dc81b919fd117e83e0bf20c6fa9051a811b22a7c6542ef12f84f3c4bad2c774",
+        "references/report-template.md": "4b86e3699bcfb16b7c4616c96e69430488a35f294e3f0323c209581bafe38325",
+        "scripts/build-gallery.mjs": "6fe8f86f74661950d3221e55c16244157b8f4673ebf5ea1e44f33240275cb212",
+        "scripts/capture.mjs": "d7b7af07e47dda36f9ce76e83b667290cb34368f9565bfd6b522ae2c59233728",
+        "scripts/gallery.css": "a65537064758b45a6441ea877f01314d8a985f420e5708d29eb2403e857aebe3",
+        "scripts/gallery.js": "885000ba17896247c3b6c77a12a8a98d40aae04727692ddfa526159a8fb097cd",
+        "scripts/pw.mjs": "e90c19c379c9d813887ad4e882d56056360d4eba34cc6184a5108fed79da89be",
+        "scripts/snip.mjs": "3d630261ef1137ec387e0e57516d454c58012c21d631976cd4f066d01d863d7a"
+      },
+      "recorded": "2026-11-17",
+      "source": "local-authored"
+    },
     "mask-reveal-transition": {
       "files": {
         "SKILL.md": "a2a94ee74a60450dd4fa03b62fdbe768934c0131eb9ca98374097f8c850076b9",
