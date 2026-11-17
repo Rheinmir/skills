@@ -279,6 +279,29 @@
     requestAnimationFrame(() => el.querySelectorAll(".g-prev").forEach(fit));
   }
 
+  // ── search island: the hero search follows the page as a floating pill once scrolled past ──
+  {
+    const field = document.querySelector(".g-bigsearch");
+    if (field) {
+      const spot = document.createElement("div");
+      spot.className = "g-bigsearch-spot";
+      field.replaceWith(spot); spot.append(field);
+      // Decided from the spot's place on every scroll (one per frame) and on every route change: an observer would miss
+      // coming back to the list while scrolled, since the spot was out of view both before and after.
+      let queued = false;
+      const check = () => {
+        queued = false;
+        const away = document.body.dataset.view === "list" && spot.getBoundingClientRect().bottom < 64;
+        field.classList.toggle("is-island", away); spot.toggleAttribute("data-island", away);
+      };
+      const soon = () => { if (!queued) { queued = true; requestAnimationFrame(check); } };
+      addEventListener("scroll", soon, { passive: true });
+      addEventListener("resize", soon);
+      addEventListener("hashchange", () => setTimeout(check, 0));
+      check();
+    }
+  }
+
   addEventListener("hashchange", route);
   addEventListener("resize", () => requestAnimationFrame(fitAll));
   // Hero frames: each screen stacks real demos, each scaled to the screen's width; the caption names them.

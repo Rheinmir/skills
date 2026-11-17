@@ -59,6 +59,9 @@ thẳng bước build.
 - Giao diện file: phong cách Name That UI (nền xám, header nổi, logo chữ, tấm trắng, hero căn giữa với ô tìm kiếm lớn, tab
   gạch chân); header mỗi mục = icon + **tối đa 2 từ**; bản xem trước khung theo vùng nội dung thật, không phóng quá 1:1,
   nền theo `--color-app` của skin; file phải cuộn được (gallery.css mở lại `html/body` mà CSS của app có thể khoá).
+- Ô tìm kiếm là **đảo nổi**: cuộn qua hero thì chính ô đó thành viên thuốc ghim dưới header (điện thoại: đáy màn hình), đi
+  cùng lưới, giữ chữ đang gõ; focus là vầng sáng theo viên thuốc. CSS của site nằm trong `@layer site`; điều khiển của
+  gallery được che bằng `@layer g-guard` (khai trước `site`) vì site có thể đặt `input { … !important }`.
 
 ### Failure boundaries
 - Không có Playwright → `pw.mjs` dừng với lệnh cài (`npm i -g playwright && npx playwright install chromium`).

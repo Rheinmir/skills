@@ -233,3 +233,26 @@ body.g[data-view="layouts"] .g-hero, body.g[data-view="layouts"] .g-frames { dis
 .g-lay[data-big] h3 { font-size: 26px; margin-bottom: 16px; }
 .g-lay[data-big] .g-lay-grid { height: min(680px, 72vh); gap: 12px; padding: 14px; }
 .g-lay[data-big] .g-lay-cue { font-size: 15px; } .g-lay[data-big] .g-lay-uses { font-size: 14px; }
+
+/* search island: once the hero search scrolls out of view it floats under the header as a pill and follows the page;
+   the same input moves, so text and filters stay. A spacer keeps the hero's height while it is away. */
+.g-bigsearch-spot { max-width: 568px; margin: 34px auto 0; }
+.g-bigsearch-spot > .g-bigsearch { margin: 0; }
+.g-bigsearch-spot[data-island] { height: 56px; }
+.g-bigsearch.is-island {
+  position: fixed; z-index: 45; top: 76px; left: 50%; transform: translateX(-50%);
+  width: min(520px, calc(100vw - 32px)); height: 48px; margin: 0; border-radius: 999px;
+  background: color-mix(in srgb, var(--g-bg) 88%, transparent); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--g-bd2); box-shadow: 0 12px 32px rgb(0 0 0 / 0.14), 0 2px 6px rgb(0 0 0 / 0.06);
+  animation: g-island-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.g-bigsearch.is-island input { font-size: 15px; }
+@keyframes g-island-in { from { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.96); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .g-bigsearch.is-island { animation: none; } }
+@media (max-width: 760px) { .g-bigsearch.is-island { top: auto; bottom: 16px; } }
+body.g:not([data-view="list"]) .g-bigsearch.is-island { display: none; }
+
+/* focus on the search is the whole pill's, never a square ring on the inner input */
+.g .g-bigsearch input:focus, .g .g-bigsearch input:focus-visible { outline: none; box-shadow: none; }
+.g-bigsearch:focus-within { border-color: var(--g-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--g-accent) 16%, transparent); }
+.g-bigsearch.is-island:focus-within { border-color: var(--g-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--g-accent) 16%, transparent), 0 12px 32px rgb(0 0 0 / 0.14); }

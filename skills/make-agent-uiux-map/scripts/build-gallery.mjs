@@ -184,7 +184,15 @@ siteCss = siteCss.replace(/@font-face\s*\{[^}]*\}/g, (face) => {
 // elements (body { max-width: 720px }) that would otherwise squeeze the gallery. @charset/@import cannot sit in a layer.
 const hoisted = [];
 siteCss = siteCss.replace(/@charset[^;]*;/g, "").replace(/@import[^;]*;/g, (m) => { hoisted.push(m); return ""; });
-const layeredCss = `${hoisted.join("\n")}\n@layer site {\n${siteCss}\n}`;
+// A site may style bare form controls with !important (input { background: … !important }). Among !important rules a
+// layer declared EARLIER wins, so the gallery's own controls are guarded in g-guard, declared before site. Only the
+// gallery's controls are named here; inputs inside previews keep the site's styling.
+const guard = `@layer g-guard {
+  .g-bigsearch input, .g-bigsearch input:hover, .g-bigsearch input:focus, .g-bigsearch input:focus-visible {
+    background: transparent !important; box-shadow: none !important; border-color: transparent !important; outline: none !important; }
+  .g-tool select, .g-tool select:hover, .g-tool select:focus { background: transparent !important; box-shadow: none !important; border-color: transparent !important; }
+}`;
+const layeredCss = `${hoisted.join("\n")}\n@layer g-guard, site;\n${guard}\n@layer site {\n${siteCss}\n}`;
 
 // ── ontology ───────────────────────────────────────────────────────────────────────────────────────────────────
 const plain = (s) => String(s ?? "").replace(/\*\*|`/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").split("\n")[0].trim();

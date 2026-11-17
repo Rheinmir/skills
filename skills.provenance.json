@@ -828,15 +828,15 @@
     },
     "make-agent-uiux-map": {
       "files": {
-        "SKILL.md": "ddc4c6e737b5db9cae8e8346b12b06738bf4a067e515253730ea4f4dd369a6bf",
+        "SKILL.md": "5f2a6bbc3256823f63078896522b6da88473610938f371aee7e409a681951682",
         "references/catalogue.md": "2dec7fb2b24ec8480e9ebf00e9e54432f170fdae4ebfa2ddfb2c90ad0682acd4",
         "references/layouts.json": "1a87a60758ac40698e0033c909a3eae20809a4a462b62c8bc0b80b1199929da8",
         "references/meta.md": "0dcebbdd924098bda83ce0f51bf0e6cae73e98c7893c3c1e144861eb2968a1a6",
         "references/report-template.md": "4b86e3699bcfb16b7c4616c96e69430488a35f294e3f0323c209581bafe38325",
-        "scripts/build-gallery.mjs": "3b6f9c8f68fe098ebd4f3e09846ebb5128c20910b366997d01ed19e622636fb9",
+        "scripts/build-gallery.mjs": "c1f17964bf0a109408b6f0ec16e610104adf0f97f35ac647e2a89196e95e0505",
         "scripts/capture.mjs": "7479ec7d9c1ceaaca61d4e53c453e6e3b6fd923d5bdab03c7af4b9fc33ed17d7",
-        "scripts/gallery.css": "52b7f5d4259ad5d61fbaffba13fc09706ab1ef230ef696489aff399fb29d6b09",
-        "scripts/gallery.js": "96503203c0b11a2c44f78a6722fcf47ac1246073b404b44240d917c9a7d6526e",
+        "scripts/gallery.css": "7d63d34cb4b3ad9e820bd2ff43c2e665fcddb5464407a14f7393a803e77ea6f8",
+        "scripts/gallery.js": "e752095ee8823ada55a0c4c685c87bdf7f66ed4fdef37db223c3e3761138fd49",
         "scripts/pw.mjs": "e90c19c379c9d813887ad4e882d56056360d4eba34cc6184a5108fed79da89be",
         "scripts/snip.mjs": "99a9e560af498b2321dd7aca276af70eaa394be02bb92d17fe301d2de0838edf"
       },
