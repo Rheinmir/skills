@@ -380,6 +380,84 @@ table.tok td:first-child { font-family: var(--mono); font-size: 12px; }
     <div class="intro">
       <div class="eyebrow">lib/tokens.ts → docs/ui-kit.html</div>
       <h1>Bộ thành phần của M3E Canvas</h1>
+    </div>
+
+    <!-- ================= HERO: MẪU MÀN HÌNH ngay dưới tiêu đề ================= -->
+    <section class="block" id="screens">
+      <header><h2>Màn hình mẫu</h2><p>Ghép thành phần theo quy tắc "A good sketch" trong agent.md: top app bar ở trên cùng, bottom nav giữ cùng các tab trên các màn chính, danh sách mở màn chi tiết, màn chi tiết có nút quay lại. Trên desktop, thanh điều hướng dưới được thay bằng navigation rail, và danh sách với chi tiết nằm cạnh nhau trong cùng một màn.</p></header>
+      <div class="phone-wrap"><div class="phones">
+        <div>
+          <div class="phone">
+            <div class="m3-topbar"><div class="status"><span>9:30</span><span><span class="ms">signal_cellular_alt</span> <span class="ms">battery_full</span></span></div><div class="row"><button class="m3-icon-btn v-standard" aria-label="Menu"><span class="ms">menu</span></button><span class="title">Công thức</span><button class="m3-icon-btn v-standard" aria-label="Tìm"><span class="ms">search</span></button></div></div>
+            <div class="body">
+              <div style="display:flex;gap:8px;padding-bottom:8px"><span class="m3-chip lead on"><span class="ms">check</span>Tất cả</span><span class="m3-chip">Chay</span><span class="m3-chip">Nhanh</span></div>
+              <div class="m3-list m3-connected y">
+                <div class="m3-li"><div class="av"><span class="ms">restaurant</span></div><div class="txt"><b>Canh cà chua</b><small>30 phút</small></div><span class="ms">chevron_right</span></div>
+                <div class="m3-li"><div class="av"><span class="ms">bakery_dining</span></div><div class="txt"><b>Bánh pancake</b><small>20 phút</small></div><span class="ms">chevron_right</span></div>
+                <div class="m3-li"><div class="av"><span class="ms">ramen_dining</span></div><div class="txt"><b>Phở bò</b><small>3 giờ</small></div><span class="ms">chevron_right</span></div>
+                <div class="m3-li"><div class="av"><span class="ms">egg_alt</span></div><div class="txt"><b>Trứng chiên</b><small>10 phút</small></div><span class="ms">chevron_right</span></div>
+              </div>
+            </div>
+            <button class="m3-fab" aria-label="Thêm công thức"><span class="ms">add</span></button>
+            <div class="m3-navbar inset"><div class="tab on"><div class="pill"><span class="ms">home</span></div>Trang chủ</div><div class="tab"><div class="pill"><span class="ms">search</span></div>Tìm</div><div class="tab"><div class="pill"><span class="ms">settings</span></div>Cài đặt</div></div>
+          </div>
+          <div class="phone-cap">home · topAppBar + chip + listItem×4 + fab + bottomNav</div>
+        </div>
+        <div>
+          <div class="phone">
+            <div class="m3-topbar m"><div class="status"><span>9:30</span><span><span class="ms">battery_full</span></span></div><div class="row"><button class="m3-icon-btn v-standard" aria-label="Quay lại"><span class="ms">arrow_back</span></button><span class="title"></span><button class="m3-icon-btn v-standard" aria-label="Yêu thích"><span class="ms">favorite</span></button></div><div class="big">Canh cà chua</div></div>
+            <div class="body" style="gap:16px">
+              <div class="m3-card v-filled"><div class="img" style="height:180px"><span class="ms">image</span></div><div class="body"><b>30 phút · 4 người</b><p>Cà chua chín, đậu phụ non, hành lá. Nấu với nước dùng xương.</p></div></div>
+              <div class="m3-tabs" style="width:380px"><div class="tab on">Nguyên liệu</div><div class="tab">Cách làm</div></div>
+              <div class="m3-labeled"><span class="m3-check on"><span class="ms">check</span></span>4 quả cà chua</div>
+              <div class="m3-labeled"><span class="m3-check"></span>1 bìa đậu phụ</div>
+              <div class="m3-connected" style="margin-top:8px"><button class="m3-btn m v-tonal half"><span class="ms">share</span>Chia sẻ</button><button class="m3-btn m v-filled half"><span class="ms">skillet</span>Nấu</button></div>
+            </div>
+          </div>
+          <div class="phone-cap">detail · action { to: "back" } trên arrow_back</div>
+        </div>
+      </div></div>
+
+      <div class="phone-wrap" style="margin-top:24px"><div>
+        <div class="desk">
+          <div class="m3-rail"><button class="m3-icon-btn v-standard menu" aria-label="Menu"><span class="ms">menu</span></button><button class="m3-fab v-tertiary" aria-label="Thêm công thức"><span class="ms">add</span></button><div class="tab on"><div class="pill"><span class="ms fill">home</span></div>Trang chủ</div><div class="tab"><div class="pill"><span class="ms">search</span></div>Tìm</div><div class="tab"><div class="pill"><span class="ms">favorite</span></div>Đã lưu</div><div class="tab"><div class="pill"><span class="ms">settings</span></div>Cài đặt</div></div>
+          <div class="panes">
+            <div class="pane list">
+              <div class="head"><span class="t">Công thức</span><button class="m3-icon-btn v-standard" aria-label="Lọc"><span class="ms">filter_list</span></button></div>
+              <div class="inner">
+                <div class="m3-search" style="width:100%"><span class="ms">search</span><span class="t">Tìm công thức</span></div>
+                <div style="display:flex;gap:8px"><span class="m3-chip lead on"><span class="ms">check</span>Tất cả</span><span class="m3-chip">Chay</span><span class="m3-chip">Nhanh</span></div>
+                <div class="m3-list m3-connected y" style="width:100%">
+                  <div class="m3-li sel"><div class="av"><span class="ms">restaurant</span></div><div class="txt"><b>Canh cà chua</b><small>30 phút · 4 người</small></div></div>
+                  <div class="m3-li"><div class="av"><span class="ms">bakery_dining</span></div><div class="txt"><b>Bánh pancake</b><small>20 phút · 2 người</small></div></div>
+                  <div class="m3-li"><div class="av"><span class="ms">ramen_dining</span></div><div class="txt"><b>Phở bò</b><small>3 giờ · 6 người</small></div></div>
+                  <div class="m3-li"><div class="av"><span class="ms">egg_alt</span></div><div class="txt"><b>Trứng chiên</b><small>10 phút · 1 người</small></div></div>
+                  <div class="m3-li"><div class="av"><span class="ms">set_meal</span></div><div class="txt"><b>Cá kho tộ</b><small>1 giờ · 4 người</small></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="pane detail">
+              <div class="head"><span class="t">Canh cà chua</span><button class="m3-icon-btn v-standard" aria-label="Yêu thích"><span class="ms">favorite</span></button><button class="m3-icon-btn v-standard" aria-label="Chia sẻ"><span class="ms">share</span></button><button class="m3-icon-btn v-standard" aria-label="Thêm"><span class="ms">more_vert</span></button></div>
+              <div class="inner">
+                <div class="hero"><span class="ms">image</span></div>
+                <div style="display:flex;gap:8px"><span class="m3-chip lead"><span class="ms">schedule</span>30 phút</span><span class="m3-chip lead"><span class="ms">group</span>4 người</span><span class="m3-chip lead"><span class="ms">eco</span>Chay</span></div>
+                <div class="cols">
+                  <div><h4>Nguyên liệu</h4>
+                    <div class="m3-labeled"><span class="m3-check on"><span class="ms">check</span></span>4 quả cà chua</div>
+                    <div class="m3-labeled"><span class="m3-check on"><span class="ms">check</span></span>1 bìa đậu phụ non</div>
+                    <div class="m3-labeled"><span class="m3-check"></span>2 cây hành lá</div></div>
+                  <div><h4>Cách làm</h4><ol><li>Phi thơm hành, xào cà chua đến khi mềm.</li><li>Thêm 1 lít nước dùng, đun sôi.</li><li>Cho đậu phụ, nêm vừa ăn, rắc hành lá.</li></ol></div>
+                </div>
+                <div class="m3-connected"><button class="m3-btn m v-tonal"><span class="ms">edit</span>Sửa</button><button class="m3-btn m v-filled"><span class="ms">skillet</span>Bắt đầu nấu</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-cap">desktop 1280 × 800 · platform "web" · navRail + list-detail (pane list 412, khoảng cách 24)</div>
+      </div></div>
+    </section>
+
+    <div class="intro">
       <p>Mọi thành phần app vẽ trên canvas, dựng lại bằng HTML/CSS thuần. Màu lấy thẳng từ 7 palette của app, cả sáng lẫn tối. Kích thước tính bằng dp đúng thông số app dùng. Mỗi thẻ ghi tên <code>kind</code> trong <code>public/agent.md</code> và có nút copy HTML, nên chỉ cần dán khối <code>--m3-*</code> cùng CSS <code>.m3-*</code> là dùng lại được ở dự án khác.</p>
       <div class="facts"><span class="fact">phone 412 × 892</span><span class="fact">margin 16 · content 380 · half 182</span><span class="fact">connected gap 3 · r 28 / 8</span><span class="fact">ease cubic-bezier(0.2, 0, 0, 1) · 340ms</span></div>
     </div>
@@ -640,80 +718,6 @@ table.tok td:first-child { font-family: var(--mono); font-size: 12px; }
       </div>
     </section>
 
-    <!-- ================= MẪU MÀN HÌNH ================= -->
-    <section class="block" id="screens">
-      <header><h2>Màn hình mẫu</h2><p>Ghép thành phần theo quy tắc "A good sketch" trong agent.md: top app bar ở trên cùng, bottom nav giữ cùng các tab trên các màn chính, danh sách mở màn chi tiết, màn chi tiết có nút quay lại. Trên desktop, thanh điều hướng dưới được thay bằng navigation rail, và danh sách với chi tiết nằm cạnh nhau trong cùng một màn.</p></header>
-      <div class="phone-wrap"><div class="phones">
-        <div>
-          <div class="phone">
-            <div class="m3-topbar"><div class="status"><span>9:30</span><span><span class="ms">signal_cellular_alt</span> <span class="ms">battery_full</span></span></div><div class="row"><button class="m3-icon-btn v-standard" aria-label="Menu"><span class="ms">menu</span></button><span class="title">Công thức</span><button class="m3-icon-btn v-standard" aria-label="Tìm"><span class="ms">search</span></button></div></div>
-            <div class="body">
-              <div style="display:flex;gap:8px;padding-bottom:8px"><span class="m3-chip lead on"><span class="ms">check</span>Tất cả</span><span class="m3-chip">Chay</span><span class="m3-chip">Nhanh</span></div>
-              <div class="m3-list m3-connected y">
-                <div class="m3-li"><div class="av"><span class="ms">restaurant</span></div><div class="txt"><b>Canh cà chua</b><small>30 phút</small></div><span class="ms">chevron_right</span></div>
-                <div class="m3-li"><div class="av"><span class="ms">bakery_dining</span></div><div class="txt"><b>Bánh pancake</b><small>20 phút</small></div><span class="ms">chevron_right</span></div>
-                <div class="m3-li"><div class="av"><span class="ms">ramen_dining</span></div><div class="txt"><b>Phở bò</b><small>3 giờ</small></div><span class="ms">chevron_right</span></div>
-                <div class="m3-li"><div class="av"><span class="ms">egg_alt</span></div><div class="txt"><b>Trứng chiên</b><small>10 phút</small></div><span class="ms">chevron_right</span></div>
-              </div>
-            </div>
-            <button class="m3-fab" aria-label="Thêm công thức"><span class="ms">add</span></button>
-            <div class="m3-navbar inset"><div class="tab on"><div class="pill"><span class="ms">home</span></div>Trang chủ</div><div class="tab"><div class="pill"><span class="ms">search</span></div>Tìm</div><div class="tab"><div class="pill"><span class="ms">settings</span></div>Cài đặt</div></div>
-          </div>
-          <div class="phone-cap">home · topAppBar + chip + listItem×4 + fab + bottomNav</div>
-        </div>
-        <div>
-          <div class="phone">
-            <div class="m3-topbar m"><div class="status"><span>9:30</span><span><span class="ms">battery_full</span></span></div><div class="row"><button class="m3-icon-btn v-standard" aria-label="Quay lại"><span class="ms">arrow_back</span></button><span class="title"></span><button class="m3-icon-btn v-standard" aria-label="Yêu thích"><span class="ms">favorite</span></button></div><div class="big">Canh cà chua</div></div>
-            <div class="body" style="gap:16px">
-              <div class="m3-card v-filled"><div class="img" style="height:180px"><span class="ms">image</span></div><div class="body"><b>30 phút · 4 người</b><p>Cà chua chín, đậu phụ non, hành lá. Nấu với nước dùng xương.</p></div></div>
-              <div class="m3-tabs" style="width:380px"><div class="tab on">Nguyên liệu</div><div class="tab">Cách làm</div></div>
-              <div class="m3-labeled"><span class="m3-check on"><span class="ms">check</span></span>4 quả cà chua</div>
-              <div class="m3-labeled"><span class="m3-check"></span>1 bìa đậu phụ</div>
-              <div class="m3-connected" style="margin-top:8px"><button class="m3-btn m v-tonal half"><span class="ms">share</span>Chia sẻ</button><button class="m3-btn m v-filled half"><span class="ms">skillet</span>Nấu</button></div>
-            </div>
-          </div>
-          <div class="phone-cap">detail · action { to: "back" } trên arrow_back</div>
-        </div>
-      </div></div>
-
-      <div class="phone-wrap" style="margin-top:24px"><div>
-        <div class="desk">
-          <div class="m3-rail"><button class="m3-icon-btn v-standard menu" aria-label="Menu"><span class="ms">menu</span></button><button class="m3-fab v-tertiary" aria-label="Thêm công thức"><span class="ms">add</span></button><div class="tab on"><div class="pill"><span class="ms fill">home</span></div>Trang chủ</div><div class="tab"><div class="pill"><span class="ms">search</span></div>Tìm</div><div class="tab"><div class="pill"><span class="ms">favorite</span></div>Đã lưu</div><div class="tab"><div class="pill"><span class="ms">settings</span></div>Cài đặt</div></div>
-          <div class="panes">
-            <div class="pane list">
-              <div class="head"><span class="t">Công thức</span><button class="m3-icon-btn v-standard" aria-label="Lọc"><span class="ms">filter_list</span></button></div>
-              <div class="inner">
-                <div class="m3-search" style="width:100%"><span class="ms">search</span><span class="t">Tìm công thức</span></div>
-                <div style="display:flex;gap:8px"><span class="m3-chip lead on"><span class="ms">check</span>Tất cả</span><span class="m3-chip">Chay</span><span class="m3-chip">Nhanh</span></div>
-                <div class="m3-list m3-connected y" style="width:100%">
-                  <div class="m3-li sel"><div class="av"><span class="ms">restaurant</span></div><div class="txt"><b>Canh cà chua</b><small>30 phút · 4 người</small></div></div>
-                  <div class="m3-li"><div class="av"><span class="ms">bakery_dining</span></div><div class="txt"><b>Bánh pancake</b><small>20 phút · 2 người</small></div></div>
-                  <div class="m3-li"><div class="av"><span class="ms">ramen_dining</span></div><div class="txt"><b>Phở bò</b><small>3 giờ · 6 người</small></div></div>
-                  <div class="m3-li"><div class="av"><span class="ms">egg_alt</span></div><div class="txt"><b>Trứng chiên</b><small>10 phút · 1 người</small></div></div>
-                  <div class="m3-li"><div class="av"><span class="ms">set_meal</span></div><div class="txt"><b>Cá kho tộ</b><small>1 giờ · 4 người</small></div></div>
-                </div>
-              </div>
-            </div>
-            <div class="pane detail">
-              <div class="head"><span class="t">Canh cà chua</span><button class="m3-icon-btn v-standard" aria-label="Yêu thích"><span class="ms">favorite</span></button><button class="m3-icon-btn v-standard" aria-label="Chia sẻ"><span class="ms">share</span></button><button class="m3-icon-btn v-standard" aria-label="Thêm"><span class="ms">more_vert</span></button></div>
-              <div class="inner">
-                <div class="hero"><span class="ms">image</span></div>
-                <div style="display:flex;gap:8px"><span class="m3-chip lead"><span class="ms">schedule</span>30 phút</span><span class="m3-chip lead"><span class="ms">group</span>4 người</span><span class="m3-chip lead"><span class="ms">eco</span>Chay</span></div>
-                <div class="cols">
-                  <div><h4>Nguyên liệu</h4>
-                    <div class="m3-labeled"><span class="m3-check on"><span class="ms">check</span></span>4 quả cà chua</div>
-                    <div class="m3-labeled"><span class="m3-check on"><span class="ms">check</span></span>1 bìa đậu phụ non</div>
-                    <div class="m3-labeled"><span class="m3-check"></span>2 cây hành lá</div></div>
-                  <div><h4>Cách làm</h4><ol><li>Phi thơm hành, xào cà chua đến khi mềm.</li><li>Thêm 1 lít nước dùng, đun sôi.</li><li>Cho đậu phụ, nêm vừa ăn, rắc hành lá.</li></ol></div>
-                </div>
-                <div class="m3-connected"><button class="m3-btn m v-tonal"><span class="ms">edit</span>Sửa</button><button class="m3-btn m v-filled"><span class="ms">skillet</span>Bắt đầu nấu</button></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="phone-cap">desktop 1280 × 800 · platform "web" · navRail + list-detail (pane list 412, khoảng cách 24)</div>
-      </div></div>
-    </section>
   </main>
 </div>
 <div class="toast m3-snackbar" id="toast" role="status"><span id="toast-t">Đã copy</span></div>
